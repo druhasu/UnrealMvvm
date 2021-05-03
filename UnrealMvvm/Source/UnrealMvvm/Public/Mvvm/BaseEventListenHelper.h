@@ -15,6 +15,11 @@ protected:
     {
     }
 
+    auto& GetEvent() const
+    {
+        return std::mem_fn(Event)(Widget);
+    }
+
     FListenManager* Manager;
     TWidget* Widget;
     TEventPtr Event;

@@ -11,11 +11,11 @@ class TDynamicEventListenHelper : public TBaseEventListenHelper<TWidget, TEventP
 public:
     /* Do not use directly. Use 'WithDynamic' macro */
     template<typename TListener>
-    void __WithDynamicImpl(TListener* Listener, typename TPointerToMember<TEventPtr>::ValueType::FDelegate::template TMethodPtrResolver<TListener>::FMethodPtr Callback, FName FunctionName)
+    void __WithDynamicImpl(TListener* Listener, typename TDecay<typename TPointerToMember<TEventPtr>::ValueType>::Type::FDelegate::template TMethodPtrResolver<TListener>::FMethodPtr Callback, FName FunctionName)
     {
         if (Widget != nullptr)
         {
-            auto& EventRef = (Widget->*Event);
+            auto& EventRef = GetEvent();
             EventRef.__Internal_AddDynamic(Listener, Callback, FunctionName);
 
             using SubscriptionType = FListenManager::TObjectUnsubscriber<TWidget, TEventPtr>;

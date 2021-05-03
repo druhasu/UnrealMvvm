@@ -5,7 +5,7 @@
 #include "Mvvm/BaseEventListenHelper.h"
 
 template<typename TWidget, typename TEventPtr>
-class UNREALMVVM_API TSimpleEventListenHelper : public TBaseEventListenHelper<TWidget, TEventPtr>
+class TSimpleEventListenHelper : public TBaseEventListenHelper<TWidget, TEventPtr>
 {
 public:
     template<typename TCallback>
@@ -14,7 +14,7 @@ public:
         // multicast delegate overload with lambda
         if (Widget != nullptr)
         {
-            auto& EventRef = (Widget->*Event);
+            auto& EventRef = GetEvent();
             FDelegateHandle Handle = EventRef.AddLambda(MoveTemp(Callback));
 
             using SubscriptionType = FListenManager::THandleUnsubscriber<TWidget, TEventPtr>;
@@ -28,7 +28,7 @@ public:
         // multicast delegate overload with UObject
         if (Widget != nullptr)
         {
-            auto& EventRef = (Widget->*Event);
+            auto& EventRef = GetEvent();
             FDelegateHandle Handle = EventRef.AddUObject(Listener, Callback);
 
             using SubscriptionType = FListenManager::THandleUnsubscriber<TWidget, TEventPtr>;

@@ -15,14 +15,16 @@ public:
     template<typename TEventPtr>
     struct TIsDynamicMulticastDelegate
     {
-        static const bool Value = TIsDerivedFrom< typename TPointerToMember<TEventPtr>::ValueType, TMulticastScriptDelegate<> >::Value;
+        using EventType = typename TDecay< typename TPointerToMember<TEventPtr>::ValueType >::Type;
+        static const bool Value = TIsDerivedFrom< EventType, TMulticastScriptDelegate<> >::Value;
     };
 
     /* Helper struct checking that given type is NonDynamic Multicast Delegate */
     template<typename TEventPtr>
     struct TIsSimpleMulticastDelegate
     {
-        static const bool Value = TIsDerivedFrom< typename TPointerToMember<TEventPtr>::ValueType, FMulticastDelegateBase<FWeakObjectPtr> >::Value;
+        using EventType = typename TDecay< typename TPointerToMember<TEventPtr>::ValueType >::Type;
+        static const bool Value = TIsDerivedFrom< EventType, FMulticastDelegateBase<FWeakObjectPtr> >::Value;
     };
 
     /* Setup listening to Dynamic Multicast Delegate */
@@ -93,7 +95,8 @@ private:
 
         void Unsubscribe() override
         {
-            (Widget->*Event).RemoveAll(Subscriber);
+            auto& EventRef = std::mem_fn(Event)(Widget);
+            EventRef.RemoveAll(Subscriber);
         }
 
         TWidget* Widget;
@@ -102,9 +105,9 @@ private:
     };
 
     template<typename TWidget, typename TEventPtr>
-    struct THandleUnsubscriber
+    struct THandleUnsubscriber : public FBaseUnsubscriber
     {
-        THandleUnsubscriber(TEventPtr InEvent, FDelegateHandle InHandle)
+        THandleUnsubscriber(TWidget* InWidget, TEventPtr InEvent, FDelegateHandle InHandle)
             : Widget(InWidget)
             , Event(InEvent)
             , Handle(InHandle)
@@ -114,7 +117,8 @@ private:
 
         void Unsubscribe() override
         {
-            (Widget->*Event).Remove(Handle);
+            auto& EventRef = std::mem_fn(Event)(Widget);
+            EventRef.Remove(Handle);
         }
 
         TWidget* Widget;
