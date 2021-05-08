@@ -2,11 +2,13 @@
 
 #pragma once
 
-#include "Mvvm/DynamicEventListenHelper.h"
-#include "Mvvm/SimpleEventListenHelper.h"
 #include "Mvvm/PointerToMember.h"
 #include "Templates/EnableIf.h"
 #include "Delegates/Delegate.h"
+#include <functional>
+
+template<typename T1, typename T2> class TDynamicEventListenHelper;
+template<typename T1, typename T2> class TSimpleEventListenHelper;
 
 class UNREALMVVM_API FListenManager
 {
@@ -30,18 +32,12 @@ public:
     /* Setup listening to Dynamic Multicast Delegate */
     template<typename TWidget, typename TEventPtr>
     typename TEnableIf< TIsDynamicMulticastDelegate<TEventPtr>::Value, TDynamicEventListenHelper<TWidget, TEventPtr> >::Type
-        Listen(TWidget* Widget, TEventPtr Event)
-    {
-        return TDynamicEventListenHelper<TWidget, TEventPtr>(this, Widget, Event);
-    }
+    Listen(TWidget* Widget, TEventPtr Event);
 
     /* Setup listening to NonDynamic Multicast Delegate */
     template<typename TWidget, typename TEventPtr>
     typename TEnableIf< TIsSimpleMulticastDelegate<TEventPtr>::Value, TSimpleEventListenHelper<TWidget, TEventPtr> >::Type
-        Listen(TWidget* Widget, TEventPtr Event)
-    {
-        return TSimpleEventListenHelper<TWidget, TEventPtr>(this, Widget, Event);
-    }
+    Listen(TWidget* Widget, TEventPtr Event);
 
     /* Removes all subscriptions */
     void UnsubscribeAll()
@@ -128,3 +124,20 @@ private:
 
     TArray<FSubscription> Subscriptions;
 };
+
+#include "Mvvm/DynamicEventListenHelper.h"
+#include "Mvvm/SimpleEventListenHelper.h"
+
+template<typename TWidget, typename TEventPtr>
+typename TEnableIf< FListenManager::TIsDynamicMulticastDelegate<TEventPtr>::Value, TDynamicEventListenHelper<TWidget, TEventPtr> >::Type
+FListenManager::Listen(TWidget* Widget, TEventPtr Event)
+{
+    return TDynamicEventListenHelper<TWidget, TEventPtr>(this, Widget, Event);
+}
+
+template<typename TWidget, typename TEventPtr>
+typename TEnableIf< FListenManager::TIsSimpleMulticastDelegate<TEventPtr>::Value, TSimpleEventListenHelper<TWidget, TEventPtr> >::Type
+FListenManager::Listen(TWidget* Widget, TEventPtr Event)
+{
+    return TSimpleEventListenHelper<TWidget, TEventPtr>(this, Widget, Event);
+}

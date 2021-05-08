@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <functional>
+
 class FListenManager;
 
 template<typename TWidget, typename TEventPtr>

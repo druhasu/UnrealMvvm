@@ -13,13 +13,13 @@ public:
     template<typename TListener>
     void __WithDynamicImpl(TListener* Listener, typename TDecay<typename TPointerToMember<TEventPtr>::ValueType>::Type::FDelegate::template TMethodPtrResolver<TListener>::FMethodPtr Callback, FName FunctionName)
     {
-        if (Widget != nullptr)
+        if (this->Widget != nullptr)
         {
-            auto& EventRef = GetEvent();
+            auto& EventRef = this->GetEvent();
             EventRef.__Internal_AddDynamic(Listener, Callback, FunctionName);
 
-            using SubscriptionType = FListenManager::TObjectUnsubscriber<TWidget, TEventPtr>;
-            Manager->AddSubscription<SubscriptionType>(Widget, Event, Listener);
+            using SubscriptionType = typename FListenManager::TObjectUnsubscriber<TWidget, TEventPtr>;
+            this->Manager->template AddSubscription<SubscriptionType>(this->Widget, this->Event, Listener);
         }
     }
 
@@ -27,7 +27,7 @@ private:
     friend class FListenManager;
 
     TDynamicEventListenHelper(FListenManager* InManager, TWidget* InWidget, TEventPtr InEvent)
-        : TBaseEventListenHelper(InManager, InWidget, InEvent)
+        : TBaseEventListenHelper<TWidget, TEventPtr>(InManager, InWidget, InEvent)
     {
     }
 };

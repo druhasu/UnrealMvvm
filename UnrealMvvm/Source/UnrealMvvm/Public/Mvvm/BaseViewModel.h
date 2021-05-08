@@ -42,6 +42,13 @@ protected:
  * Several helper macros for easier declaration of properties
  */
 
+#define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr) \
+    static const TViewModelProperty<ThisClass, ValueType>* Name##Property() \
+    { \
+        static constexpr TViewModelProperty<ThisClass, ValueType> Property = TViewModelProperty<ThisClass, ValueType> { GetterPtr, SetterPtr }; \
+        return &Property; \
+    }
+
 #define VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody, FieldBody) \
 GetterVisibility: \
     typename TPropertyTypeSelector<ValueType>::GetterType Get##Name() GetterBody \
@@ -49,7 +56,7 @@ SetterVisibility: \
     void Set##Name(typename TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
     SetterBody \
 public: \
-    static constexpr TViewModelProperty<ThisClass, ValueType> Name##Property = { &ThisClass::Get##Name, &ThisClass::Set##Name }; \
+    VM_PROP_PROPERTY_GETTER(Name, ValueType, &ThisClass::Get##Name, &ThisClass::Set##Name) \
 private: \
     FieldBody
 
@@ -59,7 +66,7 @@ private: \
 #define VM_PROP_AUTO_SETTER(Name) \
     { \
         Name##Field = InNewValue; \
-        RaiseChanged(&Name##Property); \
+        RaiseChanged(Name##Property()); \
     }
 
 #define VM_PROP_AUTO_FIELD(ValueType, Name) \
@@ -110,4 +117,4 @@ private: \
 GetterVisibility: \
     typename TPropertyTypeSelector<ValueType>::GetterType Get##Name(); \
 public: \
-    static constexpr TViewModelProperty<ThisClass, ValueType> Name##Property = { &ThisClass::Get##Name, nullptr };
+    VM_PROP_PROPERTY_GETTER(Name, ValueType, &ThisClass::Get##Name, nullptr)

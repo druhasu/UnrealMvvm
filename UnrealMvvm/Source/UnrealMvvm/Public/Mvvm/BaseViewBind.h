@@ -104,12 +104,12 @@ private:
 template<typename TOwner, typename TProperty, typename TCallback>
 void __BindImpl(TOwner* ThisPtr, TProperty* Property, TCallback&& Callback)
 {
-    using ViewModelType = TOwner::ViewModelType;
+    using ViewModelType = typename TOwner::ViewModelType;
 
     static_assert(TIsDerivedFrom<TProperty, FViewModelPropertyBase>::Value, "Property must be derived from FViewModelPropertyBase");
-    static_assert(TIsDerivedFrom<ViewModelType, TProperty::ViewModelType>::Value, "Property must be declared in TOwner's ViewModel type");
+    static_assert(TIsDerivedFrom<ViewModelType, typename TProperty::ViewModelType>::Value, "Property must be declared in TOwner's ViewModel type");
 
-    TOwner::FBindEntry Bind;
+    typename TOwner::FBindEntry Bind;
     Bind.Property = Property;
     Bind.Callback = [Property, Callback = MoveTemp(Callback)](ViewModelType* VM)
     {
@@ -131,5 +131,5 @@ template<typename TOwner, typename TProperty, typename TMemberPtr>
 typename TEnableIf< TIsMemberPointer<TMemberPtr>::Value >::Type
     Bind(TOwner* ThisPtr, TProperty* Property, TMemberPtr Callback)
 {
-    __BindImpl(ThisPtr, Property, [ThisPtr, Callback](TProperty::ValueType V) { (ThisPtr->*Callback)(V); });
+    __BindImpl(ThisPtr, Property, [ThisPtr, Callback](typename TProperty::ValueType V) { (ThisPtr->*Callback)(V); });
 }
