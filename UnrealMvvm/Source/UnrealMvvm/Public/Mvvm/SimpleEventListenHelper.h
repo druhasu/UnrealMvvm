@@ -9,30 +9,47 @@ class TSimpleEventListenHelper : public TBaseEventListenHelper<TWidget, TEventPt
 {
 public:
     template<typename TCallback>
-    void WithLambda(TCallback&& Callback)
+    void WithStatic(TCallback&& Callback)
     {
-        // multicast delegate overload with lambda
         if (this->Widget != nullptr)
         {
-            auto& EventRef = this->GetEvent();
-            FDelegateHandle Handle = EventRef.AddLambda(MoveTemp(Callback));
+            AddSubscription(this->GetEvent().AddStatic(MoveTemp(Callback)));
+        }
+    }
 
-            using SubscriptionType = FListenManager::THandleUnsubscriber<TWidget, TEventPtr>;
-            this->Manager->template AddSubscription<SubscriptionType>(this->Widget, this->Event, Handle);
+    template<typename TCallback>
+    void WithLambda(TCallback&& Callback)
+    {
+        if (this->Widget != nullptr)
+        {
+            AddSubscription(this->GetEvent().AddLambda(MoveTemp(Callback)));
+        }
+    }
+
+    template<typename TObj, typename TCallback>
+    void WithWeakLambda(TObj* Obj, TCallback&& Callback)
+    {
+        if (this->Widget != nullptr)
+        {
+            AddSubscription(this->GetEvent().AddWeakLambda(Obj, MoveTemp(Callback)));
+        }
+    }
+
+    template<typename TListener, typename TCallbackPtr>
+    void WithSP(TListener* Listener, TCallbackPtr Callback)
+    {
+        if (this->Widget != nullptr)
+        {
+            AddSubscription(this->GetEvent().AddSP(Listener, Callback));
         }
     }
 
     template<typename TListener, typename TCallbackPtr>
     void WithUObject(TListener* Listener, TCallbackPtr Callback)
     {
-        // multicast delegate overload with UObject
         if (this->Widget != nullptr)
         {
-            auto& EventRef = this->GetEvent();
-            FDelegateHandle Handle = EventRef.AddUObject(Listener, Callback);
-
-            using SubscriptionType = FListenManager::THandleUnsubscriber<TWidget, TEventPtr>;
-            this->Manager->template AddSubscription<SubscriptionType>(this->Widget, this->Event, Handle);
+            AddSubscription(this->GetEvent().AddUObject(Listener, Callback));
         }
     }
 
@@ -42,5 +59,11 @@ private:
     TSimpleEventListenHelper(FListenManager* InManager, TWidget* InWidget, TEventPtr InEvent)
         : TBaseEventListenHelper<TWidget, TEventPtr>(InManager, InWidget, InEvent)
     {
+    }
+
+    void AddSubscription(const FDelegateHandle& Handle)
+    {
+        using SubscriptionType = FListenManager::THandleUnsubscriber<TWidget, TEventPtr>;
+        this->Manager->template AddSubscription<SubscriptionType>(this->Widget, this->Event, Handle);
     }
 };

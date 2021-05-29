@@ -50,6 +50,12 @@ public:
         Subscriptions.Empty();
     }
 
+    ~FListenManager()
+    {
+        // ensure every subscription is removed
+        UnsubscribeAll();
+    }
+
 private:
     template<typename T1, typename T2> friend class TDynamicEventListenHelper;
     template<typename T1, typename T2> friend class TSimpleEventListenHelper;
