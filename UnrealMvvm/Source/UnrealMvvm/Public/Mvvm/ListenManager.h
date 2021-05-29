@@ -69,7 +69,7 @@ private:
 
     struct FSubscription
     {
-        enum { StorageCapacity = sizeof(void*) * 3 };
+        enum { StorageCapacity = sizeof(void*) * 4 };
         uint8 Buffer[StorageCapacity];
 
         void Unsubscribe()
@@ -86,7 +86,7 @@ private:
             , Event(InEvent)
             , Subscriber(InSubscriber)
         {
-            static_assert(FSubscription::StorageCapacity >= sizeof(this), "Not enough storage for TObjectUnsubscriber");
+            static_assert(FSubscription::StorageCapacity >= sizeof(*this), "Not enough storage for TObjectUnsubscriber");
         }
 
         void Unsubscribe() override
@@ -108,7 +108,7 @@ private:
             , Event(InEvent)
             , Handle(InHandle)
         {
-            static_assert(FSubscription::StorageCapacity >= sizeof(this), "Not enough storage for THandleUnsubscriber");
+            static_assert(FSubscription::StorageCapacity >= sizeof(*this), "Not enough storage for THandleUnsubscriber");
         }
 
         void Unsubscribe() override
