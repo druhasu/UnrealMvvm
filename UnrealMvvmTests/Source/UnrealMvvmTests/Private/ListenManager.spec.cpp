@@ -24,6 +24,21 @@ public:
     FTestDynamicDelegate& DynamicDelegateMethod() { return DynamicDelegateField; }
 };
 
+class FSecondBase
+{
+    int32 Dummy;
+};
+
+class FMultiInheritedEventHolder : public FEventHolder, public FSecondBase
+{
+public:
+    FTestEvent EventFieldDerived;
+    FTestEvent& EventMethodDerived() { return EventFieldDerived; }
+
+    FTestDynamicDelegate DynamicDelegateFieldDerived;
+    FTestDynamicDelegate& DynamicDelegateMethodDerived() { return DynamicDelegateFieldDerived; }
+};
+
 bool StaticInvoked = false;
 void StaticCallback()
 {
@@ -38,8 +53,8 @@ void ListenManagerSpec::Define()
         {
             It("Should Listen To Simple Event Field With Static", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 StaticInvoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithStatic(&StaticCallback);
@@ -51,8 +66,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Field With Static", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 StaticInvoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithStatic(&StaticCallback);
@@ -64,8 +79,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Event Method With Static", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 StaticInvoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::EventMethod).WithStatic(&StaticCallback);
@@ -77,8 +92,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Method With Static", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 StaticInvoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateMethod).WithStatic(&StaticCallback);
@@ -90,8 +105,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Event With Static", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithStatic(&StaticCallback);
                 TestTrue("Listener not added", Holder.EventField.IsBound());
@@ -102,8 +117,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Delegate With Static", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithStatic(&StaticCallback);
                 TestTrue("Listener not added", Holder.DelegateField.IsBound());
@@ -117,8 +132,8 @@ void ListenManagerSpec::Define()
         {
             It("Should Listen To Simple Event Field With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithLambda([&Invoked]() { Invoked = true; });
@@ -130,8 +145,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Field With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithLambda([&Invoked]() { Invoked = true; });
@@ -143,8 +158,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Event Method With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::EventMethod).WithLambda([&Invoked]() { Invoked = true; });
@@ -156,8 +171,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Method With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateMethod).WithLambda([&Invoked]() { Invoked = true; });
@@ -169,8 +184,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Event With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithLambda([]() {});
                 TestTrue("Listener not added", Holder.EventField.IsBound());
@@ -181,8 +196,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Delegate With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithLambda([]() {});
                 TestTrue("Listener not added", Holder.DelegateField.IsBound());
@@ -196,8 +211,8 @@ void ListenManagerSpec::Define()
         {
             It("Should Listen To Simple Event Field With Lambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
                 UTestListener* Listener = NewObject<UTestListener>();
 
@@ -210,8 +225,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Field With WeakLambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
                 UTestListener* Listener = NewObject<UTestListener>();
 
@@ -224,8 +239,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Event Method With WeakLambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
                 UTestListener* Listener = NewObject<UTestListener>();
 
@@ -238,8 +253,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Method With WeakLambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 bool Invoked = false;
                 UTestListener* Listener = NewObject<UTestListener>();
 
@@ -252,8 +267,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Event With WeakLambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithWeakLambda(Listener, []() {});
@@ -265,8 +280,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Delegate With WeakLambda", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithWeakLambda(Listener, []() {});
@@ -281,8 +296,8 @@ void ListenManagerSpec::Define()
         {
             It("Should Listen To Simple Event Field With SharedPtr", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 TSharedPtr<FTestListener> Listener = MakeShared<FTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithSP(Listener.Get(), &FTestListener::SimpleCallback);
@@ -294,8 +309,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Field With SharedPtr", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 TSharedPtr<FTestListener> Listener = MakeShared<FTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithSP(Listener.Get(), &FTestListener::SimpleCallback);
@@ -307,8 +322,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Event Method With SharedPtr", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 TSharedPtr<FTestListener> Listener = MakeShared<FTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventMethod).WithSP(Listener.Get(), &FTestListener::SimpleCallback);
@@ -320,8 +335,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Method With SharedPtr", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 TSharedPtr<FTestListener> Listener = MakeShared<FTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateMethod).WithSP(Listener.Get(), &FTestListener::SimpleCallback);
@@ -333,8 +348,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Event With SharedPtr", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 TSharedPtr<FTestListener> Listener = MakeShared<FTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithSP(Listener.Get(), &FTestListener::SimpleCallback);
@@ -346,8 +361,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Delegate With SharedPtr", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 TSharedPtr<FTestListener> Listener = MakeShared<FTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithSP(Listener.Get(), &FTestListener::SimpleCallback);
@@ -362,8 +377,8 @@ void ListenManagerSpec::Define()
         {
             It("Should Listen To Simple Event Field With UObject", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithUObject(Listener, &UTestListener::SimpleCallback);
@@ -375,8 +390,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Field With UObject", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithUObject(Listener, &UTestListener::SimpleCallback);
@@ -388,8 +403,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Event Method With UObject", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventMethod).WithUObject(Listener, &UTestListener::SimpleCallback);
@@ -401,8 +416,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Simple Delegate Method With UObject", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateMethod).WithUObject(Listener, &UTestListener::SimpleCallback);
@@ -414,8 +429,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Event With UObject", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::EventField).WithUObject(Listener, &UTestListener::SimpleCallback);
@@ -427,8 +442,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Simple Delegate With UObject", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DelegateField).WithUObject(Listener, &UTestListener::SimpleCallback);
@@ -438,6 +453,18 @@ void ListenManagerSpec::Define()
                 TestFalse("Listener not removed", Holder.DelegateField.IsBound());
             });
         });
+
+        It("Should Compile Unsubscriber From Event Of Class With Several Bases", [this]()
+        {
+            FMultiInheritedEventHolder Holder;
+            FListenManager Manager;
+            bool Invoked = false;
+
+            Manager.Listen(&Holder, &FMultiInheritedEventHolder::EventFieldDerived).WithLambda([&Invoked]() { Invoked = true; });
+            Manager.Listen(&Holder, &FMultiInheritedEventHolder::EventMethodDerived).WithLambda([&Invoked]() { Invoked = true; });
+            Holder.EventField.Broadcast();
+            Manager.UnsubscribeAll();
+        });
     });
 
     Describe("Dynamic Delegate", [this]()
@@ -446,8 +473,8 @@ void ListenManagerSpec::Define()
         {
             It("Should Listen To Dynamic Delegate Field With UFunction", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DynamicDelegateField).WithDynamic(Listener, &UTestListener::DynamicCallback);
@@ -459,8 +486,8 @@ void ListenManagerSpec::Define()
 
             It("Should Listen To Dynamic Delegate Method With UFunction", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DynamicDelegateMethod).WithDynamic(Listener, &UTestListener::DynamicCallback);
@@ -472,8 +499,8 @@ void ListenManagerSpec::Define()
 
             It("Should Unsubscribe From Dynamic Delegate With UFunction", [this]()
             {
-                FListenManager Manager;
                 FEventHolder Holder;
+                FListenManager Manager;
                 UTestListener* Listener = NewObject<UTestListener>();
 
                 Manager.Listen(&Holder, &FEventHolder::DynamicDelegateField).WithDynamic(Listener, &UTestListener::DynamicCallback);
@@ -482,6 +509,25 @@ void ListenManagerSpec::Define()
                 Manager.UnsubscribeAll();
                 TestFalse("Listener not removed", Holder.DynamicDelegateField.IsBound());
             });
+        });
+
+        It("Should Compile Unsubscriber From Event Of Class With Several Bases", [this]()
+        {
+            FListenManager Manager;
+            UTestListener* Listener = NewObject<UTestListener>();
+
+            {
+                FMultiInheritedEventHolder Holder;
+                Manager.Listen(&Holder, &FMultiInheritedEventHolder::DynamicDelegateFieldDerived).WithDynamic(Listener, &UTestListener::DynamicCallback);
+                Holder.DynamicDelegateField.Broadcast();
+                Manager.UnsubscribeAll();
+            }
+            {
+                FMultiInheritedEventHolder Holder;
+                Manager.Listen(&Holder, &FMultiInheritedEventHolder::DynamicDelegateMethodDerived).WithDynamic(Listener, &UTestListener::DynamicCallback);
+                Holder.DynamicDelegateField.Broadcast();
+                Manager.UnsubscribeAll();
+            }
         });
     });
 

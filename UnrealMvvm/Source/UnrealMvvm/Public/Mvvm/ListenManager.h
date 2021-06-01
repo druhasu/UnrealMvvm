@@ -75,7 +75,17 @@ private:
 
     struct FSubscription
     {
-        enum { StorageCapacity = sizeof(void*) * 4 };
+        enum
+        {
+            // this size should be enough to hold TObjectUnsubscriber or THandleUnsubscriber
+            // we cannot just use sizeof(THandleUnsubscriber) because it is templated and its size depends on template arguments
+            StorageCapacity =
+                sizeof(FBaseUnsubscriber) + // base class (VTable pointer)
+                sizeof(void*) +             // TWidget*
+                sizeof(void*) * 2 +         // TEventPtr - this thing may occupy space of 2 pointers in some cases (e.g multiple inheritance)
+                sizeof(FDelegateHandle)     // UObject* or FDelegateHandle (this thing is equal or larger than void*)
+        };
+
         uint8 Buffer[StorageCapacity];
 
         void Unsubscribe()
