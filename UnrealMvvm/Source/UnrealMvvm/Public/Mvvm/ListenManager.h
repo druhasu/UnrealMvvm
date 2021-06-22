@@ -2,6 +2,11 @@
 
 #pragma once
 
+// We need to forward declare these types before including actual delegate headers
+// Depending on UE version, one of these types will be fully declared, and we will be able to use it during overload matching
+template<typename T> class TMulticastDelegateBase; // 4.26 and above
+template<typename T> class FMulticastDelegateBase; // 4.25 and below
+
 #include "Mvvm/PointerToMember.h"
 #include "Templates/EnableIf.h"
 #include "Delegates/Delegate.h"
@@ -26,7 +31,12 @@ public:
     struct TIsSimpleMulticastDelegate
     {
         using EventType = typename TDecay< typename TPointerToMember<TEventPtr>::ValueType >::Type;
-        static const bool Value = TIsDerivedFrom< EventType, FMulticastDelegateBase<FWeakObjectPtr> >::Value;
+
+        template<typename U> static int Test(TMulticastDelegateBase<U>*);
+        template<typename U> static int Test(FMulticastDelegateBase<U>*);
+        static char Test(...);
+
+        static const bool Value = sizeof(Test(DeclVal<EventType*>())) == sizeof(int);
     };
 
     /* Setup listening to Dynamic Multicast Delegate */
