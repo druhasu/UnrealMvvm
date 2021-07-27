@@ -21,3 +21,11 @@ struct TPointerToMember<TValueType (TClassType::*)(TArgs...)>
     using ValueType = TValueType;
     using ClassType = TClassType;
 };
+
+/* Specialization for const method members */
+template<typename TValueType, typename TClassType, typename... TArgs>
+struct TPointerToMember<TValueType(TClassType::*)(TArgs...) const>
+{
+    using ValueType = TValueType;
+    using ClassType = TClassType;
+};
