@@ -26,7 +26,7 @@ protected:
     }
 
     template <typename T>
-    T GetFieldValue(const T& Field) { return Field; }
+    const T& GetFieldValue(const T& Field) { return Field; }
 
     template <typename T>
     T* GetFieldValue(T* Field) { return Field; }
@@ -70,7 +70,7 @@ private: \
     }
 
 #define VM_PROP_AUTO_FIELD(ValueType, Name) \
-    ValueType Name##Field;
+    typename TPropertyTypeSelector<ValueType>::FieldType Name##Field;
 
 /*
  * Macros to declare properties with automatic backing fields
