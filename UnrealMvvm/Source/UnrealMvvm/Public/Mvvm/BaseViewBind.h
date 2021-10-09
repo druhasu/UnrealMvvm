@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Mvvm/ViewModelProperty.h"
+#include "Mvvm/BaseViewModel.h"
 #include "Templates/UnrealTypeTraits.h"
 #include "Templates/Function.h"
 #include "Templates/EnableIf.h"
@@ -25,9 +26,9 @@ public:
         TOwner* BaseView = GetPointerToOwnerObject();
         TViewModel* ViewModel = (TViewModel*)BaseView->ViewModel;
 
-        if (ViewModel && BindEntries.Num())
+        if (ViewModel && BaseView->IsConstructed())
         {
-            ViewModel->Changed.Remove(SubscriptionHandle);
+            StopListening(ViewModel);
         }
 
         BaseView->ViewModel = InViewModel;
@@ -39,14 +40,15 @@ public:
                 BindProperties();
             }
 
-            if (BindEntries.Num() != 0)
+            if (BaseView->IsConstructed())
             {
-                SubscriptionHandle = InViewModel->Changed.AddWeakLambda(BaseView, [this](const FViewModelPropertyBase* P) { OnChanged(P); });
+                StartListening(BaseView, InViewModel);
+            }
 
-                for (auto& Bind : BindEntries)
-                {
-                    Bind.Callback(InViewModel);
-                }
+            if (!BaseView->ConstructedChanged.IsBound())
+            {
+                // it is safe to bind lambda here, because lifetime of this object is same as BaseView
+                BaseView->ConstructedChanged.BindLambda([this](bool bConstructed) { OnViewConstructedChanged(bConstructed); });
             }
         }
     }
@@ -74,6 +76,53 @@ private:
                 Bind.Callback(ViewModel);
                 return;
             }
+        }
+    }
+
+    void OnViewConstructedChanged(bool bConstructed)
+    {
+        TViewModel* ViewModel = GetViewModel();
+        if (!ViewModel)
+        {
+            // if we have no ViewModel there is nothing to do
+            return;
+        }
+
+        if (bConstructed)
+        {
+            // View is constructed (i.e. visible), start listening and update current state
+            StartListening(GetPointerToOwnerObject(), ViewModel);
+        }
+        else
+        {
+            // View is no longer attached to anything, stop listening to ViewModel
+            StopListening(ViewModel);
+        }
+    }
+
+    void StartListening(TOwner* BaseView, TViewModel* InViewModel)
+    {
+        check(BaseView); // this is ensured by caller
+        check(InViewModel); // this is ensured by caller
+
+        if (BindEntries.Num() != 0)
+        {
+            SubscriptionHandle = InViewModel->Subscribe(UBaseViewModel::FPropertyChangedDelegate::FDelegate::CreateWeakLambda(BaseView, [this](const FViewModelPropertyBase* P) { OnChanged(P); }));
+
+            for (auto& Bind : BindEntries)
+            {
+                Bind.Callback(InViewModel);
+            }
+        }
+    }
+
+    void StopListening(TViewModel* InViewModel)
+    {
+        check(InViewModel); // this is ensured by caller
+
+        if (BindEntries.Num() != 0)
+        {
+            InViewModel->Unsubscribe(SubscriptionHandle);
         }
     }
 

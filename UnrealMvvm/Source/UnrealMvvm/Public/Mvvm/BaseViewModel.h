@@ -4,6 +4,7 @@
 
 #include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/PropertyTypeSelector.h"
+#include "Mvvm/ViewModelPropertyMacros.h"
 #include "CoreMinimal.h"
 #include "BaseViewModel.generated.h"
 
@@ -17,104 +18,73 @@ class UNREALMVVM_API UBaseViewModel : public UObject
 
 public:
     DECLARE_MULTICAST_DELEGATE_OneParam(FPropertyChangedDelegate, const FViewModelPropertyBase*);
-    FPropertyChangedDelegate Changed;
+
+    /* Subscribes to changes of this ViewModel */
+    FDelegateHandle Subscribe(FPropertyChangedDelegate::FDelegate&& Callback)
+    {
+        if (!Changed.IsBound())
+        {
+            SubscriptionStatusChanged(true);
+        }
+
+        return Changed.Add(Callback);
+    }
+
+    /* Unsubscribes from changes of this ViewModel by DelegateHandle */
+    void Unsubscribe(FDelegateHandle Handle)
+    {
+        const bool bWasBound = Changed.IsBound();
+        Changed.Remove(Handle);
+
+        if (bWasBound && !Changed.IsBound())
+        {
+            SubscriptionStatusChanged(false);
+        }
+    }
+
+    /* Unsubscribes given Object from changes of this ViewModel */
+    void Unsubscribe(const void* InUserObject)
+    {
+        const bool bWasBound = Changed.IsBound();
+        Changed.RemoveAll(InUserObject);
+
+        if (bWasBound && !Changed.IsBound())
+        {
+            SubscriptionStatusChanged(false);
+        }
+    }
 
 protected:
+    /* Call this method to notify any connected View that given property was changed */
     void RaiseChanged(const FViewModelPropertyBase* Property)
     {
         Changed.Broadcast(Property);
     }
 
-    template <typename T>
-    const T& GetFieldValue(const T& Field) { return Field; }
+    /*
+     * Called when first subscription added or last subscription removed.
+     * i.e. at least one View as listening to changes or no Views are listening to changes anymore.
+     * 
+     * You can use this method to optimize your ViewModel in situations when no Views are listening,
+     * e.g. unsubscribe from some service notifications, prevent doing heavy operations, etc
+     */
+    virtual void SubscriptionStatusChanged(bool bHasConnectedViews) {}
+
+    /* Returns whether this ViewModel has any Views listening to its changes */
+    bool HasConnectedViews() const { return Changed.IsBound(); }
 
     template <typename T>
-    T* GetFieldValue(T* Field) { return Field; }
+    const T& GetFieldValue(const T& Field) const { return Field; }
 
     template <typename T>
-    T* GetFieldValue(const TScriptInterface<T>& Field) { return (T*)Field.GetInterface(); }
+    T* GetFieldValue(T* Field) const { return Field; }
 
     template <typename T>
-    T* GetFieldValue(const TWeakObjectPtr<T>& Field) { return Field.Get(); }
+    T* GetFieldValue(const TScriptInterface<T>& Field) const { return (T*)Field.GetInterface(); }
+
+    template <typename T>
+    T* GetFieldValue(const TWeakObjectPtr<T>& Field) const { return Field.Get(); }
+
+private:
+    FPropertyChangedDelegate Changed;
 };
-
-/*
- * Several helper macros for easier declaration of properties
- */
-
-#define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr) \
-    static const TViewModelProperty<ThisClass, ValueType>* Name##Property() \
-    { \
-        static constexpr TViewModelProperty<ThisClass, ValueType> Property = TViewModelProperty<ThisClass, ValueType> { GetterPtr, SetterPtr }; \
-        return &Property; \
-    }
-
-#define VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody, FieldBody) \
-GetterVisibility: \
-    typename TPropertyTypeSelector<ValueType>::GetterType Get##Name() GetterBody \
-SetterVisibility: \
-    void Set##Name(typename TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
-    SetterBody \
-public: \
-    VM_PROP_PROPERTY_GETTER(Name, ValueType, &ThisClass::Get##Name, &ThisClass::Set##Name) \
-private: \
-    FieldBody
-
-#define VM_PROP_AUTO_GETTER(Name) \
-    { return GetFieldValue( Name##Field ); }
-
-#define VM_PROP_AUTO_SETTER(Name) \
-    { \
-        Name##Field = InNewValue; \
-        RaiseChanged(Name##Property()); \
-    }
-
-#define VM_PROP_AUTO_FIELD(ValueType, Name) \
-    typename TPropertyTypeSelector<ValueType>::FieldType Name##Field;
-
-/*
- * Macros to declare properties with automatic backing fields
- */
-
-/* Creates ViewModel property with manual getter and setter */
-#define VM_PROP_MG_MS(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, ;, ;, VM_PROP_AUTO_FIELD(ValueType, Name))
-
-/* Creates ViewModel property with auto getter and manual setter */
-#define VM_PROP_AG_MS(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), ;, VM_PROP_AUTO_FIELD(ValueType, Name))
-
-/* Creates ViewModel property with manual getter and auto setter */
-#define VM_PROP_MG_AS(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, ;, VM_PROP_AUTO_SETTER(Name), VM_PROP_AUTO_FIELD(ValueType, Name))
-
-/* Creates ViewModel property with auto getter and setter */
-#define VM_PROP_AG_AS(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), VM_PROP_AUTO_SETTER(Name), VM_PROP_AUTO_FIELD(ValueType, Name))
-
-/*
- * Macros to declare properties without backing fields
- */
-
-/* Creates ViewModel property with manual getter and setter and no backing field */
-#define VM_PROP_MG_MS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, ;, ;, )
-
-/* Creates ViewModel property with auto getter and manual setter and no backing field */
-#define VM_PROP_AG_MS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), ;, )
-
-/* Creates ViewModel property with manual getter and auto setter and no backing field */
-#define VM_PROP_MG_AS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, ;, VM_PROP_AUTO_SETTER(Name), )
-
-/* Creates ViewModel property with auto getter and setter and no backing field */
-#define VM_PROP_AG_AS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), VM_PROP_AUTO_SETTER(Name), )
-
-/* Creates ViewModel property with manual getter and no backing field */
-#define VM_PROP_MG_NF(ValueType, Name, GetterVisibility) \
-GetterVisibility: \
-    typename TPropertyTypeSelector<ValueType>::GetterType Get##Name(); \
-public: \
-    VM_PROP_PROPERTY_GETTER(Name, ValueType, &ThisClass::Get##Name, nullptr)

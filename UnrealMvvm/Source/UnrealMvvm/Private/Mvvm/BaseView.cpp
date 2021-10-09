@@ -5,11 +5,13 @@
 void UBaseView::NativeConstruct()
 {
     Super::NativeConstruct();
+    ConstructedChanged.ExecuteIfBound(true);
     ListenEvents();
 }
 
 void UBaseView::NativeDestruct()
 {
     UnsubscribeAll();
+    ConstructedChanged.ExecuteIfBound(false);
     Super::NativeDestruct();
 }

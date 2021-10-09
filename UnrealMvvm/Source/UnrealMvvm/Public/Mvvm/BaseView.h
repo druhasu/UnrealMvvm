@@ -24,4 +24,7 @@ private:
 
     UPROPERTY()
     class UBaseViewModel* ViewModel;
+
+    DECLARE_DELEGATE_OneParam(FConstructedChanged, bool);
+    FConstructedChanged ConstructedChanged;
 };

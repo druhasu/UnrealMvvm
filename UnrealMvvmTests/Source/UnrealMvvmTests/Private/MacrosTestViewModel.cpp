@@ -4,15 +4,15 @@
 
 void UMacrosTestViewModel::SetPropAgMs(const int32& NewValue) { PropAgMsField = NewValue; }
 
-int32 UMacrosTestViewModel::GetPropMgAs() { return PropMgAsField; }
+int32 UMacrosTestViewModel::GetPropMgAs() const { return PropMgAsField; }
 
-int32 UMacrosTestViewModel::GetPropMgMs() { return PropMgMsField; }
+int32 UMacrosTestViewModel::GetPropMgMs() const { return PropMgMsField; }
 void UMacrosTestViewModel::SetPropMgMs(const int32& NewValue) { PropMgMsField = NewValue; }
 
 void UMacrosTestViewModel::SetPropAgMsNf(const int32& NewValue) { PropAgMsNfField = NewValue; }
-int32 UMacrosTestViewModel::GetPropMgAsNf() { return PropMgAsNfField; }
+int32 UMacrosTestViewModel::GetPropMgAsNf() const { return PropMgAsNfField; }
 
-int32 UMacrosTestViewModel::GetPropMgMsNf() { return PropMgMsNfField; }
+int32 UMacrosTestViewModel::GetPropMgMsNf() const { return PropMgMsNfField; }
 void UMacrosTestViewModel::SetPropMgMsNf(const int32& NewValue) { PropMgMsNfField = NewValue; }
 
-int32 UMacrosTestViewModel::GetPropMgNf() { return PropMgNfField; }
+int32 UMacrosTestViewModel::GetPropMgNf() const { return PropMgNfField; }

@@ -19,7 +19,7 @@ public:
     using GetterReturnType = typename TPropertyTypeSelector<TValue>::GetterType;
     using SetterArgumentType = typename TPropertyTypeSelector<TValue>::SetterType;
 
-    using GetterPtr = GetterReturnType (TOwner::*) ();
+    using GetterPtr = GetterReturnType (TOwner::*) () const;
     using SetterPtr = void (TOwner::*) (SetterArgumentType);
 
     constexpr TViewModelProperty(GetterPtr InGetter, SetterPtr InSetter)
