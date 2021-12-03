@@ -21,6 +21,7 @@ protected:
 private:
     template<typename U, typename V>
     friend class TBaseView;
+    friend class UMvvmBlueprintLibrary;
 
     UPROPERTY()
     class UBaseViewModel* ViewModel;

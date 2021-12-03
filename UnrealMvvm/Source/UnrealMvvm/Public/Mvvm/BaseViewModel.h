@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Mvvm/ViewModelProperty.h"
-#include "Mvvm/PropertyTypeSelector.h"
-#include "Mvvm/ViewModelPropertyMacros.h"
+#include "Mvvm/Impl/PropertyTypeSelector.h"
+#include "Mvvm/Impl/ViewModelPropertyMacros.h"
 #include "CoreMinimal.h"
 #include "BaseViewModel.generated.h"
 
@@ -72,18 +72,6 @@ protected:
 
     /* Returns whether this ViewModel has any Views listening to its changes */
     bool HasConnectedViews() const { return Changed.IsBound(); }
-
-    template <typename T>
-    const T& GetFieldValue(const T& Field) const { return Field; }
-
-    template <typename T>
-    T* GetFieldValue(T* Field) const { return Field; }
-
-    template <typename T>
-    T* GetFieldValue(const TScriptInterface<T>& Field) const { return (T*)Field.GetInterface(); }
-
-    template <typename T>
-    T* GetFieldValue(const TWeakObjectPtr<T>& Field) const { return Field.Get(); }
 
 private:
     FPropertyChangedDelegate Changed;

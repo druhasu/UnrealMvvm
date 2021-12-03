@@ -12,15 +12,16 @@
 #define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr) \
     static const TViewModelProperty<ThisClass, ValueType>* Name##Property() \
     { \
-        static constexpr TViewModelProperty<ThisClass, ValueType> Property = TViewModelProperty<ThisClass, ValueType> { GetterPtr, SetterPtr }; \
+        static constexpr TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property> Property = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>{ GetterPtr, SetterPtr, #Name }; \
+        const uint8& Register = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>::Registered; \
         return &Property; \
     }
 
 #define VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody, FieldBody) \
 GetterVisibility: \
-    typename TPropertyTypeSelector<ValueType>::GetterType Get##Name() const GetterBody \
+    typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::GetterType Get##Name() const GetterBody \
 SetterVisibility: \
-    void Set##Name(typename TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
+    void Set##Name(typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
     SetterBody \
 public: \
     VM_PROP_PROPERTY_GETTER(Name, ValueType, &ThisClass::Get##Name, &ThisClass::Set##Name) \
@@ -28,7 +29,7 @@ private: \
     FieldBody
 
 #define VM_PROP_AUTO_GETTER(Name) \
-    { return GetFieldValue( Name##Field ); }
+    { return Name##Field; }
 
 #define VM_PROP_AUTO_SETTER(Name) \
     { \
@@ -37,7 +38,7 @@ private: \
     }
 
 #define VM_PROP_AUTO_FIELD(ValueType, Name) \
-    typename TPropertyTypeSelector<ValueType>::FieldType Name##Field;
+    typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::FieldType Name##Field;
 
 /*
  * Macros to declare properties with automatic backing fields
@@ -82,6 +83,6 @@ private: \
 /* Creates ViewModel property with manual getter and no backing field */
 #define VM_PROP_MG_NF(ValueType, Name, GetterVisibility) \
 GetterVisibility: \
-    typename TPropertyTypeSelector<ValueType>::GetterType Get##Name() const; \
+    typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::GetterType Get##Name() const; \
 public: \
     VM_PROP_PROPERTY_GETTER(Name, ValueType, &ThisClass::Get##Name, nullptr)

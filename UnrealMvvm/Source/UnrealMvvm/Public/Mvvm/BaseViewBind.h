@@ -4,6 +4,8 @@
 
 #include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/BaseViewModel.h"
+#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/BindImpl.h"
 #include "Templates/UnrealTypeTraits.h"
 #include "Templates/Function.h"
 #include "Templates/EnableIf.h"
@@ -37,7 +39,7 @@ public:
         {
             if (BindEntries.Num() == 0)
             {
-                BindProperties();
+                PrepareBindings(BaseView);
             }
 
             if (BaseView->IsConstructed())
@@ -54,7 +56,7 @@ public:
     }
 
 protected:
-    virtual void BindProperties() = 0;
+    virtual void BindProperties() {};
 
 private:
     template<typename T, typename P, typename C>
@@ -66,6 +68,36 @@ private:
         TFunction<void(TViewModel*)> Callback;
     };
 
+    void PrepareBindings(TOwner* BaseView)
+    {
+        check(BaseView); // this is ensured by caller
+
+        // native bindings first
+        BindProperties();
+
+        // blueprint bindings second
+        for (const UnrealMvvm_Impl::FViewModelPropertyReflection& PropertyInfo : UnrealMvvm_Impl::FViewModelRegistry::GetProperties<TViewModel>())
+        {
+            UFunction* Function = BaseView->FindFunction(PropertyInfo.Property->GetCallbackName());
+
+            if (Function)
+            {
+                FBindEntry& Bind = BindEntries.AddDefaulted_GetRef();
+                Bind.Property = PropertyInfo.Property;
+                Bind.Callback = [BaseView, Function](TViewModel*)
+                {
+                    BaseView->ProcessEvent(Function, nullptr);
+                };
+            }
+        }
+
+        // add at least one bind to prevent this method from being called again
+        if (BindEntries.Num() == 0)
+        {
+            BindEntries.Add(FBindEntry{ nullptr, [](auto){} });
+        }
+    }
+
     void OnChanged(const FViewModelPropertyBase* Property)
     {
         TViewModel* ViewModel = GetViewModel();
@@ -74,7 +106,6 @@ private:
             if (Bind.Property == Property)
             {
                 Bind.Callback(ViewModel);
-                return;
             }
         }
     }
@@ -139,7 +170,7 @@ private:
             const TOwner* DefaultObject = GetDefault<TOwner>();
             const ThisType* ThisObject = StaticCast<const ThisType*>(DefaultObject);
             auto Result = (UPTRINT)(void*)(ThisObject)-(UPTRINT)(void*)(DefaultObject);
-            return Result;
+            return Registered > 0 ? Result : 0;
         }();
 
         // use computed offset to find actual locationf of TOwner
@@ -148,106 +179,8 @@ private:
 
     TArray<FBindEntry> BindEntries;
     FDelegateHandle SubscriptionHandle;
+    static uint8 Registered;
 };
 
-template<typename TOwner, typename TProperty, typename TCallback>
-void __BindImpl(TOwner* ThisPtr, TProperty* Property, TCallback&& Callback)
-{
-    using ViewModelType = typename TOwner::ViewModelType;
-
-    static_assert(TIsDerivedFrom<TProperty, FViewModelPropertyBase>::Value, "Property must be derived from FViewModelPropertyBase");
-    static_assert(TIsDerivedFrom<ViewModelType, typename TProperty::ViewModelType>::Value, "Property must be declared in TOwner's ViewModel type");
-
-    // warn caller if he tries to bind several callbacks to a single property
-    // we call only first callback when property changes, and this may lead to some confusion.
-    // better say it here, when binding stuff
-    const bool bNotBound = ensureAlwaysMsgf(
-        !ThisPtr->BindEntries.FindByPredicate([Property](const auto& Entry) { return Entry.Property == Property; }),
-        TEXT("You are trying to bind property that is already bound. Only first callback will be called"));
-
-    if (bNotBound)
-    {
-        typename TOwner::FBindEntry Bind;
-        Bind.Property = Property;
-        Bind.Callback = [Property, Callback = MoveTemp(Callback)](ViewModelType* VM)
-        {
-            auto Value = Property->GetValue(VM);
-            Callback(Value);
-        };
-
-        ThisPtr->BindEntries.Emplace(Bind);
-    }
-}
-
-namespace ViewModelBind_Private
-{
-    // checks whether method T::SetText(FText) exists
-    template <typename T>
-    struct THasSetText
-    {
-        template<typename U> static decltype(&U::SetText) Test(U*);
-        template<typename U> static char Test(...);
-
-        static const bool Value = TIsInvocable< decltype(Test<T>(nullptr)), T&, FText >::Value;
-    };
-
-    // checks whether method FText::AsNumber(T) exists
-    template <typename T>
-    struct THasNumberToText
-    {
-        template<typename U> static decltype(FText::AsNumber(DeclVal<U>())) Test(int);
-        template<typename U> static char Test(...);
-
-        static const bool Value = TIsSame<decltype(Test<T>(0)), FText>::Value;
-    };
-}
-
-// Binds property to a lambda
-template<typename TOwner, typename TProperty, typename TCallback>
-typename TEnableIf< TIsInvocable<TCallback, typename TProperty::ValueType>::Value >::Type
-Bind(TOwner* ThisPtr, TProperty* Property, TCallback&& Callback)
-{
-    __BindImpl(ThisPtr, Property, MoveTemp(Callback));
-}
-
-// Binds property to a method of TOwner
-template<typename TOwner, typename TProperty, typename TMemberPtr>
-typename TEnableIf< TIsMemberPointer<TMemberPtr>::Value >::Type
-Bind(TOwner* ThisPtr, TProperty* Property, TMemberPtr Callback)
-{
-    __BindImpl(ThisPtr, Property, [ThisPtr, Callback](typename TProperty::ValueType V) { (ThisPtr->*Callback)(V); });
-}
-
-// Binds FText property to UTextBlock or any other class that has SetText method
-template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<TIsSame<typename TProperty::ValueType, FText>::Value && ViewModelBind_Private::THasSetText<TTextBlock>::Value>::Type
-Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
-{
-    check(Text);
-    __BindImpl(ThisPtr, Property, [Text](typename TProperty::ValueType V) { Text->SetText(V); });
-}
-
-// Binds FString property to UTextBlock or any other class that has SetText method
-template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<TIsSame<typename TProperty::ValueType, FString>::Value && ViewModelBind_Private::THasSetText<TTextBlock>::Value>::Type
-Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
-{
-    check(Text);
-    __BindImpl(ThisPtr, Property, [Text](typename TProperty::ValueType V) { Text->SetText(FText::FromString(V)); });
-}
-
-// Binds numeric property to UTextBlock or any other class that has SetText method
-template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<ViewModelBind_Private::THasNumberToText<typename TProperty::ValueType>::Value && ViewModelBind_Private::THasSetText<TTextBlock>::Value>::Type
-Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text, const FNumberFormattingOptions* const Options = nullptr, const FCulturePtr& TargetCulture = nullptr)
-{
-    check(Text);
-    if (Options)
-    {
-        __BindImpl(ThisPtr, Property, [Text, Options = *Options, TargetCulture](typename TProperty::ValueType V) { Text->SetText(FText::AsNumber(V, &Options, TargetCulture)); });
-    }
-    else
-    {
-        __BindImpl(ThisPtr, Property, [Text, TargetCulture](typename TProperty::ValueType V) { Text->SetText(FText::AsNumber(V, nullptr, TargetCulture)); });
-    }
-}
+template<typename TOwner, typename TViewModel>
+uint8 TBaseView<TOwner, TViewModel>::Registered = UnrealMvvm_Impl::FViewModelRegistry::RegisterViewModelClass(&TOwner::StaticClass, &TViewModel::StaticClass);
