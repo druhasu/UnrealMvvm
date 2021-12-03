@@ -2,14 +2,21 @@
 
 #pragma once
 
+#include "Templates/ChooseClass.h"
+#include "Templates/IsArithmetic.h"
+
 namespace UnrealMvvm_Impl
 {
+
+    // helper used to select by-value setter for arithmetic types
+    template <typename T>
+    using TByValueOrByRef = typename TChooseClass< TIsArithmetic<T>::Value, T, const T& >;
 
     template <typename T>
     struct TPropertyTypeSelector
     {
         using GetterType = T;
-        using SetterType = const T&;
+        using SetterType = typename TByValueOrByRef<T>::Result;
         using FieldType = T;
     };
 
@@ -17,7 +24,7 @@ namespace UnrealMvvm_Impl
     struct TPropertyTypeSelector<const T&>
     {
         using GetterType = const T&;
-        using SetterType = const T&;
+        using SetterType = typename TByValueOrByRef<T>::Result;
         using FieldType = T;
     };
 
