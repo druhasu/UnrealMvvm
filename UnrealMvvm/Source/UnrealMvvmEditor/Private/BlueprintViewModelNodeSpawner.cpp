@@ -6,9 +6,10 @@
 
 #define LOCTEXT_NAMESPACE "UnrealMvvm"
 
-UBlueprintViewModelNodeSpawner* UBlueprintViewModelNodeSpawner::CreateForProperty(TSubclassOf<UK2Node> NodeClass, UClass* ViewModelClass, const FName& ViewModelPropertyName)
+UBlueprintViewModelNodeSpawner* UBlueprintViewModelNodeSpawner::CreateForProperty(TSubclassOf<UK2Node> NodeClass, UClass* ViewClass, UClass* ViewModelClass, const FName& ViewModelPropertyName)
 {
     UBlueprintViewModelNodeSpawner* Spawner = NewObject<UBlueprintViewModelNodeSpawner>();
+    Spawner->ViewClass = ViewClass;
     Spawner->ViewModelClass = ViewModelClass;
     Spawner->ViewModelPropertyName = ViewModelPropertyName;
     Spawner->NodeClass = NodeClass;
@@ -18,6 +19,27 @@ UBlueprintViewModelNodeSpawner* UBlueprintViewModelNodeSpawner::CreateForPropert
     Spawner->DefaultMenuSignature.Category = FEditorCategoryUtils::BuildCategoryString(FCommonEditorCategory::Variables, ViewModelClass->GetDisplayNameText());
 
     return Spawner;
+}
+
+bool UBlueprintViewModelNodeSpawner::FilterAction(FBlueprintActionFilter const& Filter, FBlueprintActionInfo& ActionInfo)
+{
+    const UBlueprintViewModelNodeSpawner* Spawner = Cast<UBlueprintViewModelNodeSpawner>(ActionInfo.NodeSpawner);
+
+    if (!Spawner)
+    {
+        // do not filter other spawners
+        return false;
+    }
+
+    for (UBlueprint* Blueprint : Filter.Context.Blueprints)
+    {
+        if (Spawner->ViewClass == Blueprint->GeneratedClass)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 FBlueprintNodeSignature UBlueprintViewModelNodeSpawner::GetSpawnerSignature() const

@@ -39,7 +39,7 @@ void UK2Node_ViewModelPropertyValue::GetMenuActions(FBlueprintActionDatabaseRegi
 
             for (auto& Property : Properties)
             {
-                UBlueprintViewModelNodeSpawner* Spawner = UBlueprintViewModelNodeSpawner::CreateForProperty(GetClass(), ViewModelClass, Property.Property->GetName());
+                UBlueprintViewModelNodeSpawner* Spawner = UBlueprintViewModelNodeSpawner::CreateForProperty(GetClass(), BlueprintClass, ViewModelClass, Property.Property->GetName());
 
                 ActionRegistrar.AddBlueprintAction(Filter, Spawner);
             }

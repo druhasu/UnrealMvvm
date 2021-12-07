@@ -10,7 +10,7 @@ namespace UnrealMvvm_Impl
 
     // helper used to select by-value setter for arithmetic types
     template <typename T>
-    using TByValueOrByRef = typename TChooseClass< TIsArithmetic<T>::Value, T, const T& >;
+    using TByValueOrByRef = TChooseClass< TIsArithmetic<T>::Value, T, const T& >;
 
     template <typename T>
     struct TPropertyTypeSelector

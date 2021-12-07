@@ -16,6 +16,15 @@ class TBaseView
 public:
     using ViewModelType = TViewModel;
 
+    TBaseView()
+    {
+        // we need to have a place where Registered is used
+        // simplest way - is to save a reference to static value into some variable
+        // this way compiler will not optimize away initialization of Registered and this View will be recorded in Registry
+        // this line though will be optimized away later and won't cost us anything
+        const uint8& Register = Registered;
+    }
+
     virtual ~TBaseView() = default;
 
     TViewModel* GetViewModel() const
@@ -170,7 +179,7 @@ private:
             const TOwner* DefaultObject = GetDefault<TOwner>();
             const ThisType* ThisObject = StaticCast<const ThisType*>(DefaultObject);
             auto Result = (UPTRINT)(void*)(ThisObject)-(UPTRINT)(void*)(DefaultObject);
-            return Registered > 0 ? Result : 0;
+            return Result;
         }();
 
         // use computed offset to find actual locationf of TOwner

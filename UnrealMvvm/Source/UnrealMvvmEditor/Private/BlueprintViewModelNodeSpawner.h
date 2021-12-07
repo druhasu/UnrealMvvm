@@ -15,7 +15,9 @@ class UBlueprintViewModelNodeSpawner : public UBlueprintNodeSpawner
     GENERATED_BODY()
 
 public:
-    static UBlueprintViewModelNodeSpawner* CreateForProperty(TSubclassOf<UK2Node> NodeClass, UClass* ViewModelClass, const FName& ViewModelPropertyName);
+    static UBlueprintViewModelNodeSpawner* CreateForProperty(TSubclassOf<UK2Node> NodeClass, UClass* ViewClass, UClass* ViewModelClass, const FName& ViewModelPropertyName);
+
+    static bool FilterAction(FBlueprintActionFilter const&, FBlueprintActionInfo&);
 
     // UBlueprintNodeSpawner interface
     FBlueprintNodeSignature GetSpawnerSignature() const override;
@@ -25,6 +27,10 @@ public:
 
 private:
     UPROPERTY()
+    UClass* ViewClass;
+
+    UPROPERTY()
     UClass* ViewModelClass;
+
     FName ViewModelPropertyName;
 };

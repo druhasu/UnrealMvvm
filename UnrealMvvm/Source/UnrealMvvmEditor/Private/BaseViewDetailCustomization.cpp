@@ -88,6 +88,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     ]
     .ValueContent()
     .MinDesiredWidth(0)
+    .MaxDesiredWidth(400)
     [
         SNew(SHyperlink)
         .Style(FEditorStyle::Get(), "Common.GotoNativeCodeHyperlink")
@@ -123,6 +124,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
                 SNew(STextBlock)
                 .Font(IDetailLayoutBuilder::GetDetailFont())
                 .Text(NameText)
+                .ToolTipText(NameText)
             ]
         ];
 
