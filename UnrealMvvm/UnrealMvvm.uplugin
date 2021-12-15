@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "3.0.1",
+	"VersionName": "3.0.2",
 	"FriendlyName": "UnrealMvvm",
 	"Description": "MVVM framework for Unreal",
 	"Category": "Other",
@@ -22,7 +22,7 @@
 		},
 		{
 			"Name": "UnrealMvvmEditor",
-			"Type": "Editor",
+			"Type": "UncookedOnly",
 			"LoadingPhase": "Default"
 		}
 	]

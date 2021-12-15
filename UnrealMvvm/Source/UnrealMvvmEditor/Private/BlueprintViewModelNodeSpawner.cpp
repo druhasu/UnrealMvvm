@@ -51,11 +51,11 @@ FBlueprintNodeSignature UBlueprintViewModelNodeSpawner::GetSpawnerSignature() co
 
 UEdGraphNode* UBlueprintViewModelNodeSpawner::Invoke(UEdGraph* ParentGraph, FBindingSet const& Bindings, FVector2D const Location) const
 {
-    auto PostSpawnSetupLambda = [](UEdGraphNode* NewNode, bool bIsTemplateNode, UClass* ViewModelClass, FName ViewModelPropertyName)
+    auto PostSpawnSetupLambda = [](UEdGraphNode* NewNode, bool bIsTemplateNode, UClass* InViewModelClass, FName InViewModelPropertyName)
     {
         UK2Node_ViewModelPropertyValue* Node = CastChecked<UK2Node_ViewModelPropertyValue>(NewNode);
-        Node->ViewModelOwnerClass = ViewModelClass;
-        Node->ViewModelPropertyName = ViewModelPropertyName;
+        Node->ViewModelOwnerClass = InViewModelClass;
+        Node->ViewModelPropertyName = InViewModelPropertyName;
     };
 
     FCustomizeNodeDelegate PostSpawnSetupDelegate = FCustomizeNodeDelegate::CreateStatic(PostSpawnSetupLambda, ViewModelClass, ViewModelPropertyName);
