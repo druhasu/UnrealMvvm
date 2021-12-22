@@ -21,12 +21,14 @@ namespace UnrealMvvm_Impl
         using ClassGetterPtr = UClass* (*)();
 
         template <typename T>
-        static const TArray<FViewModelPropertyReflection>& GetProperties()
+        static TArray<const FViewModelPropertyReflection*> GetProperties()
         {
             return GetProperties(T::StaticClass());
         }
 
-        static const TArray<FViewModelPropertyReflection>& GetProperties(UClass* InClass);
+        static TArray<const FViewModelPropertyReflection*> GetProperties(UClass* InViewModelClass);
+
+        static const FViewModelPropertyReflection* FindProperty(UClass* InViewModelClass, const FName& InPropertyName);
 
         static UClass* GetViewModelClass(UClass* ViewClass);
 
@@ -47,6 +49,11 @@ namespace UnrealMvvm_Impl
             ClassGetterPtr GetViewClass;
             ClassGetterPtr GetViewModelClass;
         };
+
+        static void ProcessProperties();
+        static void ProcessClasses();
+        static void AppendProperties(TArray<const FViewModelPropertyReflection*>& OutArray, UClass* InViewModelClass);
+        static const FViewModelPropertyReflection* FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName);
 
         // Map of <ViewModelClass, Properties>
         static TMap<UClass*, TArray<FViewModelPropertyReflection>> ViewModelProperties;

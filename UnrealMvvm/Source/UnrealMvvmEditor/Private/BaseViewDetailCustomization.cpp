@@ -65,7 +65,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     }
 
     UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(OutObjects[0]->GetClass());
-    const TArray<UnrealMvvm_Impl::FViewModelPropertyReflection>& Properties = UnrealMvvm_Impl::FViewModelRegistry::GetProperties(ViewModelClass);
+    TArray<const UnrealMvvm_Impl::FViewModelPropertyReflection*> Properties = UnrealMvvm_Impl::FViewModelRegistry::GetProperties(ViewModelClass);
 
     if (Properties.Num() == 0)
     {
@@ -98,9 +98,9 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     ];
 
     // Add rows for each property in ViewModel
-    for (const auto& Property : Properties)
+    for (auto Property : Properties)
     {
-        FName PropertyName = Property.Property->GetName();
+        FName PropertyName = Property->Property->GetName();
         FText NameText = FText::FromName(PropertyName);
         FDetailWidgetRow& DetailRow = Category.AddCustomRow(NameText);
 
@@ -128,7 +128,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
             ]
         ];
 
-        if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(Property))
+        if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*Property))
         {
             DetailRow
             .ValueContent()

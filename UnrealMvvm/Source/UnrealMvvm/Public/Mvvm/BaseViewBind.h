@@ -85,14 +85,14 @@ private:
         BindProperties();
 
         // blueprint bindings second
-        for (const UnrealMvvm_Impl::FViewModelPropertyReflection& PropertyInfo : UnrealMvvm_Impl::FViewModelRegistry::GetProperties<TViewModel>())
+        for (const UnrealMvvm_Impl::FViewModelPropertyReflection* PropertyInfo : UnrealMvvm_Impl::FViewModelRegistry::GetProperties<TViewModel>())
         {
-            UFunction* Function = BaseView->FindFunction(PropertyInfo.Property->GetCallbackName());
+            UFunction* Function = BaseView->FindFunction(PropertyInfo->Property->GetCallbackName());
 
             if (Function)
             {
                 FBindEntry& Bind = BindEntries.AddDefaulted_GetRef();
-                Bind.Property = PropertyInfo.Property;
+                Bind.Property = PropertyInfo->Property;
                 Bind.Callback = [BaseView, Function](TViewModel*)
                 {
                     BaseView->ProcessEvent(Function, nullptr);

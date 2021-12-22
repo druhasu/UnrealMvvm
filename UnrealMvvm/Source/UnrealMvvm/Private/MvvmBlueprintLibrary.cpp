@@ -22,8 +22,7 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
         UBaseViewModel* ViewModel = View->ViewModel;
         if (ViewModel)
         {
-            const TArray<UnrealMvvm_Impl::FViewModelPropertyReflection>& Properties = UnrealMvvm_Impl::FViewModelRegistry::GetProperties(ViewModel->GetClass());
-            const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = Properties.FindByPredicate([PropertyName](const UnrealMvvm_Impl::FViewModelPropertyReflection& P) { return P.Property->GetName() == PropertyName; });
+            const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName);
 
             if (MyProperty)
             {

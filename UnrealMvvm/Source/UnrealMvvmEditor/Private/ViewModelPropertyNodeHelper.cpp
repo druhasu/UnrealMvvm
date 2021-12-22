@@ -36,8 +36,7 @@ bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMv
 
 bool FViewModelPropertyNodeHelper::FillPinType(FEdGraphPinType& PinType, const FName& ViewModelPropertyName, UClass* ViewModelOwnerClass)
 {
-    const TArray<UnrealMvvm_Impl::FViewModelPropertyReflection>& Properties = UnrealMvvm_Impl::FViewModelRegistry::GetProperties(ViewModelOwnerClass);
-    const UnrealMvvm_Impl::FViewModelPropertyReflection* Property = Properties.FindByPredicate([=](const UnrealMvvm_Impl::FViewModelPropertyReflection& P) { return P.Property->GetName() == ViewModelPropertyName; });
+    const UnrealMvvm_Impl::FViewModelPropertyReflection* Property = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModelOwnerClass, ViewModelPropertyName);
 
     if (Property && IsPropertyAvailableInBlueprint(*Property))
     {

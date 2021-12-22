@@ -7,10 +7,18 @@
 #include "Mvvm/ListenManager.h"
 #include "BaseView.generated.h"
 
+/*
+* Base class for View.
+* Actual view must inherit from this class and from TBaseView.
+*/
 UCLASS()
 class UNREALMVVM_API UBaseView : public UUserWidget, public FListenManager
 {
     GENERATED_BODY()
+
+public:
+    /* Returns pointer to current BaseViewModel */
+    class UBaseViewModel* GetUntypedViewModel() const { return ViewModel; }
 
 protected:
     void NativeConstruct() override;

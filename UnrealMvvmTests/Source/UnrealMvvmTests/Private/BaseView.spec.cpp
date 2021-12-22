@@ -126,4 +126,15 @@ void BaseViewSpec::Define()
         ViewModel->SetIntValue(2);
         TestEqual("MyValue was wrongly updated", View->MyValue, 1);
     });
+
+    It("Should Return Untyped ViewModel", [this]()
+    {
+        FTempWorldHelper Helper;
+
+        UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+        UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+        View->SetViewModel(ViewModel);
+
+        TestEqual("Untyped ViewModel", View->GetUntypedViewModel(), StaticCast<UBaseViewModel*>(ViewModel));
+    });
 }
