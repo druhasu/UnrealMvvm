@@ -85,7 +85,6 @@ FName FViewModelPropertyNodeHelper::GetPinCategoryNameFromType(UnrealMvvm_Impl::
         PIN_CASE(String);
         PIN_CASE(Text);
         PIN_CASE(Struct);
-        PIN_CASE(Enum);
     }
 
     #undef PIN_CASE

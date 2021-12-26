@@ -18,6 +18,9 @@
     }
 
 #define VM_PROP_COMMON(ValueType, Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody, FieldBody) \
+    VM_PROP_COMMON_CORRECT_VALUE_TYPE(PREPROCESSOR_REMOVE_OPTIONAL_PARENS(ValueType), Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody, FieldBody)
+
+#define VM_PROP_COMMON_CORRECT_VALUE_TYPE(ValueType, Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody, FieldBody) \
 GetterVisibility: \
     typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::GetterType Get##Name() const GetterBody \
 SetterVisibility: \
@@ -38,7 +41,7 @@ private: \
     }
 
 #define VM_PROP_AUTO_FIELD(ValueType, Name) \
-    typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::FieldType Name##Field;
+    typename UnrealMvvm_Impl::TPropertyTypeSelector<PREPROCESSOR_REMOVE_OPTIONAL_PARENS(ValueType)>::FieldType Name##Field
 
 /*
  * Macros to declare properties with automatic backing fields

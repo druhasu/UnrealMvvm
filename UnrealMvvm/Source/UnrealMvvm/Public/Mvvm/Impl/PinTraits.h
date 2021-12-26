@@ -3,6 +3,38 @@
 #pragma once
 
 #include "Mvvm/Impl/ViewModelPropertyReflection.h"
+#include "Templates/IntegralConstant.h"
+
+// forward declare all structs from Core module
+struct FRotator;
+struct FQuat;
+struct FTransform;
+struct FLinearColor;
+struct FColor;
+struct FPlane;
+struct FVector;
+struct FVector2D;
+struct FVector4;
+struct FRandomStream;
+struct FGuid;
+struct FBox2D;
+struct FFallbackStruct;
+struct FFloatRangeBound;
+struct FFloatRange;
+struct FInt32RangeBound;
+struct FInt32Range;
+struct FFloatInterval;
+struct FInt32Interval;
+struct FFrameNumber;
+struct FFrameTime;
+struct FSoftObjectPath;
+struct FSoftClassPath;
+struct FPrimaryAssetType;
+struct FPrimaryAssetId;
+struct FDateTime;
+struct FPolyglotTextData;
+struct FAssetBundleData;
+struct FTestUninitializedScriptStructMembersTest;
 
 namespace UnrealMvvm_Impl
 {
@@ -24,6 +56,53 @@ namespace UnrealMvvm_Impl
         static const bool IsClass = TIsSame<decltype(Test1<JustT>(0)), UClass*>::Value;
         static const bool IsInterface = !TIsSame< char, decltype(Test2<JustT>(0)) >::Value && !TIsDerivedFrom<JustT, UObject>::Value;
     };
+
+    // Traits for structs from Core modules
+
+    template <typename T>
+    struct TIsBaseStructure : TIntegralConstant<bool, false> {};
+
+#define DEFINE_BASE_STRUCTURE(ValueType) \
+    template <> struct TIsBaseStructure<ValueType> : TIntegralConstant<bool, true> {}
+
+    // List all structures from Class.h that have specializations for TBaseStructure
+    DEFINE_BASE_STRUCTURE(FRotator);
+    DEFINE_BASE_STRUCTURE(FQuat);
+    DEFINE_BASE_STRUCTURE(FTransform);
+    DEFINE_BASE_STRUCTURE(FLinearColor);
+    DEFINE_BASE_STRUCTURE(FColor);
+    DEFINE_BASE_STRUCTURE(FPlane);
+    DEFINE_BASE_STRUCTURE(FVector);
+    DEFINE_BASE_STRUCTURE(FVector2D);
+    DEFINE_BASE_STRUCTURE(FVector4);
+    DEFINE_BASE_STRUCTURE(FRandomStream);
+    DEFINE_BASE_STRUCTURE(FGuid);
+    DEFINE_BASE_STRUCTURE(FBox2D);
+    DEFINE_BASE_STRUCTURE(FFallbackStruct);
+    DEFINE_BASE_STRUCTURE(FInterpCurvePointFloat);
+    DEFINE_BASE_STRUCTURE(FInterpCurvePointVector2D);
+    DEFINE_BASE_STRUCTURE(FInterpCurvePointVector);
+    DEFINE_BASE_STRUCTURE(FInterpCurvePointQuat);
+    DEFINE_BASE_STRUCTURE(FInterpCurvePointTwoVectors);
+    DEFINE_BASE_STRUCTURE(FInterpCurvePointLinearColor);
+    DEFINE_BASE_STRUCTURE(FFloatRangeBound);
+    DEFINE_BASE_STRUCTURE(FFloatRange);
+    DEFINE_BASE_STRUCTURE(FInt32RangeBound);
+    DEFINE_BASE_STRUCTURE(FInt32Range);
+    DEFINE_BASE_STRUCTURE(FFloatInterval);
+    DEFINE_BASE_STRUCTURE(FInt32Interval);
+    DEFINE_BASE_STRUCTURE(FFrameNumber);
+    DEFINE_BASE_STRUCTURE(FFrameTime);
+    DEFINE_BASE_STRUCTURE(FSoftObjectPath);
+    DEFINE_BASE_STRUCTURE(FSoftClassPath);
+    DEFINE_BASE_STRUCTURE(FPrimaryAssetType);
+    DEFINE_BASE_STRUCTURE(FPrimaryAssetId);
+    DEFINE_BASE_STRUCTURE(FDateTime);
+    DEFINE_BASE_STRUCTURE(FPolyglotTextData);
+    DEFINE_BASE_STRUCTURE(FAssetBundleData);
+    DEFINE_BASE_STRUCTURE(FTestUninitializedScriptStructMembersTest);
+
+#undef DEFINE_BASE_STRUCTURE
 
     // Traits for Element type
 
@@ -91,6 +170,9 @@ namespace UnrealMvvm_Impl
 
     // Struct. SubCategoryObject is the ScriptStruct of the struct passed thru this pin
     DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TPinTypeHelper<T>::IsStruct, TDecay<T>::Type::StaticStruct());
+
+    // Struct from Core
+    DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TIsBaseStructure<typename TDecay<T>::Type>::Value, TBaseStructure<typename TDecay<T>::Type>::Get());
 
     // Enum. SubCategoryObject is the UEnum object passed thru this pin.
     DEFINE_COMPLEX_PIN_TRAITS(T, Byte, TIsEnumClass<T>::Value, StaticEnum<T>());
