@@ -26,6 +26,7 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
 
     UEdGraphPin* ExecPin = FindPin(UEdGraphSchema_K2::PN_Then);
     UEdGraphPin* ValuePin = FindPin(ViewModelPropertyName);
+    UEdGraphPin* HasValuePin = FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
 
     if (ExecPin->LinkedTo.Num() > 0)
     {
@@ -40,7 +41,7 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
             CustomEvent->CustomFunctionName = UnrealMvvm_Impl::FViewModelPropertyNamesCache::MakeCallbackName(ViewModelPropertyName);
             CustomEvent->AllocateDefaultPins();
 
-            FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(ValuePin, CompilerContext, this, SourceGraph, ViewModelPropertyName);
+            FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(ValuePin, HasValuePin, CompilerContext, this, SourceGraph, ViewModelPropertyName);
 
             const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
             CompilerContext.MovePinLinksToIntermediate(*ExecPin, *Schema->FindExecutionPin(*CustomEvent, EGPD_Output));
@@ -54,9 +55,16 @@ void UK2Node_ViewModelPropertyChanged::AllocateDefaultPins()
 
     // create pin based on property type
     FEdGraphPinType PinType;
-    if (FViewModelPropertyNodeHelper::FillPinType(PinType, ViewModelPropertyName, ViewModelOwnerClass))
+    const UnrealMvvm_Impl::FViewModelPropertyReflection* Property;
+    if (FViewModelPropertyNodeHelper::FillPinType(PinType, ViewModelPropertyName, ViewModelOwnerClass, &Property))
     {
         CreatePin(EGPD_Output, PinType, ViewModelPropertyName);
+
+        // create pin for TOptional HasValue
+        if (Property->IsOptional)
+        {
+            CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
+        }
     }
 }
 

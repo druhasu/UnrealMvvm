@@ -21,7 +21,8 @@ void UK2Node_ViewModelPropertyValue::ExpandNode(FKismetCompilerContext& Compiler
     Super::ExpandNode(CompilerContext, SourceGraph);
 
     UEdGraphPin* ValuePin = FindPin(ViewModelPropertyName);
-    FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(ValuePin, CompilerContext, this, SourceGraph, ViewModelPropertyName);
+    UEdGraphPin* HasValuePin = FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
+    FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(ValuePin, HasValuePin, CompilerContext, this, SourceGraph, ViewModelPropertyName);
 }
 
 void UK2Node_ViewModelPropertyValue::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -51,9 +52,16 @@ void UK2Node_ViewModelPropertyValue::AllocateDefaultPins()
 {
     // create pin based on property type
     FEdGraphPinType PinType;
-    if (FViewModelPropertyNodeHelper::FillPinType(PinType, ViewModelPropertyName, ViewModelOwnerClass))
+    const UnrealMvvm_Impl::FViewModelPropertyReflection* Property;
+    if (FViewModelPropertyNodeHelper::FillPinType(PinType, ViewModelPropertyName, ViewModelOwnerClass, &Property))
     {
         CreatePin(EGPD_Output, PinType, ViewModelPropertyName);
+
+        // create pin for TOptional HasValue
+        if (Property->IsOptional)
+        {
+            CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
+        }
     }
 }
 

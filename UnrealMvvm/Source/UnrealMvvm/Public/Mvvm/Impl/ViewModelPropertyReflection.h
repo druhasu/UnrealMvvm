@@ -37,8 +37,11 @@ namespace UnrealMvvm_Impl
     // contains reflection data about single viewmodel property
     struct UNREALMVVM_API FViewModelPropertyReflection
     {
+        using FCopyValueFunction = TFunction< void (UBaseViewModel* /*ViewModel*/, void* /*OutValue*/, bool& /*OutHasValue*/) > ;
+
         const FViewModelPropertyBase* Property;
-        TFunction<void(UBaseViewModel*, void*)> CopyValueToMemory;
+        FCopyValueFunction CopyValueToMemory;
+        bool IsOptional = false;
 
 #if WITH_EDITOR
         using SubCategoryGetterPtr = UObject* (*)();

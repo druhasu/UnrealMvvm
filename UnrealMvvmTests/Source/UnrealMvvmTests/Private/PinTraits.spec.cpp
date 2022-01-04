@@ -23,6 +23,7 @@ void TestSingleValue(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
+    TestFalse("IsOptional", Reflection->IsOptional);
 }
 
 void TestArray(const FTestCase& TestCase)
@@ -33,6 +34,7 @@ void TestArray(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Array);
+    TestFalse("IsOptional", Reflection->IsOptional);
 }
 
 void TestMap(const FTestCase& TestCase)
@@ -43,6 +45,7 @@ void TestMap(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinValueCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinValueSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Map);
+    TestFalse("IsOptional", Reflection->IsOptional);
 }
 
 template <typename TType>
@@ -50,6 +53,17 @@ void TestBaseStructure(UObject* Struct)
 {
     TestEqual("PinType", TPinTraits<TType>::PinCategoryType, EPinCategoryType::Struct);
     TestEqual("SubCategoryObject", TPinTraits<TType>::GetSubCategoryObject(), Struct);
+}
+
+void TestOptional(const FTestCase& TestCase)
+{
+    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Optional")));
+
+    TestNotNull("ReflectionInfo", Reflection);
+    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
+    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
+    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
+    TestTrue("IsOptional", Reflection->IsOptional);
 }
 
 TArray<FTestCase> GetTestCases() const
@@ -80,6 +94,14 @@ END_DEFINE_SPEC(PinTraitsSpec)
 
 void PinTraitsSpec::Define()
 {
+    It("Should pass EPinCategoryType::Unsupported for Unsupported type", [this]()
+    {
+        const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName("Unsupported"));
+
+        TestNotNull("ReflectionInfo", Reflection);
+        TestEqual("PinType", Reflection->PinCategoryType, EPinCategoryType::Unsupported);
+    });
+
     Describe("Single Value", [this]()
     {
         for (auto& TestCase : GetTestCases())
@@ -146,6 +168,18 @@ void PinTraitsSpec::Define()
         BASE_STRUCTURE_TEST_CASE(FDateTime);
 
     #undef BASE_STRUCTURE_TEST_CASE
+    });
+
+    Describe("Optional", [this]()
+    {
+        for (auto& TestCase : GetTestCases())
+        {
+            FString Desc = FString::Printf(TEXT("Should pass EPinCategoryType::%s for %sOptional"), ToString(TestCase.CategoryType), *TestCase.BaseName);
+            It(Desc, [this, TestCase]()
+            {
+                TestOptional(TestCase);
+            });
+        }
     });
 }
 

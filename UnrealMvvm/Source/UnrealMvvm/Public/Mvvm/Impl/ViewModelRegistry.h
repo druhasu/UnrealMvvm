@@ -28,6 +28,12 @@ namespace UnrealMvvm_Impl
 
         static TArray<const FViewModelPropertyReflection*> GetProperties(UClass* InViewModelClass);
 
+        template <typename T>
+        static const FViewModelPropertyReflection* FindProperty(const FName& InPropertyName)
+        {
+            return FindProperty(T::StaticClass(), InPropertyName);
+        }
+
         static const FViewModelPropertyReflection* FindProperty(UClass* InViewModelClass, const FName& InPropertyName);
 
         static UClass* GetViewModelClass(UClass* ViewClass);
@@ -68,6 +74,12 @@ namespace UnrealMvvm_Impl
         static TArray<FUnprocessedViewModelClassEntry> UnprocessedViewModelClasses;
     };
 
+    template <typename TOwner, typename TValue, bool IsOptional>
+    struct TCopyValueFunctionHelper
+    {
+        static void Make(const TViewModelProperty<TOwner, TValue>* Prop, FViewModelPropertyReflection::FCopyValueFunction& OutFunction);
+    };
+
     template<typename TOwner, typename TValue>
     inline uint8 FViewModelRegistry::RegisterPropertyGetter(const TViewModelProperty<TOwner, TValue>* (*PropertyGetterPtr)())
     {
@@ -81,10 +93,9 @@ namespace UnrealMvvm_Impl
         FViewModelPropertyReflection& Item = Entry.Reflection;
         Item.Property = Prop;
 
-        Item.CopyValueToMemory = [Prop](UBaseViewModel* VM, void* Dest)
-        {
-            *((TDecayedValue*)Dest) = Prop->GetValue((TOwner*)VM);
-        };
+        const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
+        TCopyValueFunctionHelper<TOwner, TValue, IsOptional>::Make(Prop, Item.CopyValueToMemory);
+        Item.IsOptional = IsOptional;
 
 #if WITH_EDITOR
         Item.PinCategoryType = TPinTraits<TDecayedValue>::PinCategoryType;
@@ -97,4 +108,37 @@ namespace UnrealMvvm_Impl
         return 1;
     }
 
+    template <typename TOwner, typename TValue>
+    struct TCopyValueFunctionHelper<TOwner, TValue, true>
+    {
+        static void Make(const TViewModelProperty<TOwner, TValue>* Prop, FViewModelPropertyReflection::FCopyValueFunction& OutFunction)
+        {
+            using TDecayedValue = typename TDecay<TValue>::Type;
+
+            OutFunction = [Prop](UBaseViewModel* VM, void* Dest, bool& HasValue)
+            {
+                TValue Value = Prop->GetValue((TOwner*)VM);
+                HasValue = Value.IsSet();
+                if (HasValue)
+                {
+                    *((TDecayedValue*)Dest) = Value.GetValue();
+                }
+            };
+        }
+    };
+
+    template <typename TOwner, typename TValue>
+    struct TCopyValueFunctionHelper<TOwner, TValue, false>
+    {
+        static void Make(const TViewModelProperty<TOwner, TValue>* Prop, FViewModelPropertyReflection::FCopyValueFunction& OutFunction)
+        {
+            using TDecayedValue = typename TDecay<TValue>::Type;
+
+            OutFunction = [Prop](UBaseViewModel* VM, void* Dest, bool& HasValue)
+            {
+                *((TDecayedValue*)Dest) = Prop->GetValue((TOwner*)VM);
+                HasValue = true;
+            };
+        }
+    };
 }

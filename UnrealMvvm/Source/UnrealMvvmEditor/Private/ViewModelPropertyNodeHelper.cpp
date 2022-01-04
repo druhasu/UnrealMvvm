@@ -8,6 +8,8 @@
 #include "K2Node_CallFunction.h"
 #include "K2Node_Self.h"
 
+const FName FViewModelPropertyNodeHelper::HasValuePinName("HasValue");
+
 bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMvvm_Impl::FViewModelPropertyReflection& Property)
 {
     bool Result = Property.PinCategoryType != UnrealMvvm_Impl::EPinCategoryType::Unsupported;
@@ -34,9 +36,13 @@ bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMv
     return Result;
 }
 
-bool FViewModelPropertyNodeHelper::FillPinType(FEdGraphPinType& PinType, const FName& ViewModelPropertyName, UClass* ViewModelOwnerClass)
+bool FViewModelPropertyNodeHelper::FillPinType(FEdGraphPinType& PinType, const FName& ViewModelPropertyName, UClass* ViewModelOwnerClass, const UnrealMvvm_Impl::FViewModelPropertyReflection** OutProperty)
 {
     const UnrealMvvm_Impl::FViewModelPropertyReflection* Property = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModelOwnerClass, ViewModelPropertyName);
+    if (OutProperty)
+    {
+        *OutProperty = Property;
+    }
 
     if (Property && IsPropertyAvailableInBlueprint(*Property))
     {
@@ -90,7 +96,7 @@ FName FViewModelPropertyNodeHelper::GetPinCategoryNameFromType(UnrealMvvm_Impl::
     #undef PIN_CASE
 }
 
-void FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName)
+void FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, UEdGraphPin* HasValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName)
 {
     if (ValuePin->LinkedTo.Num() > 0)
     {
@@ -118,5 +124,11 @@ void FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(UEdGraphPin* Valu
         ValueOutPin->PinType.ContainerType = ValuePin->PinType.ContainerType;
 
         CompilerContext.MovePinLinksToIntermediate(*ValuePin, *ValueOutPin);
+
+        if (HasValuePin)
+        {
+            UEdGraphPin* HasValueOutPin = GetViewModelPropertyValueCall->FindPin(TEXT("HasValue"));
+            CompilerContext.MovePinLinksToIntermediate(*HasValuePin, *HasValueOutPin);
+        }
     }
 }

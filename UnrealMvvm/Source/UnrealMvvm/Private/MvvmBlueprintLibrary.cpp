@@ -3,8 +3,9 @@
 #include "Mvvm/Impl/MvvmBlueprintLibrary.h"
 #include "Mvvm/Impl/ViewModelRegistry.h"
 #include "Mvvm/BaseView.h"
+#include "Mvvm/BaseViewModel.h"
 
-void UMvvmBlueprintLibrary::GetViewModelPropertyValue(UBaseView* View, FName PropertyName, int32& Value)
+void UMvvmBlueprintLibrary::GetViewModelPropertyValue(UBaseView* View, FName PropertyName, int32& Value, bool& HasValue)
 {
     checkNoEntry();
 }
@@ -17,16 +18,18 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
     Stack.StepCompiledIn<FProperty>(nullptr);
     void* OutValuePtr = Stack.MostRecentPropertyAddress;
 
+    P_GET_UBOOL_REF(OutHasValueRef);
+
     if (View)
     {
-        UBaseViewModel* ViewModel = View->ViewModel;
+        UBaseViewModel* ViewModel = View->GetUntypedViewModel();
         if (ViewModel)
         {
             const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName);
 
             if (MyProperty)
             {
-                MyProperty->CopyValueToMemory(ViewModel, OutValuePtr);
+                MyProperty->CopyValueToMemory(ViewModel, OutValuePtr, OutHasValueRef);
             }
         }
     }

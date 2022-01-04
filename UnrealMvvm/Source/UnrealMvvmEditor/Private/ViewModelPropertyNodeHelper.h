@@ -18,12 +18,15 @@ class FViewModelPropertyNodeHelper
 public:
     static bool IsPropertyAvailableInBlueprint(const UnrealMvvm_Impl::FViewModelPropertyReflection& Property);
 
-    /* Fills FEdGraphPinType struct according to a type of ViewModel property*/
-    static bool FillPinType(FEdGraphPinType& PinType, const FName& ViewModelPropertyName, UClass* ViewModelOwnerClass);
+    /* Fills FEdGraphPinType struct according to a type of ViewModel property. Optionally returns property reflection data */
+    static bool FillPinType(FEdGraphPinType& PinType, const FName& ViewModelPropertyName, UClass* ViewModelOwnerClass, const UnrealMvvm_Impl::FViewModelPropertyReflection** OutProperty = nullptr);
 
     /* Converts EPinCategoryType to FName used in BP editor */
     static FName GetPinCategoryNameFromType(UnrealMvvm_Impl::EPinCategoryType CategoryType);
 
     /* Spawns intermediate node equivalent to Self -> GetViewModelPropertyValue(View, ViewModelPropertyName) and connects its output to a given ValuePin */
-    static void SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
+    static void SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, UEdGraphPin* HasValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
+
+    /* Pin Name for HasValue */
+    static const FName HasValuePinName;
 };

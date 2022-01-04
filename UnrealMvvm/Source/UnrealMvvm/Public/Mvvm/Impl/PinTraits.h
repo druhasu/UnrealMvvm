@@ -104,10 +104,10 @@ namespace UnrealMvvm_Impl
 
 #undef DEFINE_BASE_STRUCTURE
 
-    // Traits for Element type
+    // Traits for Pin Category
 
     template <typename T, typename = void>
-    struct TPinElementTraits
+    struct TPinCategoryTraits
     {
         static const EPinCategoryType PinCategoryType = EPinCategoryType::Unsupported;
         static UObject* GetSubCategoryObject() { return nullptr; }
@@ -115,7 +115,7 @@ namespace UnrealMvvm_Impl
 
 #define DEFINE_SIMPLE_PIN_TRAITS(ValueType, InPinCategoryType) \
     template <> \
-    struct TPinElementTraits< ValueType > \
+    struct TPinCategoryTraits< ValueType > \
     { \
         static const EPinCategoryType PinCategoryType = EPinCategoryType:: InPinCategoryType; \
         static UObject* GetSubCategoryObject() { return nullptr; } \
@@ -123,7 +123,7 @@ namespace UnrealMvvm_Impl
 
 #define DEFINE_COMPLEX_PIN_TRAITS(ValueType, InPinCategoryType, Condition, ObjectExpression) \
     template <typename T> \
-    struct TPinElementTraits< ValueType, typename TEnableIf< Condition >::Type > \
+    struct TPinCategoryTraits< ValueType, typename TEnableIf< Condition >::Type > \
     { \
         static const EPinCategoryType PinCategoryType = EPinCategoryType:: InPinCategoryType; \
         static UObject* GetSubCategoryObject() { return ObjectExpression; } \
@@ -180,42 +180,63 @@ namespace UnrealMvvm_Impl
 #undef DEFINE_SIMPLE_PIN_TRAITS
 #undef DEFINE_COMPLEX_PIN_TRAITS
 
-    // Traits for single element container
+    // Traits for container without separate Value
 
-    struct FPinNoValueTraits
+    struct FPinContainerNoValueTraits
     {
         static const EPinCategoryType PinValueCategoryType = EPinCategoryType::Unsupported;
         static UObject* GetValueSubCategoryObject() { return nullptr; }
     };
 
-    // Traits for whole Pin
+    // Traits for container of a Pin
 
     template <typename T>
-    struct TPinTraits : public TPinElementTraits<T>, public FPinNoValueTraits
+    struct TPinContainerTraits : public TPinCategoryTraits<T>, public FPinContainerNoValueTraits
     {
         static const EPinContainerType PinContainerType = EPinContainerType::None;
     };
 
     template <typename T>
-    struct TPinTraits< TArray<T> > : public TPinElementTraits<T>, public FPinNoValueTraits
+    struct TPinContainerTraits< TArray<T> > : public TPinCategoryTraits<T>, public FPinContainerNoValueTraits
     {
         static const EPinContainerType PinContainerType = EPinContainerType::Array;
     };
 
     template <typename T>
-    struct TPinTraits< TSet<T> > : public TPinElementTraits<T>, public FPinNoValueTraits
+    struct TPinContainerTraits< TSet<T> > : public TPinCategoryTraits<T>, public FPinContainerNoValueTraits
     {
         static const EPinContainerType PinContainerType = EPinContainerType::Set;
     };
 
     template <typename TKey, typename TValue>
-    struct TPinTraits< TMap<TKey, TValue> > : public TPinElementTraits<TKey>
+    struct TPinContainerTraits< TMap<TKey, TValue> > : public TPinCategoryTraits<TKey>
     {
         static const EPinContainerType PinContainerType = EPinContainerType::Map;
 
-        static const EPinCategoryType PinValueCategoryType = TPinElementTraits<TValue>::PinCategoryType;
-        static UObject* GetValueSubCategoryObject() { return TPinElementTraits<TValue>::GetSubCategoryObject(); }
+        static const EPinCategoryType PinValueCategoryType = TPinCategoryTraits<TValue>::PinCategoryType;
+        static UObject* GetValueSubCategoryObject() { return TPinCategoryTraits<TValue>::GetSubCategoryObject(); }
     };
 
+#else
+
+    // Non-Editor base class. Empty to reduce build times
+    template <typename T>
+    struct TPinContainerTraits {};
+
 #endif
+
+    // Traits for whole Pin
+
+    template <typename T>
+    struct TPinTraits : public TPinContainerTraits<T>
+    {
+        static const bool IsOptional = false;
+    };
+
+    template <typename T>
+    struct TPinTraits< TOptional<T> > : public TPinContainerTraits<T>
+    {
+        static const bool IsOptional = true;
+    };
+
 }
