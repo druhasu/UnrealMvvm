@@ -33,6 +33,11 @@ enum class EPinTraitsEnum : uint8
     First, Second, Third
 };
 
+enum class EPinTraitsSimpleEnum : uint8
+{
+    First, Second, Third
+};
+
 #define VM_PROP_PIN_TRAITS_TEST(ValueType, Name) \
     VM_PROP_AG_AS(ValueType, Name, public, public); \
     VM_PROP_AG_AS(TArray<ValueType>, Name##Array, public, public); \
@@ -60,6 +65,7 @@ class UPinTraitsViewModel : public UBaseViewModel
     VM_PROP_PIN_TRAITS_TEST(FText, MyText);
     VM_PROP_PIN_TRAITS_TEST(FPinTraitsStruct, MyStruct);
     VM_PROP_PIN_TRAITS_TEST(EPinTraitsEnum, MyEnum);
+    VM_PROP_PIN_TRAITS_TEST(EPinTraitsSimpleEnum, MySimpleEnum);
 
     VM_PROP_AG_AS(TSharedPtr<EPinTraitsEnum>, Unsupported, public, public);
 };

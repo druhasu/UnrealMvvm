@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Mvvm/Impl/ViewModelPropertyReflection.h"
+#include "Mvvm/Impl/TryGetStaticEnum.h"
 #include "Templates/IntegralConstant.h"
 
 // forward declare all structs from Core module
@@ -175,7 +176,7 @@ namespace UnrealMvvm_Impl
     DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TIsBaseStructure<typename TDecay<T>::Type>::Value, TBaseStructure<typename TDecay<T>::Type>::Get());
 
     // Enum. SubCategoryObject is the UEnum object passed thru this pin.
-    DEFINE_COMPLEX_PIN_TRAITS(T, Byte, TIsEnumClass<T>::Value, StaticEnum<T>());
+    DEFINE_COMPLEX_PIN_TRAITS(T, Enum, TIsEnumClass<T>::Value, TryGetStaticEnum<T>());
 
 #undef DEFINE_SIMPLE_PIN_TRAITS
 #undef DEFINE_COMPLEX_PIN_TRAITS

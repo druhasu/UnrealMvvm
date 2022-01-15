@@ -137,4 +137,20 @@ void BaseViewSpec::Define()
 
         TestEqual("Untyped ViewModel", View->GetUntypedViewModel(), StaticCast<UBaseViewModel*>(ViewModel));
     });
+
+    It("Should Call OnViewModelChanged", [this]()
+    {
+        FTempWorldHelper Helper;
+
+        UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+        UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+        View->SetViewModel(ViewModel);
+        TestNull("OldViewModel", View->OldViewModel);
+        TestEqual("NewViewModel", View->NewViewModel, ViewModel);
+
+        View->SetViewModel(nullptr);
+        TestEqual("OldViewModel", View->OldViewModel, ViewModel);
+        TestNull("NewViewModel", View->NewViewModel);
+    });
 }

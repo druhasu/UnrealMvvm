@@ -31,6 +31,11 @@ bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMv
         {
             Result &= Property.PinValueCategoryType != UnrealMvvm_Impl::EPinCategoryType::Unsupported;
         }
+
+        if (Property.PinCategoryType == UnrealMvvm_Impl::EPinCategoryType::Enum)
+        {
+            Result &= Property.GetPinSubCategoryObject() != nullptr;
+        }
     }
 
     return Result;
@@ -91,6 +96,10 @@ FName FViewModelPropertyNodeHelper::GetPinCategoryNameFromType(UnrealMvvm_Impl::
         PIN_CASE(String);
         PIN_CASE(Text);
         PIN_CASE(Struct);
+
+        // special handling for Enum. Unreal uses Byte for them
+        case UnrealMvvm_Impl::EPinCategoryType::Enum:
+            return UEdGraphSchema_K2::PC_Byte;
     }
 
     #undef PIN_CASE

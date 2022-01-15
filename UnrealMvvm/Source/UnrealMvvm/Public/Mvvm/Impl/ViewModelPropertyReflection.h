@@ -30,7 +30,7 @@ namespace UnrealMvvm_Impl
         String,
         Text,
         Struct, // SubCategoryObject is the ScriptStruct of the struct passed thru this pin, 'self' is not a valid SubCategory. DefaultObject should always be empty, the DefaultValue string may be used for supported structs.
-        //Enum, // Looks like this value is not used by Unreal anymore. Byte is used instead with SubCategoryObject pointing to Enum
+        Enum, // Looks like this value is not used by Unreal anymore. Byte is used instead with SubCategoryObject pointing to Enum. But we are using this to mark properties that should be enums
     };
 #endif
 

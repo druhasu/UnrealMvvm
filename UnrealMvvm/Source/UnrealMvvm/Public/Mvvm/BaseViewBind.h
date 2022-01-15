@@ -35,14 +35,15 @@ public:
     void SetViewModel(TViewModel* InViewModel)
     {
         TOwner* BaseView = GetPointerToOwnerObject();
-        TViewModel* ViewModel = (TViewModel*)BaseView->ViewModel;
+        TViewModel* OldViewModel = (TViewModel*)BaseView->ViewModel;
 
-        if (ViewModel && BaseView->IsConstructed())
+        if (OldViewModel && BaseView->IsConstructed())
         {
-            StopListening(ViewModel);
+            StopListening(OldViewModel);
         }
 
         BaseView->ViewModel = InViewModel;
+        OnViewModelChanged(OldViewModel, InViewModel);
 
         if (InViewModel)
         {
@@ -65,7 +66,11 @@ public:
     }
 
 protected:
+    /* Override this method to setup bindings. Yous should not call anything except Bind from it */
     virtual void BindProperties() {};
+
+    /* Override this method to get notified about ViewModel changes. OldViewModel and NewViewModel may be nullptr */
+    virtual void OnViewModelChanged(TViewModel* OldViewModel, TViewModel* NewViewModel) {}
 
 private:
     template<typename T, typename P, typename C>

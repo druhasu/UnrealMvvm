@@ -84,7 +84,8 @@ TArray<FTestCase> GetTestCases() const
         { TEXT("MyString"), EPinCategoryType::String, nullptr },
         { TEXT("MyText"), EPinCategoryType::Text, nullptr },
         { TEXT("MyStruct"), EPinCategoryType::Struct, FPinTraitsStruct::StaticStruct() },
-        { TEXT("MyEnum"), EPinCategoryType::Byte, StaticEnum<EPinTraitsEnum>() },
+        { TEXT("MyEnum"), EPinCategoryType::Enum, StaticEnum<EPinTraitsEnum>() },
+        { TEXT("MySimpleEnum"), EPinCategoryType::Enum, nullptr },
     };
 }
 
@@ -206,6 +207,7 @@ const TCHAR* PinTraitsSpec::ToString(EPinCategoryType Type)
         CASE(String);
         CASE(Text);
         CASE(Struct);
+        CASE(Enum);
 
         default:
             return TEXT("");

@@ -13,10 +13,18 @@ class UTestBaseView : public UBaseView, public TBaseView<UTestBaseView, UTestBas
 
 public:
     int32 MyValue = 0;
+    ViewModelType* OldViewModel = nullptr;
+    ViewModelType* NewViewModel = nullptr;
 
 protected:
     void BindProperties() override
     {
         Bind(this, ViewModelType::IntValueProperty(), [this](const int32& InValue) { MyValue = InValue; });
+    }
+
+    void OnViewModelChanged(ViewModelType* InOldViewModel, ViewModelType* InNewViewModel) override
+    {
+        OldViewModel = InOldViewModel;
+        NewViewModel = InNewViewModel;
     }
 };
