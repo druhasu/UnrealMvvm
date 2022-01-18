@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UObject/UObjectGlobals.h"
+#include "UObject/Package.h"
 #include "Templates/IsEnumClass.h"
 
 namespace UnrealMvvm_Impl
