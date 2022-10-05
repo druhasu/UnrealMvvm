@@ -4,6 +4,7 @@
 
 #include "DerivedViewModel.h"
 #include "PinTraitsViewModel.h"
+#include "Mvvm/Impl/ViewModelPropertyIterator.h"
 
 using namespace UnrealMvvm_Impl;
 
@@ -16,19 +17,19 @@ void ViewModelRegistrySpec::Define()
     {
         It("Should Return Properties Of Base And Derived ViewModels", [this]()
         {
-            TArray<const FViewModelPropertyReflection*> Properties = FViewModelRegistry::GetProperties<UDerivedClassViewModel>();
+            TArray<const FViewModelPropertyReflection*> Properties = FViewModelPropertyIterator(UDerivedClassViewModel::StaticClass(), true).ToArray();
 
             TestEqual("Num properties", Properties.Num(), 2);
-            TestEqual("Properties[0]", Properties[0]->Property, (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
-            TestEqual("Properties[1]", Properties[1]->Property, (const FViewModelPropertyBase*)UDerivedClassViewModel::DerivedClassValueProperty());
+            TestEqual("Properties[0]", Properties[0]->GetProperty(), (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
+            TestEqual("Properties[1]", Properties[1]->GetProperty(), (const FViewModelPropertyBase*)UDerivedClassViewModel::DerivedClassValueProperty());
         });
 
         It("Should Return Properties Of Base ViewModel", [this]()
         {
-            TArray<const FViewModelPropertyReflection*> Properties = FViewModelRegistry::GetProperties<UBaseClassViewModel>();
+            TArray<const FViewModelPropertyReflection*> Properties = FViewModelPropertyIterator(UBaseClassViewModel::StaticClass(), true).ToArray();
 
             TestEqual("Num properties", Properties.Num(), 1);
-            TestEqual("Properties[0]", Properties[0]->Property, (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
+            TestEqual("Properties[0]", Properties[0]->GetProperty(), (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
         });
     });
 
@@ -39,7 +40,7 @@ void ViewModelRegistrySpec::Define()
             const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UBaseClassViewModel>(TEXT("BaseClassValue"));
 
             TestNotNull("Property", Property);
-            TestEqual("Property Pointer", Property->Property, (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
+            TestEqual("Property Pointer", Property->GetProperty(), (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
         });
 
         It("Should Find Property Of Derived ViewModel", [this]()
@@ -47,7 +48,7 @@ void ViewModelRegistrySpec::Define()
             const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UDerivedClassViewModel>(TEXT("DerivedClassValue"));
 
             TestNotNull("Property", Property);
-            TestEqual("Property Pointer", Property->Property, (const FViewModelPropertyBase*)UDerivedClassViewModel::DerivedClassValueProperty());
+            TestEqual("Property Pointer", Property->GetProperty(), (const FViewModelPropertyBase*)UDerivedClassViewModel::DerivedClassValueProperty());
         });
 
         It("Should Find Property Of Base ViewModel In Derived ViewModel", [this]()
@@ -55,7 +56,7 @@ void ViewModelRegistrySpec::Define()
             const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UDerivedClassViewModel>(TEXT("BaseClassValue"));
 
             TestNotNull("Property", Property);
-            TestEqual("Property Pointer", Property->Property, (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
+            TestEqual("Property Pointer", Property->GetProperty(), (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
         });
     });
 
@@ -72,7 +73,7 @@ void ViewModelRegistrySpec::Define()
                 bool HasValue = false;
 
                 ViewModel->SetMyInt(123);
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, 123);
                 TestTrue("HasValue", HasValue);
@@ -87,7 +88,7 @@ void ViewModelRegistrySpec::Define()
                 bool HasValue = false;
 
                 ViewModel->SetMyObject(ViewModel);
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, (UObject*)ViewModel);
                 TestTrue("HasValue", HasValue);
@@ -102,7 +103,7 @@ void ViewModelRegistrySpec::Define()
                 bool HasValue = false;
 
                 ViewModel->SetMyIntArray({ 123, 321 });
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue.Num", OutValue.Num(), 2);
                 TestEqual("OutValue[0]", OutValue[0], 123);
@@ -121,11 +122,11 @@ void ViewModelRegistrySpec::Define()
                 int32 OutValue = 0;
                 bool HasValue = false;
 
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
                 TestFalse("HasValue", HasValue);
 
                 ViewModel->SetMyIntOptional(123);
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, 123);
                 TestTrue("HasValue", HasValue);
@@ -139,11 +140,11 @@ void ViewModelRegistrySpec::Define()
                 UObject* OutValue = 0;
                 bool HasValue = false;
 
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
                 TestFalse("HasValue", HasValue);
 
                 ViewModel->SetMyObjectOptional(ViewModel);
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, (UObject*)ViewModel);
                 TestTrue("HasValue", HasValue);
@@ -157,11 +158,11 @@ void ViewModelRegistrySpec::Define()
                 TArray<int32> OutValue;
                 bool HasValue = false;
 
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
                 TestFalse("HasValue", HasValue);
 
                 ViewModel->SetMyIntArrayOptional(TArray<int32>({ 123, 321 }));
-                Property->CopyValueToMemory(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue.Num", OutValue.Num(), 2);
                 TestEqual("OutValue[0]", OutValue[0], 123);

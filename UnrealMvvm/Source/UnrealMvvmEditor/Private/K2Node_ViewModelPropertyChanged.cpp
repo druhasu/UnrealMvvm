@@ -11,8 +11,6 @@
 #include "GraphEditorSettings.h"
 #include "ViewModelPropertyNodeHelper.h"
 
-#define LOCTEXT_NAMESPACE "UnrealMvvm"
-
 bool UK2Node_ViewModelPropertyChanged::Modify(bool bAlwaysMarkDirty)
 {
     CachedNodeTitle.MarkDirty();
@@ -61,7 +59,7 @@ void UK2Node_ViewModelPropertyChanged::AllocateDefaultPins()
         CreatePin(EGPD_Output, PinType, ViewModelPropertyName);
 
         // create pin for TOptional HasValue
-        if (Property->IsOptional)
+        if (Property->Flags.IsOptional)
         {
             CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
         }
@@ -76,7 +74,7 @@ FText UK2Node_ViewModelPropertyChanged::GetNodeTitle(ENodeTitleType::Type TitleT
         Args.Add(TEXT("PropertyName"), FText::FromName(ViewModelPropertyName));
 
         // FText::Format() is slow, so we cache this to save on performance
-        CachedNodeTitle.SetCachedText(FText::Format(LOCTEXT("ViewModelPropertyChangedEvent_Title", "On {PropertyName} Changed"), Args), this);
+        CachedNodeTitle.SetCachedText(FText::Format(NSLOCTEXT("UnrealMvvm", "ViewModelPropertyChangedEvent_Title", "On {PropertyName} Changed"), Args), this);
     }
 
     return CachedNodeTitle;

@@ -28,3 +28,9 @@ protected:
         NewViewModel = InNewViewModel;
     }
 };
+
+UCLASS()
+class UTestBaseViewNoBind : public UBaseView, public TBaseView<UTestBaseViewNoBind, UTestBaseViewModel>
+{
+    GENERATED_BODY()
+};

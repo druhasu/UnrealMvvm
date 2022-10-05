@@ -6,8 +6,6 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintViewModelNodeSpawner.h"
 
-#define LOCTEXT_NAMESPACE "UnrealMvvm"
-
 bool UK2Node_ViewModelPropertyValue::Modify(bool bAlwaysMarkDirty)
 {
     CachedNodeTitle.MarkDirty();
@@ -36,11 +34,10 @@ void UK2Node_ViewModelPropertyValue::GetMenuActions(FBlueprintActionDatabaseRegi
         if (BlueprintClass->IsChildOf<UBaseView>())
         {
             UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(BlueprintClass);
-            TArray<const UnrealMvvm_Impl::FViewModelPropertyReflection*> Properties = UnrealMvvm_Impl::FViewModelRegistry::GetProperties(ViewModelClass);
 
-            for (auto Property : Properties)
+            for (UnrealMvvm_Impl::FViewModelPropertyIterator Iter(ViewModelClass, false); Iter; ++Iter)
             {
-                UBlueprintViewModelNodeSpawner* Spawner = UBlueprintViewModelNodeSpawner::CreateForProperty(GetClass(), BlueprintClass, ViewModelClass, Property->Property->GetName());
+                UBlueprintViewModelNodeSpawner* Spawner = UBlueprintViewModelNodeSpawner::CreateForProperty(GetClass(), BlueprintClass, ViewModelClass, Iter->GetProperty()->GetName());
 
                 ActionRegistrar.AddBlueprintAction(Filter, Spawner);
             }
@@ -58,7 +55,7 @@ void UK2Node_ViewModelPropertyValue::AllocateDefaultPins()
         CreatePin(EGPD_Output, PinType, ViewModelPropertyName);
 
         // create pin for TOptional HasValue
-        if (Property->IsOptional)
+        if (Property->Flags.IsOptional)
         {
             CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
         }
@@ -73,7 +70,7 @@ FText UK2Node_ViewModelPropertyValue::GetNodeTitle(ENodeTitleType::Type TitleTyp
         Args.Add(TEXT("PropertyName"), FText::FromName(ViewModelPropertyName));
 
         // FText::Format() is slow, so we cache this to save on performance
-        CachedNodeTitle.SetCachedText(FText::Format(LOCTEXT("ViewModelPropertyValue_Title", "Get {PropertyName}"), Args), this);
+        CachedNodeTitle.SetCachedText(FText::Format(NSLOCTEXT("UnrealMvvm", "ViewModelPropertyValue_Title", "Get {PropertyName}"), Args), this);
     }
 
     return CachedNodeTitle;
@@ -97,10 +94,8 @@ FText UK2Node_ViewModelPropertyValue::GetTooltipText() const
         Args.Add(TEXT("PropertyName"), FText::FromName(ViewModelPropertyName));
 
         // FText::Format() is slow, so we cache this to save on performance
-        CachedNodeTooltip.SetCachedText(FText::Format(LOCTEXT("ViewModelPropertyValue_Tooltip", "Read the value of property {PropertyName}"), Args), this);
+        CachedNodeTooltip.SetCachedText(FText::Format(NSLOCTEXT("UnrealMvvm", "ViewModelPropertyValue_Tooltip", "Read the value of property {PropertyName}"), Args), this);
     }
 
     return CachedNodeTooltip;
 }
-
-#undef LOCTEXT_NAMESPACE

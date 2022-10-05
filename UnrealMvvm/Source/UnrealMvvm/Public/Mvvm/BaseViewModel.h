@@ -58,6 +58,7 @@ protected:
     /* Call this method to notify any connected View that given property was changed */
     void RaiseChanged(const FViewModelPropertyBase* Property)
     {
+        checkf(Property, TEXT("You should not call RaiseChanged with nullptr property"));
         Changed.Broadcast(Property);
     }
 

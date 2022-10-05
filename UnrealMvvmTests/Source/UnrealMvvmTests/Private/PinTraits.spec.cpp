@@ -23,7 +23,7 @@ void TestSingleValue(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
-    TestFalse("IsOptional", Reflection->IsOptional);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
 }
 
 void TestArray(const FTestCase& TestCase)
@@ -34,7 +34,7 @@ void TestArray(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Array);
-    TestFalse("IsOptional", Reflection->IsOptional);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
 }
 
 void TestMap(const FTestCase& TestCase)
@@ -45,7 +45,7 @@ void TestMap(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinValueCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinValueSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Map);
-    TestFalse("IsOptional", Reflection->IsOptional);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
 }
 
 template <typename TType>
@@ -63,7 +63,7 @@ void TestOptional(const FTestCase& TestCase)
     TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
     TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
     TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
-    TestTrue("IsOptional", Reflection->IsOptional);
+    TestTrue("IsOptional", Reflection->Flags.IsOptional);
 }
 
 TArray<FTestCase> GetTestCases() const

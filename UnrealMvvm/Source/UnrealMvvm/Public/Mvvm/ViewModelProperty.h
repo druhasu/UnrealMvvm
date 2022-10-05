@@ -39,30 +39,32 @@ template<typename TOwner, typename TValue>
 class TViewModelProperty : public FViewModelPropertyBase
 {
 public:
-    using ViewModelType = TOwner;
-    using ValueType = TValue;
+    using FViewModelType = TOwner;
+    using FValueType = TValue;
 
-    using GetterReturnType = typename UnrealMvvm_Impl::TPropertyTypeSelector<TValue>::GetterType;
-    using SetterArgumentType = typename UnrealMvvm_Impl::TPropertyTypeSelector<TValue>::SetterType;
+    using FGetterReturnType = typename UnrealMvvm_Impl::TPropertyTypeSelector<TValue>::GetterType;
+    using FSetterArgumentType = typename UnrealMvvm_Impl::TPropertyTypeSelector<TValue>::SetterType;
 
-    using GetterPtr = GetterReturnType (TOwner::*) () const;
-    using SetterPtr = void (TOwner::*) (SetterArgumentType);
+    using FPropertyGetterPtr = const TViewModelProperty<TOwner, TValue>* (*)();
+    using FGetterPtr = FGetterReturnType (TOwner::*) () const;
+    using FSetterPtr = void (TOwner::*) (FSetterArgumentType);
 
-    constexpr TViewModelProperty(GetterPtr InGetter, SetterPtr InSetter, const ANSICHAR* InName)
+    constexpr TViewModelProperty(FGetterPtr InGetter, FSetterPtr InSetter, int32 InFieldOffset, const ANSICHAR* InName)
         : FViewModelPropertyBase(InName)
         , Getter(InGetter)
         , Setter(InSetter)
+        , FieldOffset(InFieldOffset)
     {
     }
 
     /* Returns value of this property from given ViewModel */
-    GetterReturnType GetValue(ViewModelType* Owner) const
+    FGetterReturnType GetValue(FViewModelType* Owner) const
     {
         return (Owner->*Getter)();
     }
 
     /* Sets value of this property to given ViewModel */
-    void SetValue(ViewModelType* Owner, SetterArgumentType Value) const
+    void SetValue(FViewModelType* Owner, FSetterArgumentType Value) const
     {
         if (Setter)
         {
@@ -70,20 +72,31 @@ public:
         }
     }
 
+    int32 GetFieldOffset() const
+    {
+        return FieldOffset;
+    }
+
 private:
-    GetterPtr Getter;
-    SetterPtr Setter;
+    FGetterPtr Getter;
+    FSetterPtr Setter;
+    int32 FieldOffset;
 };
 
 /* Helper class that registers a property into reflection system */
-template<typename TOwner, typename TValue, const TViewModelProperty<TOwner, TValue>*(*PropertyGetterPtr)()>
+template
+<
+    typename TOwner,
+    typename TValue,
+    typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr
+>
 class TViewModelPropertyRegistered : public TViewModelProperty<TOwner, TValue>
 {
     using Super = TViewModelProperty<TOwner, TValue>;
 
 public:
-    constexpr TViewModelPropertyRegistered(typename Super::GetterPtr InGetter, typename Super::SetterPtr InSetter, const ANSICHAR* InName)
-        : Super(InGetter, InSetter, InName)
+    constexpr TViewModelPropertyRegistered(typename Super::FGetterPtr InGetter, typename Super::FSetterPtr InSetter, int32 InFieldOffset, const ANSICHAR* InName)
+        : Super(InGetter, InSetter, InFieldOffset, InName)
     {
     }
 
@@ -93,5 +106,10 @@ public:
 
 #include "Mvvm/Impl/ViewModelRegistry.h"
 
-template<typename TOwner, typename TValue, const TViewModelProperty<TOwner, TValue>* (*PropertyGetterPtr)()>
+template
+<
+    typename TOwner,
+    typename TValue,
+    typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr
+>
 const uint8 TViewModelPropertyRegistered<TOwner, TValue, PropertyGetterPtr>::Registered = UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter<TOwner, TValue>(PropertyGetterPtr);

@@ -153,4 +153,15 @@ void BaseViewSpec::Define()
         TestEqual("OldViewModel", View->OldViewModel, ViewModel);
         TestNull("NewViewModel", View->NewViewModel);
     });
+
+    It("Should Support Views Without Bindings", [this]()
+    {
+        FTempWorldHelper Helper;
+
+        UTestBaseViewNoBind* View = CreateWidget<UTestBaseViewNoBind>(Helper.World);
+        UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+        View->SetViewModel(ViewModel);
+        TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
+    });
 }

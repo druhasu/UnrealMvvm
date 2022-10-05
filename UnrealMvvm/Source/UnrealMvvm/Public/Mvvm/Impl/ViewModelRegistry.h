@@ -18,15 +18,7 @@ namespace UnrealMvvm_Impl
     class UNREALMVVM_API FViewModelRegistry
     {
     public:
-        using ClassGetterPtr = UClass* (*)();
-
-        template <typename T>
-        static TArray<const FViewModelPropertyReflection*> GetProperties()
-        {
-            return GetProperties(T::StaticClass());
-        }
-
-        static TArray<const FViewModelPropertyReflection*> GetProperties(UClass* InViewModelClass);
+        using ClassGetterPtr = UClass * (*)();
 
         template <typename T>
         static const FViewModelPropertyReflection* FindProperty(const FName& InPropertyName)
@@ -41,9 +33,13 @@ namespace UnrealMvvm_Impl
         static uint8 RegisterViewModelClass(ClassGetterPtr ViewClassGetter, ClassGetterPtr ViewModelClassGetter);
 
         template<typename TOwner, typename TValue>
-        static uint8 RegisterPropertyGetter(const TViewModelProperty<TOwner, TValue>* (*PropertyGetterPtr)());
+        static uint8 RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr);
+
+        static void ProcessPendingRegistrations();
 
     private:
+        friend class FViewModelPropertyIterator;
+
         struct FUnprocessedPropertyEntry
         {
             ClassGetterPtr GetClass;
@@ -56,10 +52,10 @@ namespace UnrealMvvm_Impl
             ClassGetterPtr GetViewModelClass;
         };
 
-        static void ProcessProperties();
-        static void ProcessClasses();
-        static void AppendProperties(TArray<const FViewModelPropertyReflection*>& OutArray, UClass* InViewModelClass);
         static const FViewModelPropertyReflection* FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName);
+        static void GenerateReferenceTokenStream(class UClass* ViewModelClass);
+        static bool TransferTokenStream(UClass* Source, UClass* Destination);
+        static TArray<FField*> ExtractMapAndSetProperties(UClass* InClass);
 
         // Map of <ViewModelClass, Properties>
         static TMap<UClass*, TArray<FViewModelPropertyReflection>> ViewModelProperties;
@@ -74,71 +70,43 @@ namespace UnrealMvvm_Impl
         static TArray<FUnprocessedViewModelClassEntry> UnprocessedViewModelClasses;
     };
 
-    template <typename TOwner, typename TValue, bool IsOptional>
-    struct TCopyValueFunctionHelper
-    {
-        static void Make(const TViewModelProperty<TOwner, TValue>* Prop, FViewModelPropertyReflection::FCopyValueFunction& OutFunction);
-    };
+}
 
-    template<typename TOwner, typename TValue>
-    inline uint8 FViewModelRegistry::RegisterPropertyGetter(const TViewModelProperty<TOwner, TValue>* (*PropertyGetterPtr)())
-    {
-        using TDecayedValue = typename TDecay<TValue>::Type;
+#include "Mvvm/Impl/ViewModelPropertyOperations.h"
 
-        const TViewModelProperty<TOwner, TValue>* Prop = PropertyGetterPtr();
+template<typename TOwner, typename TValue>
+inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr)
+{
+    using namespace UnrealMvvm_Impl;
+    using TDecayedValue = typename TDecay<TValue>::Type;
 
-        FUnprocessedPropertyEntry& Entry = UnprocessedProperties.AddDefaulted_GetRef();
-        Entry.GetClass = &StaticClass<TOwner>;
+    FUnprocessedPropertyEntry& Entry = UnprocessedProperties.AddDefaulted_GetRef();
+    Entry.GetClass = &StaticClass<TOwner>;
 
-        FViewModelPropertyReflection& Item = Entry.Reflection;
-        Item.Property = Prop;
+    const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
 
-        const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
-        TCopyValueFunctionHelper<TOwner, TValue, IsOptional>::Make(Prop, Item.CopyValueToMemory);
-        Item.IsOptional = IsOptional;
+    using FBaseOps    = Details::TBaseOperation<TOwner, TValue>;
+    using FCopyOps    = Details::TCopyValueOperation<FBaseOps, TOwner, TValue, IsOptional>;
+    using FAddPropOps = Details::TAddClassPropertyOperation<FCopyOps, TOwner, TValue>;
+
+    using FEffectiveOpsType = TViewModelPropertyOperations<FAddPropOps>;
+
+    static_assert(sizeof(FViewModelPropertyOperations) == sizeof(FEffectiveOpsType), "Generated Operations type cannot fit into OpsBuffer");
+
+    FViewModelPropertyReflection& Item = Entry.Reflection;
+
+    const TViewModelProperty<TOwner, TValue>* Prop = PropertyGetterPtr();
+    new (Item.OpsBuffer.Buffer.GetTypedPtr()) FEffectiveOpsType(Prop);
+
+    Item.Flags.IsOptional = IsOptional;
 
 #if WITH_EDITOR
-        Item.PinCategoryType = TPinTraits<TDecayedValue>::PinCategoryType;
-        Item.PinValueCategoryType = TPinTraits<TDecayedValue>::PinValueCategoryType;
-        Item.ContainerType = TPinTraits<TDecayedValue>::PinContainerType;
-        Item.GetPinSubCategoryObject = &TPinTraits<TDecayedValue>::GetSubCategoryObject;
-        Item.GetPinValueSubCategoryObject = &TPinTraits<TDecayedValue>::GetValueSubCategoryObject;
+    Item.PinCategoryType = TPinTraits<TDecayedValue>::PinCategoryType;
+    Item.PinValueCategoryType = TPinTraits<TDecayedValue>::PinValueCategoryType;
+    Item.ContainerType = TPinTraits<TDecayedValue>::PinContainerType;
+    Item.GetPinSubCategoryObject = &TPinTraits<TDecayedValue>::GetSubCategoryObject;
+    Item.GetPinValueSubCategoryObject = &TPinTraits<TDecayedValue>::GetValueSubCategoryObject;
 #endif
 
-        return 1;
-    }
-
-    template <typename TOwner, typename TValue>
-    struct TCopyValueFunctionHelper<TOwner, TValue, true>
-    {
-        static void Make(const TViewModelProperty<TOwner, TValue>* Prop, FViewModelPropertyReflection::FCopyValueFunction& OutFunction)
-        {
-            using TDecayedValue = typename TDecay<TValue>::Type;
-
-            OutFunction = [Prop](UBaseViewModel* VM, void* Dest, bool& HasValue)
-            {
-                TValue Value = Prop->GetValue((TOwner*)VM);
-                HasValue = Value.IsSet();
-                if (HasValue)
-                {
-                    *((TDecayedValue*)Dest) = Value.GetValue();
-                }
-            };
-        }
-    };
-
-    template <typename TOwner, typename TValue>
-    struct TCopyValueFunctionHelper<TOwner, TValue, false>
-    {
-        static void Make(const TViewModelProperty<TOwner, TValue>* Prop, FViewModelPropertyReflection::FCopyValueFunction& OutFunction)
-        {
-            using TDecayedValue = typename TDecay<TValue>::Type;
-
-            OutFunction = [Prop](UBaseViewModel* VM, void* Dest, bool& HasValue)
-            {
-                *((TDecayedValue*)Dest) = Prop->GetValue((TOwner*)VM);
-                HasValue = true;
-            };
-        }
-    };
+    return 1;
 }

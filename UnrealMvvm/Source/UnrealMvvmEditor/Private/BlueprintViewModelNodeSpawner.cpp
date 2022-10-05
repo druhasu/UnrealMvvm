@@ -4,8 +4,6 @@
 #include "K2Node_ViewModelPropertyValue.h"
 #include "EditorCategoryUtils.h"
 
-#define LOCTEXT_NAMESPACE "UnrealMvvm"
-
 UBlueprintViewModelNodeSpawner* UBlueprintViewModelNodeSpawner::CreateForProperty(TSubclassOf<UK2Node> NodeClass, UClass* ViewClass, UClass* ViewModelClass, const FName& ViewModelPropertyName)
 {
     UBlueprintViewModelNodeSpawner* Spawner = NewObject<UBlueprintViewModelNodeSpawner>();
@@ -14,8 +12,8 @@ UBlueprintViewModelNodeSpawner* UBlueprintViewModelNodeSpawner::CreateForPropert
     Spawner->ViewModelPropertyName = ViewModelPropertyName;
     Spawner->NodeClass = NodeClass;
 
-    Spawner->DefaultMenuSignature.MenuName = FText::Format(LOCTEXT("Action.GetterMenuName", "Get {0}"), FText::FromName(ViewModelPropertyName));
-    Spawner->DefaultMenuSignature.Tooltip = FText::Format(LOCTEXT("Action.GetterMenuTooltip", "Read the value of property {0}"), FText::FromName(ViewModelPropertyName));
+    Spawner->DefaultMenuSignature.MenuName = FText::Format(NSLOCTEXT("UnrealMvvm", "Action.GetterMenuName", "Get {0}"), FText::FromName(ViewModelPropertyName));
+    Spawner->DefaultMenuSignature.Tooltip = FText::Format(NSLOCTEXT("UnrealMvvm", "Action.GetterMenuTooltip", "Read the value of property {0}"), FText::FromName(ViewModelPropertyName));
     Spawner->DefaultMenuSignature.Category = FEditorCategoryUtils::BuildCategoryString(FCommonEditorCategory::Variables, ViewModelClass->GetDisplayNameText());
 
     return Spawner;

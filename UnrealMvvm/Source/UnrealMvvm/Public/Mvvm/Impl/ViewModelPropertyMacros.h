@@ -12,10 +12,10 @@
 // shorthand for remove parentheses
 #define VM_PROP_RP PREPROCESSOR_REMOVE_OPTIONAL_PARENS
 
-#define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr) \
+#define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr, FieldOffset) \
     static const TViewModelProperty<ThisClass, ValueType>* Name##Property() \
     { \
-        static constexpr TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property> Property = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>{ GetterPtr, SetterPtr, #Name }; \
+        static constexpr TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property> Property = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>{ GetterPtr, SetterPtr, FieldOffset, #Name }; \
         const uint8& Register = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>::Registered; \
         return &Property; \
     }
@@ -27,9 +27,18 @@ SetterVisibility: \
     void Set##Name(typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
     SetterBody \
 public: \
-    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name) \
+    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name, STRUCT_OFFSET(ThisClass, Name##Field)) \
 private: \
     FieldBody
+
+#define VM_PROP_COMMON_NF(ValueType, Name, GetterVisibility, SetterVisibility, GetterBody, SetterBody) \
+GetterVisibility: \
+    typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::GetterType Get##Name() const GetterBody \
+SetterVisibility: \
+    void Set##Name(typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
+    SetterBody \
+public: \
+    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name, 0)
 
 #define VM_PROP_AUTO_GETTER(Name) \
     { return Name##Field; }
@@ -69,23 +78,23 @@ private: \
 
 /* Creates ViewModel property with manual getter and setter and no backing field */
 #define VM_PROP_MG_MS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, ;, ;, )
+    VM_PROP_COMMON_NF(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, ;, ;)
 
 /* Creates ViewModel property with auto getter and manual setter and no backing field */
 #define VM_PROP_AG_MS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), ;, )
+    VM_PROP_COMMON_NF(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), ;)
 
 /* Creates ViewModel property with manual getter and auto setter and no backing field */
 #define VM_PROP_MG_AS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, ;, VM_PROP_AUTO_SETTER(Name), )
+    VM_PROP_COMMON_NF(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, ;, VM_PROP_AUTO_SETTER(Name))
 
 /* Creates ViewModel property with auto getter and setter and no backing field */
 #define VM_PROP_AG_AS_NF(ValueType, Name, GetterVisibility, SetterVisibility) \
-    VM_PROP_COMMON(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), VM_PROP_AUTO_SETTER(Name), )
+    VM_PROP_COMMON_NF(VM_PROP_RP(ValueType), Name, GetterVisibility, SetterVisibility, VM_PROP_AUTO_GETTER(Name), VM_PROP_AUTO_SETTER(Name))
 
 /* Creates ViewModel property with manual getter and no backing field */
 #define VM_PROP_MG_NF(ValueType, Name, GetterVisibility) \
 GetterVisibility: \
     typename UnrealMvvm_Impl::TPropertyTypeSelector<VM_PROP_RP(ValueType)>::GetterType Get##Name() const; \
 public: \
-    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, nullptr)
+    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, nullptr, 0)

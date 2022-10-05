@@ -5,6 +5,7 @@
 #include "Mvvm/Impl/ViewModelPropertyReflection.h"
 #include "Mvvm/Impl/TryGetStaticEnum.h"
 #include "Templates/IntegralConstant.h"
+#include "Mvvm/Impl/ValueTypeTraits.h"
 
 // forward declare all structs from Core module
 struct FRotator;
@@ -40,24 +41,6 @@ struct FTestUninitializedScriptStructMembersTest;
 namespace UnrealMvvm_Impl
 {
 #if WITH_EDITOR
-
-    // checks what kind of type is T (Struct, Class or Interface)
-    template <typename T>
-    struct TPinTypeHelper
-    {
-        template<typename U> static decltype(U::StaticStruct()) Test1(int);
-        template<typename U> static decltype(U::StaticClass()) Test1(int);
-        template<typename U> static char Test1(...);
-        template<typename U> static decltype(&U::_getUObject) Test2(int);
-        template<typename U> static char Test2(...);
-
-        using JustT = typename TDecay<T>::Type;
-
-        static const bool IsStruct = TIsSame<decltype(Test1<JustT>(0)), UScriptStruct*>::Value;
-        static const bool IsClass = TIsSame<decltype(Test1<JustT>(0)), UClass*>::Value;
-        static const bool IsInterface = !TIsSame< char, decltype(Test2<JustT>(0)) >::Value && !TIsDerivedFrom<JustT, UObject>::Value;
-    };
-
     // Traits for structs from Core modules
 
     template <typename T>
@@ -137,10 +120,10 @@ namespace UnrealMvvm_Impl
     DEFINE_SIMPLE_PIN_TRAITS(uint8, Byte);
 
     // Class. SubCategoryObject is the MetaClass of the Class passed thru this pin
-    DEFINE_COMPLEX_PIN_TRAITS(TSubclassOf<T>, Class, TPinTypeHelper<T>::IsClass, T::StaticClass());
+    DEFINE_COMPLEX_PIN_TRAITS(TSubclassOf<T>, Class, TValueTypeTraits<T>::IsClass, T::StaticClass());
 
     // SoftClass
-    DEFINE_COMPLEX_PIN_TRAITS(TSoftClassPtr<T>, SoftClass, TPinTypeHelper<T>::IsClass, T::StaticClass());
+    DEFINE_COMPLEX_PIN_TRAITS(TSoftClassPtr<T>, SoftClass, TValueTypeTraits<T>::IsClass, T::StaticClass());
 
     // Int
     DEFINE_SIMPLE_PIN_TRAITS(int32, Int);
@@ -155,13 +138,13 @@ namespace UnrealMvvm_Impl
     DEFINE_SIMPLE_PIN_TRAITS(FName, Name);
 
     // Object. SubCategoryObject is the Class of the object passed thru this pin.
-    DEFINE_COMPLEX_PIN_TRAITS(T*, Object, TPinTypeHelper<T>::IsClass, T::StaticClass());
+    DEFINE_COMPLEX_PIN_TRAITS(T*, Object, TValueTypeTraits<T>::IsClass, T::StaticClass());
 
     // Interface. SubCategoryObject is the Class of the object passed thru this pin.
-    DEFINE_COMPLEX_PIN_TRAITS(TScriptInterface<T>, Interface, TPinTypeHelper<T>::IsInterface, T::UClassType::StaticClass());
+    DEFINE_COMPLEX_PIN_TRAITS(TScriptInterface<T>, Interface, TValueTypeTraits<T>::IsInterface, T::UClassType::StaticClass());
 
     // SoftObject. SubCategoryObject is the Class of the AssetPtr passed thru this pin.
-    DEFINE_COMPLEX_PIN_TRAITS(TSoftObjectPtr<T>, SoftObject, TPinTypeHelper<T>::IsClass, T::StaticClass());
+    DEFINE_COMPLEX_PIN_TRAITS(TSoftObjectPtr<T>, SoftObject, TValueTypeTraits<T>::IsClass, T::StaticClass());
 
     // String
     DEFINE_SIMPLE_PIN_TRAITS(FString, String);
@@ -170,7 +153,7 @@ namespace UnrealMvvm_Impl
     DEFINE_SIMPLE_PIN_TRAITS(FText, Text);
 
     // Struct. SubCategoryObject is the ScriptStruct of the struct passed thru this pin
-    DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TPinTypeHelper<T>::IsStruct, TDecay<T>::Type::StaticStruct());
+    DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TValueTypeTraits<T>::IsStruct, TDecay<T>::Type::StaticStruct());
 
     // Struct from Core
     DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TIsBaseStructure<typename TDecay<T>::Type>::Value, TBaseStructure<typename TDecay<T>::Type>::Get());

@@ -4,6 +4,7 @@
 #include "ViewModelPropertyNodeHelper.h"
 #include "Mvvm/BaseView.h"
 #include "Mvvm/BaseViewModel.h"
+#include "Mvvm/Impl/ViewModelPropertyIterator.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailCategoryBuilder.h"
 #include "DetailWidgetRow.h"
@@ -22,8 +23,6 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SHyperlink.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
-
-#define LOCTEXT_NAMESPACE "UnrealMvvm"
 
 TSharedRef<IDetailCustomization> FBaseViewDetailCustomization::MakeInstance()
 {
@@ -65,9 +64,9 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     }
 
     UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(OutObjects[0]->GetClass());
-    TArray<const UnrealMvvm_Impl::FViewModelPropertyReflection*> Properties = UnrealMvvm_Impl::FViewModelRegistry::GetProperties(ViewModelClass);
+    UnrealMvvm_Impl::FViewModelPropertyIterator Iter(ViewModelClass, true);
 
-    if (Properties.Num() == 0)
+    if (!Iter)
     {
         // don't show additional category if ViewModel has no properties
         Category.SetCategoryVisibility(false);
@@ -75,7 +74,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     }
 
     Category.SetCategoryVisibility(true);
-    DetailBuilder.EditCategory(CategoryName, LOCTEXT("CategoryNameText","ViewModel Properties"), ECategoryPriority::TypeSpecific);
+    DetailBuilder.EditCategory(CategoryName, NSLOCTEXT("UnrealMvvm", "CategoryNameText","ViewModel Properties"), ECategoryPriority::TypeSpecific);
 
     // Add row with hyperlink to ViewModel source file
     FText ViewModelClassText = FText::FromString("ViewModel Class");
@@ -94,13 +93,13 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
         .Style(FEditorStyle::Get(), "Common.GotoNativeCodeHyperlink")
         .OnNavigate_Lambda([](UClass* C) { FSourceCodeNavigation::NavigateToClass(C); }, ViewModelClass)
         .Text(ViewModelClass->GetDisplayNameText())
-        .ToolTipText(FText::Format(LOCTEXT("GotoViewModelSourceTooltip", "Click to open ViewModel source file in {0}"), FSourceCodeNavigation::GetSelectedSourceCodeIDE()))
+        .ToolTipText(FText::Format(NSLOCTEXT("UnrealMvvm", "GotoViewModelSourceTooltip", "Click to open ViewModel source file in {0}"), FSourceCodeNavigation::GetSelectedSourceCodeIDE()))
     ];
 
     // Add rows for each property in ViewModel
-    for (auto Property : Properties)
+    for (; Iter; ++Iter)
     {
-        FName PropertyName = Property->Property->GetName();
+        FName PropertyName = Iter->GetProperty()->GetName();
         FText NameText = FText::FromName(PropertyName);
         FDetailWidgetRow& DetailRow = Category.AddCustomRow(NameText);
 
@@ -128,7 +127,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
             ]
         ];
 
-        if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*Property))
+        if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*Iter))
         {
             DetailRow
             .ValueContent()
@@ -151,7 +150,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
                         [
                             SNew(STextBlock)
                             .Font(FEditorStyle::GetFontStyle(TEXT("BoldFont")))
-                            .Text(LOCTEXT("ViewEvent", "View"))
+                            .Text(NSLOCTEXT("UnrealMvvm", "ViewEvent", "View"))
                         ]
                         + SWidgetSwitcher::Slot()
                         [
@@ -173,7 +172,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
                 [
                     SNew(STextBlock)
                     .Font(IDetailLayoutBuilder::GetDetailFont())
-                    .Text(LOCTEXT("PropertyNotAvailableInBP", "Not Available in Blueprints"))
+                    .Text(NSLOCTEXT("UnrealMvvm", "PropertyNotAvailableInBP", "Not Available in Blueprints"))
                 ]
             ];
         }

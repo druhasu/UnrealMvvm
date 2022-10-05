@@ -29,7 +29,7 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
 
             if (MyProperty)
             {
-                MyProperty->CopyValueToMemory(ViewModel, OutValuePtr, OutHasValueRef);
+                MyProperty->GetOperations().CopyValue(ViewModel, OutValuePtr, OutHasValueRef);
             }
         }
     }

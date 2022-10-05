@@ -5,10 +5,38 @@
 #include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/BindEntry.h"
 #include "Mvvm/Impl/BindImpl.h"
+#include "Mvvm/Impl/ViewModelPropertyIterator.h"
 #include "Templates/UnrealTypeTraits.h"
 #include "Templates/Function.h"
 #include "Templates/EnableIf.h"
+
+namespace UnrealMvvm_Impl
+{
+    struct FBlueprintPropertyChangeHandler : public IPropertyChangeHandler
+    {
+        FBlueprintPropertyChangeHandler(UObject* InBaseView, UFunction* InFunction)
+            : BaseView(InBaseView), Function(InFunction)
+        {
+        }
+
+        void Invoke(UBaseViewModel*, const FViewModelPropertyBase*) override
+        {
+            BaseView->ProcessEvent(Function, nullptr);
+        }
+
+        UObject* BaseView;
+        UFunction* Function;
+    };
+
+    struct FNoopPropertyChangeHandler : public IPropertyChangeHandler
+    {
+        void Invoke(UBaseViewModel*, const FViewModelPropertyBase*) override
+        {
+        }
+    };
+}
 
 template<typename TOwner, typename TViewModel>
 class TBaseView
@@ -76,10 +104,14 @@ private:
     template<typename T, typename P, typename C>
     friend void __BindImpl(T*, P*, C&&);
 
-    struct FBindEntry
+    // TBaseView may not be copied, so we cannot store usual TArray<> inside
+    // this class solves the issue by removing copy constructors/operators from TArray
+    template <typename T>
+    class TNoncopyableArray : public TArray<T>
     {
-        const FViewModelPropertyBase* Property;
-        TFunction<void(TViewModel*)> Callback;
+    public:
+        TNoncopyableArray(TNoncopyableArray&&) = default;
+        TNoncopyableArray() = default;
     };
 
     void PrepareBindings(TOwner* BaseView)
@@ -90,25 +122,22 @@ private:
         BindProperties();
 
         // blueprint bindings second
-        for (const UnrealMvvm_Impl::FViewModelPropertyReflection* PropertyInfo : UnrealMvvm_Impl::FViewModelRegistry::GetProperties<TViewModel>())
+        for (UnrealMvvm_Impl::FViewModelPropertyIterator Iter(TViewModel::StaticClass(), false); Iter; ++Iter)
         {
-            UFunction* Function = BaseView->FindFunction(PropertyInfo->Property->GetCallbackName());
+            UFunction* Function = BaseView->FindFunction(Iter->GetProperty()->GetCallbackName());
 
             if (Function)
             {
-                FBindEntry& Bind = BindEntries.AddDefaulted_GetRef();
-                Bind.Property = PropertyInfo->Property;
-                Bind.Callback = [BaseView, Function](TViewModel*)
-                {
-                    BaseView->ProcessEvent(Function, nullptr);
-                };
+                UnrealMvvm_Impl::FBindEntry& Entry = BindEntries.Emplace_GetRef(Iter->GetProperty());
+                Entry.Handler.Emplace<UnrealMvvm_Impl::FBlueprintPropertyChangeHandler>(BaseView, Function);
             }
         }
 
         // add at least one bind to prevent this method from being called again
         if (BindEntries.Num() == 0)
         {
-            BindEntries.Add(FBindEntry{ nullptr, [](auto){} });
+            UnrealMvvm_Impl::FBindEntry& Entry = BindEntries.Emplace_GetRef(nullptr);
+            Entry.Handler.Emplace<UnrealMvvm_Impl::FNoopPropertyChangeHandler>();
         }
     }
 
@@ -119,7 +148,7 @@ private:
         {
             if (Bind.Property == Property)
             {
-                Bind.Callback(ViewModel);
+                Bind.Handler->Invoke(ViewModel, Property);
             }
         }
     }
@@ -156,7 +185,7 @@ private:
 
             for (auto& Bind : BindEntries)
             {
-                Bind.Callback(InViewModel);
+                Bind.Handler->Invoke(InViewModel, Bind.Property);
             }
         }
     }
@@ -171,27 +200,17 @@ private:
         }
     }
 
-    TOwner* GetPointerToOwnerObject() const
+    TOwner* GetPointerToOwnerObject()
     {
-        // we need this ugly hack to access ViewModel member of "unrelated" class UBaseView =(
-        // we know exact class of this object - TOwner
-        // we also know that we are a UObject
-        // so we have a CDO. and its memory layout is same as ours
-        // so we can find offset from "this" pointer to beginning of TOwner
-        static UPTRINT PointerOffset = []()
-        {
-            using ThisType = TBaseView<TOwner, TViewModel>;
-            const TOwner* DefaultObject = GetDefault<TOwner>();
-            const ThisType* ThisObject = StaticCast<const ThisType*>(DefaultObject);
-            auto Result = (UPTRINT)(void*)(ThisObject)-(UPTRINT)(void*)(DefaultObject);
-            return Result;
-        }();
-
-        // use computed offset to find actual locationf of TOwner
-        return (TOwner*)(((UPTRINT)(void*)this) - PointerOffset);
+        return static_cast<TOwner*>(this);
     }
 
-    TArray<FBindEntry> BindEntries;
+    const TOwner* GetPointerToOwnerObject() const
+    {
+        return static_cast<const TOwner*>(this);
+    }
+
+    TNoncopyableArray< UnrealMvvm_Impl::FBindEntry > BindEntries;
     FDelegateHandle SubscriptionHandle;
     static uint8 Registered;
 };

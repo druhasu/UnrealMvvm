@@ -3,6 +3,7 @@
 #pragma once
 
 #include "EdGraph/EdGraphNode.h"
+#include "Templates/TypeCompatibleBytes.h"
 
 class UBaseViewModel;
 class FViewModelPropertyBase;
@@ -34,14 +35,52 @@ namespace UnrealMvvm_Impl
     };
 #endif
 
+    // contains operations that can be performed with property
+    struct UNREALMVVM_API FViewModelPropertyOperations
+    {
+        virtual ~FViewModelPropertyOperations() {}
+
+        // Reads value from InViewModel and writes to memory pointed by OutValue. OutHasValue denotes whether TOptional property has value
+        virtual void CopyValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const = 0;
+
+        // Adds new FProperty to given class
+        virtual void AddClassProperty(UClass* TargetClass) const = 0;
+
+        // Pointer to a FViewModelPropertyBase
+        const FViewModelPropertyBase* Property;
+    };
+
     // contains reflection data about single viewmodel property
     struct UNREALMVVM_API FViewModelPropertyReflection
     {
-        using FCopyValueFunction = TFunction< void (UBaseViewModel* /*ViewModel*/, void* /*OutValue*/, bool& /*OutHasValue*/) > ;
+        struct FFlags
+        {
+            bool IsOptional : 1;
+        };
 
-        const FViewModelPropertyBase* Property;
-        FCopyValueFunction CopyValueToMemory;
-        bool IsOptional = false;
+        // this union is for debugging only, that way we can see names of properties
+        union FOpsBuffer
+        {
+            TTypeCompatibleBytes<FViewModelPropertyOperations> Buffer;
+            struct
+            {
+                void* Unused;
+                const FViewModelPropertyBase* Property;
+            } Prop;
+        };
+
+        const FViewModelPropertyOperations& GetOperations() const
+        {
+            return *OpsBuffer.Buffer.GetTypedPtr();
+        }
+
+        const FViewModelPropertyBase* GetProperty() const
+        {
+            return GetOperations().Property;
+        }
+
+        FOpsBuffer OpsBuffer;
+        FFlags Flags;
 
 #if WITH_EDITOR
         using SubCategoryGetterPtr = UObject* (*)();
