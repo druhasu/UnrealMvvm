@@ -10,6 +10,7 @@ class TViewModelProperty;
 
 class FViewModelPropertyBase;
 class UBaseViewModel;
+class UClass;
 
 namespace UnrealMvvm_Impl
 {
@@ -60,7 +61,7 @@ namespace UnrealMvvm_Impl
             }
         };
 
-        /* Implementation of AddClassProperty method */
+        /* Implementation of AddClassProperty method and ContainsObjectReference method */
         template <typename TBaseOp, typename TOwner, typename TValue>
         struct TAddClassPropertyOperation : public TBaseOp
         {
@@ -71,6 +72,21 @@ namespace UnrealMvvm_Impl
                 {
                     TPropertyFactory<typename TDecay<TValue>::Type>::AddProperty(TargetClass, Prop->GetFieldOffset(), Prop->GetName());
                 }
+            }
+
+            bool ContainsObjectReference() const override
+            {
+                return TPropertyFactory<typename TDecay<TValue>::Type>::ContainsObjectReference;
+            }
+        };
+
+        /* Implementation of GetViewModelClass method */
+        template <typename TBaseOp, typename TOwner, typename TValue>
+        struct TGetViewModelClassOperation : public TBaseOp
+        {
+            UClass* GetViewModelClass() const override
+            {
+                return TOwner::StaticClass();
             }
         };
     }

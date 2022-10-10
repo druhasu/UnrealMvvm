@@ -46,6 +46,12 @@ namespace UnrealMvvm_Impl
         // Adds new FProperty to given class
         virtual void AddClassProperty(UClass* TargetClass) const = 0;
 
+        // Returns whether this property might contain Object Reference for GC
+        virtual bool ContainsObjectReference() const = 0;
+
+        // Returns UClass of owning ViewModel
+        virtual UClass* GetViewModelClass() const = 0;
+
         // Pointer to a FViewModelPropertyBase
         const FViewModelPropertyBase* Property;
     };

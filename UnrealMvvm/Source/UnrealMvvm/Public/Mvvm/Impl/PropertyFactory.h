@@ -17,7 +17,7 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory
         {
             static constexpr bool IsSupportedByUnreal = false;
-            static constexpr bool ContainsObjectReferences = false;
+            static constexpr bool ContainsObjectReference = false;
 
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
             {
@@ -29,19 +29,19 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory<VariableType> \
         { \
             static constexpr bool IsSupportedByUnreal = true; \
-            static constexpr bool ContainsObjectReferences = false; \
+            static constexpr bool ContainsObjectReference = false; \
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName) \
             { \
                 new PropertyType(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, ##__VA_ARGS__); \
             } \
         }
 
-#define DECLARE_WRAPPER_PROPERTY(VariableType, PropertyType, ContainsReferences, InnerClass) \
+#define DECLARE_WRAPPER_PROPERTY(VariableType, PropertyType, ContainsReference, InnerClass) \
         template <typename TValue> \
         struct TPropertyFactory<VariableType> \
         { \
             static constexpr bool IsSupportedByUnreal = true; \
-            static constexpr bool ContainsObjectReferences = ContainsReferences; \
+            static constexpr bool ContainsObjectReference = ContainsReference; \
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName) \
             { \
                 new PropertyType(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, InnerClass); \
@@ -76,7 +76,7 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory<TValue*, typename TEnableIf<TValueTypeTraits<TValue>::IsClass>::Type>
         {
             static constexpr bool IsSupportedByUnreal = true;
-            static constexpr bool ContainsObjectReferences = true;
+            static constexpr bool ContainsObjectReference = true;
 
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
             {
@@ -89,7 +89,7 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory<TValue, typename TEnableIf<TValueTypeTraits<TValue>::IsStruct>::Type>
         {
             static constexpr bool IsSupportedByUnreal = true;
-            static constexpr bool ContainsObjectReferences = true; // assume true, we cannot easily check this in compile time
+            static constexpr bool ContainsObjectReference = true; // assume true, we cannot easily check this in compile time
 
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
             {
@@ -102,11 +102,11 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory<TArray<TValue>>
         {
             static constexpr bool IsSupportedByUnreal = true;
-            static constexpr bool ContainsObjectReferences = TPropertyFactory<TValue>::ContainsObjectReferences;
+            static constexpr bool ContainsObjectReference = TPropertyFactory<TValue>::ContainsObjectReference;
 
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
             {
-                if (ContainsObjectReferences)
+                if (ContainsObjectReference)
                 {
                     auto Prop = new FArrayProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, EArrayPropertyFlags::None);
                     TPropertyFactory<TValue>::AddProperty(Prop, FieldOffset, FName(DebugName.ToString() + TEXT("_Value")));
@@ -119,11 +119,11 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory<TSet<TValue>>
         {
             static constexpr bool IsSupportedByUnreal = true;
-            static constexpr bool ContainsObjectReferences = TPropertyFactory<TValue>::ContainsObjectReferences;
+            static constexpr bool ContainsObjectReference = TPropertyFactory<TValue>::ContainsObjectReference;
 
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
             {
-                if (ContainsObjectReferences)
+                if (ContainsObjectReference)
                 {
                     auto Prop = new FSetProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None);
                     TPropertyFactory<TValue>::AddProperty(Prop, FieldOffset, FName(DebugName.ToString() + TEXT("_Value")));
@@ -136,15 +136,18 @@ namespace UnrealMvvm_Impl
         struct TPropertyFactory<TMap<TKey, TValue>>
         {
             static constexpr bool IsSupportedByUnreal = true;
-            static constexpr bool ContainsObjectReferences = TPropertyFactory<TKey>::ContainsObjectReferences || TPropertyFactory<TValue>::ContainsObjectReferences;
+            static constexpr bool ContainsObjectReference = TPropertyFactory<TKey>::ContainsObjectReference || TPropertyFactory<TValue>::ContainsObjectReference;
 
             static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
             {
                 // if either TKey or TValue has references, then both of them MUST be supported
-                static_assert(!ContainsObjectReferences || TPropertyFactory<TKey>::IsSupportedByUnreal, "Unsupported Key Type");
-                static_assert(!ContainsObjectReferences || TPropertyFactory<TValue>::IsSupportedByUnreal, "Unsupported Value Type");
+                // 
+                // if your code triggers this assert, and you are absolutely sure that you need exactly this type,
+                // then change your property to have _NF suffix and provide field manually
+                static_assert(!ContainsObjectReference || TPropertyFactory<TKey>::IsSupportedByUnreal, "Unsupported Key Type");
+                static_assert(!ContainsObjectReference || TPropertyFactory<TValue>::IsSupportedByUnreal, "Unsupported Value Type");
 
-                if (ContainsObjectReferences)
+                if (ContainsObjectReference)
                 {
                     auto Prop = new FMapProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, EMapPropertyFlags::None);
                     TPropertyFactory<TKey>::AddProperty(Prop, 0, FName(DebugName.ToString() + TEXT("_Key")));

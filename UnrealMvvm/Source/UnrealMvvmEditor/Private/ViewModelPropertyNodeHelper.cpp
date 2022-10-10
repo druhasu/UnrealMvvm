@@ -30,8 +30,15 @@ bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMv
         if (Property.ContainerType == EPinContainerType::Map)
         {
             Result &= Property.PinValueCategoryType != UnrealMvvm_Impl::EPinCategoryType::Unsupported;
+
+            // we support only UEnums. regular enum class won't have SubCategoryObject available
+            if (Property.PinValueCategoryType == UnrealMvvm_Impl::EPinCategoryType::Enum)
+            {
+                Result &= Property.GetPinValueSubCategoryObject() != nullptr;
+            }
         }
 
+        // we support only UEnums. regular enum class won't have SubCategoryObject available
         if (Property.PinCategoryType == UnrealMvvm_Impl::EPinCategoryType::Enum)
         {
             Result &= Property.GetPinSubCategoryObject() != nullptr;

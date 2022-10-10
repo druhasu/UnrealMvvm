@@ -30,6 +30,8 @@ namespace UnrealMvvm_Impl
 
         static UClass* GetViewModelClass(UClass* ViewClass);
 
+        static const TMap<UClass*, TArray<FViewModelPropertyReflection>>& GetAllProperties() { return ViewModelProperties; }
+
         static uint8 RegisterViewModelClass(ClassGetterPtr ViewClassGetter, ClassGetterPtr ViewModelClassGetter);
 
         template<typename TOwner, typename TValue>
@@ -88,8 +90,9 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     using FBaseOps    = Details::TBaseOperation<TOwner, TValue>;
     using FCopyOps    = Details::TCopyValueOperation<FBaseOps, TOwner, TValue, IsOptional>;
     using FAddPropOps = Details::TAddClassPropertyOperation<FCopyOps, TOwner, TValue>;
+    using FGetVMOps   = Details::TGetViewModelClassOperation<FAddPropOps, TOwner, TValue>;
 
-    using FEffectiveOpsType = TViewModelPropertyOperations<FAddPropOps>;
+    using FEffectiveOpsType = TViewModelPropertyOperations<FGetVMOps>;
 
     static_assert(sizeof(FViewModelPropertyOperations) == sizeof(FEffectiveOpsType), "Generated Operations type cannot fit into OpsBuffer");
 
