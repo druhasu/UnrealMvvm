@@ -14,7 +14,7 @@ public:
 
     void ShutdownModule() override
     {
-        FModuleManager::Get().OnProcessLoadedObjectsCallback().RemoveAll(this);
+        FModuleManager::Get().OnModulesChanged().RemoveAll(this);
     }
 
 private:

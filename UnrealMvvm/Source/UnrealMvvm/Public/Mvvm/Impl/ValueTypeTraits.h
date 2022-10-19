@@ -11,6 +11,8 @@ namespace UnrealMvvm_Impl
     template <typename T>
     struct TValueTypeTraits
     {
+        UE_STATIC_ASSERT_COMPLETE_TYPE(T, "T must be fully defined type, not just forward declared");
+
         template<typename U> static decltype(U::StaticStruct()) Test1(int);
         template<typename U> static decltype(U::StaticClass()) Test1(int);
         template<typename U> static char Test1(...);

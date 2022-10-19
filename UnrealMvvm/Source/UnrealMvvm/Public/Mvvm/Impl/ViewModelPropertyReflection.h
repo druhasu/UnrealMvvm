@@ -47,7 +47,7 @@ namespace UnrealMvvm_Impl
         virtual void AddClassProperty(UClass* TargetClass) const = 0;
 
         // Returns whether this property might contain Object Reference for GC
-        virtual bool ContainsObjectReference() const = 0;
+        virtual bool ContainsObjectReference(bool bIncludeNoFieldProperties) const = 0;
 
         // Returns UClass of owning ViewModel
         virtual UClass* GetViewModelClass() const = 0;

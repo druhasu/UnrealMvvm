@@ -165,7 +165,7 @@ FString FListViewModelPropertiesCommand::GetAttributes(const UnrealMvvm_Impl::FV
     using namespace UnrealMvvm_Impl;
 
     TArray<FString> Attributes;
-    if (Reflection.GetOperations().ContainsObjectReference())
+    if (Reflection.GetOperations().ContainsObjectReference(false))
     {
         Attributes.Emplace(TEXT("HasReference"));
     }

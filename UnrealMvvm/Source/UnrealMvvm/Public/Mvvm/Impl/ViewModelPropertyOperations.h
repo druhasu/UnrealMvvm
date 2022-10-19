@@ -74,9 +74,10 @@ namespace UnrealMvvm_Impl
                 }
             }
 
-            bool ContainsObjectReference() const override
+            bool ContainsObjectReference(bool bIncludeNoFieldProperties) const override
             {
-                return TPropertyFactory<typename TDecay<TValue>::Type>::ContainsObjectReference;
+                return TPropertyFactory<typename TDecay<TValue>::Type>::ContainsObjectReference &&
+                    (this->GetCastedProperty()->GetFieldOffset() > 0 || bIncludeNoFieldProperties);
             }
         };
 
