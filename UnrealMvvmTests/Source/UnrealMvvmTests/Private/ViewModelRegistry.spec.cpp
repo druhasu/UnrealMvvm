@@ -31,6 +31,13 @@ void ViewModelRegistrySpec::Define()
             TestEqual("Num properties", Properties.Num(), 1);
             TestEqual("Properties[0]", Properties[0]->GetProperty(), (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
         });
+
+        It("Should Return Zero Properties Of nullptr", [this]()
+        {
+            TArray<const FViewModelPropertyReflection*> Properties = FViewModelPropertyIterator(nullptr, true).ToArray();
+
+            TestEqual("Num properties", Properties.Num(), 0);
+        });
     });
 
     Describe("FindProperty", [this]()

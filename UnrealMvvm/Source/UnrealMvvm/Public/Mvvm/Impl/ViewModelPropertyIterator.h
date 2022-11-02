@@ -11,10 +11,8 @@ namespace UnrealMvvm_Impl
     public:
         FViewModelPropertyIterator(TSubclassOf<UBaseViewModel> InViewModelClass, bool bMaintainOrder)
         {
-            check(InViewModelClass->IsChildOf<UBaseViewModel>());
-
             UClass* Class = InViewModelClass;
-            while (Class->IsChildOf<UBaseViewModel>())
+            while (Class && Class->IsChildOf<UBaseViewModel>())
             {
                 TArray<FViewModelPropertyReflection>* List = FViewModelRegistry::ViewModelProperties.Find(Class);
                 if (List)
