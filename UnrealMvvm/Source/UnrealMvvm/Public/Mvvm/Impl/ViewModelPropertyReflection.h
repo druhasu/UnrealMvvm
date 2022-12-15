@@ -24,6 +24,7 @@ namespace UnrealMvvm_Impl
         Int,
         Int64,
         Float,
+        Double,
         Name,
         Object, // SubCategoryObject is the Class of the object passed thru this pin, or SubCategory can be 'self'. The DefaultValue string should always be empty, use DefaultObject.
         Interface, // SubCategoryObject is the Class of the object passed thru this pin.

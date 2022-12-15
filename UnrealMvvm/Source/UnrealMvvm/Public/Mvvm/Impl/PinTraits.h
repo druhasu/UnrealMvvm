@@ -6,20 +6,13 @@
 #include "Mvvm/Impl/TryGetStaticEnum.h"
 #include "Templates/IntegralConstant.h"
 #include "Mvvm/Impl/ValueTypeTraits.h"
+#include "Math/MathFwd.h"
 
 // forward declare all structs from Core module
-struct FRotator;
-struct FQuat;
-struct FTransform;
 struct FLinearColor;
 struct FColor;
-struct FPlane;
-struct FVector;
-struct FVector2D;
-struct FVector4;
 struct FRandomStream;
 struct FGuid;
-struct FBox2D;
 struct FFallbackStruct;
 struct FFloatRangeBound;
 struct FFloatRange;
@@ -133,6 +126,11 @@ namespace UnrealMvvm_Impl
 
     // Float
     DEFINE_SIMPLE_PIN_TRAITS(float, Float);
+
+#if ENGINE_MAJOR_VERSION >= 5
+    // Double
+    DEFINE_SIMPLE_PIN_TRAITS(double, Double);
+#endif
 
     // Name
     DEFINE_SIMPLE_PIN_TRAITS(FName, Name);

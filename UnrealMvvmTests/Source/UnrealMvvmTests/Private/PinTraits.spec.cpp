@@ -77,6 +77,9 @@ TArray<FTestCase> GetTestCases() const
         { TEXT("MyInt"), EPinCategoryType::Int, nullptr },
         { TEXT("MyInt64"), EPinCategoryType::Int64, nullptr },
         { TEXT("MyFloat"), EPinCategoryType::Float, nullptr },
+#if ENGINE_MAJOR_VERSION >= 5
+        { TEXT("MyDouble"), EPinCategoryType::Double, nullptr },
+#endif
         { TEXT("MyName"), EPinCategoryType::Name, nullptr },
         { TEXT("MyObject"), EPinCategoryType::Object, UObject::StaticClass() },
         { TEXT("MyInterface"), EPinCategoryType::Interface, UPinTraitsInterface::StaticClass() },
@@ -200,6 +203,9 @@ const TCHAR* PinTraitsSpec::ToString(EPinCategoryType Type)
         CASE(Int);
         CASE(Int64);
         CASE(Float);
+#if ENGINE_MAJOR_VERSION >= 5
+        CASE(Double);
+#endif
         CASE(Name);
         CASE(Object);
         CASE(Interface);

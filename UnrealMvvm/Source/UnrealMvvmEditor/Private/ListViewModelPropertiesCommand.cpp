@@ -152,6 +152,9 @@ FString FListViewModelPropertiesCommand::GetValueElementTypeName(UnrealMvvm_Impl
         case EPinCategoryType::Int:     return TEXT("int32");
         case EPinCategoryType::Int64:   return TEXT("int64");
         case EPinCategoryType::Float:   return TEXT("float");
+#if ENGINE_MAJOR_VERSION >= 5
+        case EPinCategoryType::Double:   return TEXT("double");
+#endif
         case EPinCategoryType::Name:    return TEXT("FName");
         case EPinCategoryType::String:  return TEXT("FString");
         case EPinCategoryType::Text:    return TEXT("FText");

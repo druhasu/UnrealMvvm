@@ -96,6 +96,9 @@ FName FViewModelPropertyNodeHelper::GetPinCategoryNameFromType(UnrealMvvm_Impl::
         PIN_CASE(Int);
         PIN_CASE(Int64);
         PIN_CASE(Float);
+#if ENGINE_MAJOR_VERSION >= 5
+        PIN_CASE(Double);
+#endif
         PIN_CASE(Name);
         PIN_CASE(Object);
         PIN_CASE(Interface);

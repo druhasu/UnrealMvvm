@@ -127,7 +127,11 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindPropertyInternal(UCl
 void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 {
     UClass* TempClass = NewObject<UClass>();
+#if ENGINE_MAJOR_VERSION >= 5
+    TempClass->CppClassStaticFunctions.SetAddReferencedObjects(&UObject::AddReferencedObjects);
+#else
     TempClass->ClassAddReferencedObjects = &UObject::AddReferencedObjects;
+#endif
 
     // Create FProperty objects and add them to TempClass
     for (FViewModelPropertyIterator Iter(ViewModelClass, false); Iter; ++Iter)
@@ -155,7 +159,19 @@ void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 bool FViewModelRegistry::TransferTokenStream(UClass* Source, UClass* Destination)
 {
     // Helper class that mirrors layout of FGCReferenceTokenStream
-    // We cannot use FGCReferenceTokenStream directly because it is not exported by Unreal
+    // We cannot use its fields directly because they are private :(
+
+#if ENGINE_MAJOR_VERSION >= 5
+    struct FReferenceTokenStreamDouble
+    {
+        TArray<uint32> Tokens;
+        int32 StackSize;
+        EGCTokenType TokenType;
+#if ENABLE_GC_OBJECT_CHECKS
+        TArray<FName> TokenDebugInfo;
+#endif
+    };
+#else
     struct FReferenceTokenStreamDouble
     {
         TArray<uint32> Tokens;
@@ -163,6 +179,7 @@ bool FViewModelRegistry::TransferTokenStream(UClass* Source, UClass* Destination
         TArray<FName> TokenDebugInfo;
 #endif
     };
+#endif
 
     FReferenceTokenStreamDouble& SourceStream = reinterpret_cast<FReferenceTokenStreamDouble&>(Source->ReferenceTokenStream);
     FReferenceTokenStreamDouble& DestinationStream = reinterpret_cast<FReferenceTokenStreamDouble&>(Destination->ReferenceTokenStream);
@@ -197,6 +214,10 @@ bool FViewModelRegistry::TransferTokenStream(UClass* Source, UClass* Destination
             const int32 NewDestinationNum = DestinationStream.Tokens.Num() + LastSourceTokenIdx;
             DestinationStream.Tokens.Reserve(NewDestinationNum);
             DestinationStream.Tokens.Insert(SourceStream.Tokens.GetData(), LastSourceTokenIdx, LastDestinationTokenIdx);
+
+#if ENGINE_MAJOR_VERSION >= 5
+            DestinationStream.StackSize = FMath::Max(DestinationStream.StackSize, SourceStream.StackSize);
+#endif
 
 #if ENABLE_GC_OBJECT_CHECKS
             DestinationStream.TokenDebugInfo.Reserve(NewDestinationNum);

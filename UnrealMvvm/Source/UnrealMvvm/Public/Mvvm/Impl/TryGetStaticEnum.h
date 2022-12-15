@@ -9,7 +9,7 @@
 namespace UnrealMvvm_Impl
 {
     // StaticEnum<T> is defined only if T is UEnum. That prevents linking if called with incorrect T
-    // We cannot determine in compile time whether T is UEnum or not. So we had to do it runtime
+    // We cannot determine in compile time whether T is UEnum or not. So we had to do it in runtime
     // This function is a replacement for StaticEnum<T> and returns nullptr if corresponding UEnum class is not found for T
 
     template <typename T>
@@ -46,7 +46,11 @@ namespace UnrealMvvm_Impl
 
         FString EnumName = PrettyName.Mid(StartIndex, EndIndex - StartIndex);
 
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 1
+        return FindFirstObject<UEnum>(*EnumName);
+#else
         return FindObject<UEnum>(ANY_PACKAGE, *EnumName);
+#endif
     }
 
     template <typename T>

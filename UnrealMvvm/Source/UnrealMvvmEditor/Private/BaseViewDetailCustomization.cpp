@@ -24,6 +24,14 @@
 #include "Widgets/Input/SHyperlink.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 
+#if ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 1
+#include "Styling/AppStyle.h"
+using FCorrectStyle = FAppStyle;
+#else
+#include "EditorStyleSet.h"
+using FCorrectStyle = FEditorStyle;
+#endif
+
 TSharedRef<IDetailCustomization> FBaseViewDetailCustomization::MakeInstance()
 {
     return MakeShared<FBaseViewDetailCustomization>();
@@ -90,7 +98,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
     .MaxDesiredWidth(400)
     [
         SNew(SHyperlink)
-        .Style(FEditorStyle::Get(), "Common.GotoNativeCodeHyperlink")
+        .Style(FCorrectStyle::Get(), "Common.GotoNativeCodeHyperlink")
         .OnNavigate_Lambda([](UClass* C) { FSourceCodeNavigation::NavigateToClass(C); }, ViewModelClass)
         .Text(ViewModelClass->GetDisplayNameText())
         .ToolTipText(FText::Format(NSLOCTEXT("UnrealMvvm", "GotoViewModelSourceTooltip", "Click to open ViewModel source file in {0}"), FSourceCodeNavigation::GetSelectedSourceCodeIDE()))
@@ -114,7 +122,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
             .Padding(0, 0, 5, 0)
             [
                 SNew(SImage)
-                .Image(FEditorStyle::GetBrush("GraphEditor.Event_16x"))
+                .Image(FCorrectStyle::GetBrush("GraphEditor.Event_16x"))
             ]
 
             + SHorizontalBox::Slot()
@@ -135,7 +143,7 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
             .MaxDesiredWidth(200)
             [
                 SNew(SButton)
-                .ButtonStyle(FEditorStyle::Get(), "FlatButton.Success")
+                .ButtonStyle(FCorrectStyle::Get(), "FlatButton.Success")
                 .HAlign(HAlign_Center)
                 .OnClicked(this, &FBaseViewDetailCustomization::HandleAddOrViewEventForProperty, ViewModelClass, PropertyName)
                 .ForegroundColor(FSlateColor::UseForeground())
@@ -149,13 +157,13 @@ void FBaseViewDetailCustomization::CustomizeDetails(IDetailLayoutBuilder& Detail
                         + SWidgetSwitcher::Slot()
                         [
                             SNew(STextBlock)
-                            .Font(FEditorStyle::GetFontStyle(TEXT("BoldFont")))
+                            .Font(FCorrectStyle::GetFontStyle(TEXT("BoldFont")))
                             .Text(NSLOCTEXT("UnrealMvvm", "ViewEvent", "View"))
                         ]
                         + SWidgetSwitcher::Slot()
                         [
                             SNew(SImage)
-                            .Image(FEditorStyle::GetBrush("Plus"))
+                            .Image(FCorrectStyle::GetBrush("Plus"))
                         ]
                     ]
                 ]

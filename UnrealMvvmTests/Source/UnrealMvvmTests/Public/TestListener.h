@@ -7,7 +7,13 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTestDynamicDelegate);
 
-struct FTestListener : public TSharedFromThis<FTestListener, ESPMode::Fast>
+struct FTestListener : public TSharedFromThis<FTestListener,
+#if ENGINE_MAJOR_VERSION >= 5
+    ESPMode::ThreadSafe
+#else
+    ESPMode::NotThreadSafe
+#endif
+>
 {
 public:
     void SimpleCallback() { Invoked = true; }

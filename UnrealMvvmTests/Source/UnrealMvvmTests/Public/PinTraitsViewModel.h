@@ -57,6 +57,9 @@ class UPinTraitsViewModel : public UBaseViewModel
     VM_PROP_PIN_TRAITS_TEST(int32, MyInt);
     VM_PROP_PIN_TRAITS_TEST(int64, MyInt64);
     VM_PROP_PIN_TRAITS_TEST(float, MyFloat);
+#if ENGINE_MAJOR_VERSION >= 5
+    VM_PROP_PIN_TRAITS_TEST(double, MyDouble);
+#endif
     VM_PROP_PIN_TRAITS_TEST(FName, MyName);
     VM_PROP_PIN_TRAITS_TEST(UObject*, MyObject);
     VM_PROP_PIN_TRAITS_TEST(TScriptInterface<IPinTraitsInterface>, MyInterface);
