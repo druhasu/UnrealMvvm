@@ -59,6 +59,7 @@ bool FViewModelPropertyNodeHelper::FillPinType(FEdGraphPinType& PinType, const F
     if (Property && IsPropertyAvailableInBlueprint(*Property))
     {
         PinType.PinCategory = GetPinCategoryNameFromType(Property->PinCategoryType);
+        PinType.PinSubCategory = GetPinSubCategoryNameFromType(Property->PinCategoryType);
         PinType.PinSubCategoryObject = Property->GetPinSubCategoryObject();
 
         PinType.bIsConst = true;
@@ -68,6 +69,7 @@ bool FViewModelPropertyNodeHelper::FillPinType(FEdGraphPinType& PinType, const F
         if (PinType.ContainerType == EPinContainerType::Map)
         {
             PinType.PinValueType.TerminalCategory = GetPinCategoryNameFromType(Property->PinValueCategoryType);
+            PinType.PinValueType.TerminalSubCategory = GetPinSubCategoryNameFromType(Property->PinValueCategoryType);
             PinType.PinValueType.TerminalSubCategoryObject = Property->GetPinValueSubCategoryObject();
         }
 
@@ -95,9 +97,8 @@ FName FViewModelPropertyNodeHelper::GetPinCategoryNameFromType(UnrealMvvm_Impl::
         PIN_CASE(SoftClass);
         PIN_CASE(Int);
         PIN_CASE(Int64);
+#if ENGINE_MAJOR_VERSION < 5
         PIN_CASE(Float);
-#if ENGINE_MAJOR_VERSION >= 5
-        PIN_CASE(Double);
 #endif
         PIN_CASE(Name);
         PIN_CASE(Object);
@@ -110,9 +111,34 @@ FName FViewModelPropertyNodeHelper::GetPinCategoryNameFromType(UnrealMvvm_Impl::
         // special handling for Enum. Unreal uses Byte for them
         case UnrealMvvm_Impl::EPinCategoryType::Enum:
             return UEdGraphSchema_K2::PC_Byte;
+
+        // special handling for floats and doubles in UE5
+#if ENGINE_MAJOR_VERSION >= 5
+        case UnrealMvvm_Impl::EPinCategoryType::Float:
+        case UnrealMvvm_Impl::EPinCategoryType::Double:
+            return UEdGraphSchema_K2::PC_Real;
+#endif
     }
 
     #undef PIN_CASE
+}
+
+FName FViewModelPropertyNodeHelper::GetPinSubCategoryNameFromType(UnrealMvvm_Impl::EPinCategoryType CategoryType)
+{
+    switch (CategoryType)
+    {
+        case UnrealMvvm_Impl::EPinCategoryType::Unsupported:
+        default:
+            return FName();
+
+        // only Floats and Doubles in UE5 are using subcategory name right now
+#if ENGINE_MAJOR_VERSION >= 5
+        case UnrealMvvm_Impl::EPinCategoryType::Float:
+            return UEdGraphSchema_K2::PC_Float;
+        case UnrealMvvm_Impl::EPinCategoryType::Double:
+            return UEdGraphSchema_K2::PC_Double;
+#endif
+    }
 }
 
 void FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, UEdGraphPin* HasValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName)

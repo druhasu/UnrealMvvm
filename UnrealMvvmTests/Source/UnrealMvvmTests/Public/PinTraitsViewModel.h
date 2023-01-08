@@ -62,6 +62,9 @@ class UPinTraitsViewModel : public UBaseViewModel
 #endif
     VM_PROP_PIN_TRAITS_TEST(FName, MyName);
     VM_PROP_PIN_TRAITS_TEST(UObject*, MyObject);
+#if ENGINE_MAJOR_VERSION >= 5
+    VM_PROP_PIN_TRAITS_TEST(TObjectPtr<UObject>, MyObjectPtr);
+#endif
     VM_PROP_PIN_TRAITS_TEST(TScriptInterface<IPinTraitsInterface>, MyInterface);
     VM_PROP_PIN_TRAITS_TEST(TSoftObjectPtr<UTexture2D>, MySoftObject);
     VM_PROP_PIN_TRAITS_TEST(FString, MyString);

@@ -95,6 +95,40 @@ void FViewModelGCSpec::Define()
                 ViewModel->SetPointerMapKeyValueRef({ { Obj, Obj } });
             });
         });
+
+#if ENGINE_MAJOR_VERSION >= 5
+        It("Should keep object stored as TObjectPtr<UObject>", [this]
+        {
+            TestCommon([](UGCTestViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetObjectPtr(Obj);
+            });
+        });
+
+        It("Should keep object stored in TArray<TObjectPtr<UObject>>", [this]
+        {
+            TestCommon([](UGCTestViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetObjectPtrArray({ Obj });
+            });
+        });
+
+        It("Should keep object stored in TSet<TObjectPtr<UObject>>", [this]
+        {
+            TestCommon([](UGCTestViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetObjectPtrSet({ Obj });
+            });
+        });
+
+        It("Should keep object stored in TMap<TObjectPtr<UObject>, _ >", [this]
+        {
+            TestCommon([](UGCTestViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetObjectPtrMapKey({ { Obj, 1 } });
+            });
+        });
+#endif
     });
 
     Describe("Struct", [this]

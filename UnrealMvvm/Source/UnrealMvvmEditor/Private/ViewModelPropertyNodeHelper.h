@@ -24,6 +24,9 @@ public:
     /* Converts EPinCategoryType to FName used in BP editor */
     static FName GetPinCategoryNameFromType(UnrealMvvm_Impl::EPinCategoryType CategoryType);
 
+    /* Converts EPinCategoryType to a subcategory name */
+    static FName GetPinSubCategoryNameFromType(UnrealMvvm_Impl::EPinCategoryType CategoryType);
+
     /* Spawns intermediate node equivalent to Self -> GetViewModelPropertyValue(View, ViewModelPropertyName) and connects its output to a given ValuePin */
     static void SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, UEdGraphPin* HasValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
 

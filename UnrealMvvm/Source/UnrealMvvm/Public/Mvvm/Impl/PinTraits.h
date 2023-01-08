@@ -138,6 +138,11 @@ namespace UnrealMvvm_Impl
     // Object. SubCategoryObject is the Class of the object passed thru this pin.
     DEFINE_COMPLEX_PIN_TRAITS(T*, Object, TValueTypeTraits<T>::IsClass, T::StaticClass());
 
+#if ENGINE_MAJOR_VERSION >= 5
+    // Object inside TObjectPtr
+    DEFINE_COMPLEX_PIN_TRAITS(TObjectPtr<T>, Object, TValueTypeTraits<T>::IsClass, T::StaticClass());
+#endif
+
     // Interface. SubCategoryObject is the Class of the object passed thru this pin.
     DEFINE_COMPLEX_PIN_TRAITS(TScriptInterface<T>, Interface, TValueTypeTraits<T>::IsInterface, T::UClassType::StaticClass());
 

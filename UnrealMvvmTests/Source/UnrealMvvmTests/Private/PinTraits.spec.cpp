@@ -82,6 +82,9 @@ TArray<FTestCase> GetTestCases() const
 #endif
         { TEXT("MyName"), EPinCategoryType::Name, nullptr },
         { TEXT("MyObject"), EPinCategoryType::Object, UObject::StaticClass() },
+#if ENGINE_MAJOR_VERSION >= 5
+        { TEXT("MyObjectPtr"), EPinCategoryType::Object, UObject::StaticClass() },
+#endif
         { TEXT("MyInterface"), EPinCategoryType::Interface, UPinTraitsInterface::StaticClass() },
         { TEXT("MySoftObject"), EPinCategoryType::SoftObject, UTexture2D::StaticClass() },
         { TEXT("MyString"), EPinCategoryType::String, nullptr },

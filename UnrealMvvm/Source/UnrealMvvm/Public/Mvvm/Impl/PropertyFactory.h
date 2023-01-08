@@ -120,6 +120,21 @@ namespace UnrealMvvm_Impl
             }
         };
 
+#if ENGINE_MAJOR_VERSION >= 5
+        /* TObjectPtr<> pointer */
+        template <typename TValue>
+        struct TPropertyFactory<TObjectPtr<TValue>, typename TEnableIf<TValueTypeTraits<TValue>::IsClass>::Type>
+        {
+            static constexpr bool IsSupportedByUnreal = true;
+            static constexpr bool ContainsObjectReference = true;
+
+            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            {
+                DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, TValue::StaticClass);
+            }
+        };
+#endif
+
         /* UStruct value */
         template <typename TValue>
         struct TPropertyFactory<TValue, typename TEnableIf<TValueTypeTraits<TValue>::IsStruct>::Type>
