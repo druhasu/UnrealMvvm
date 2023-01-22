@@ -8,10 +8,31 @@
 namespace UnrealMvvm_Impl
 {
 
+FViewModelRegistry::FViewModelClassChanged FViewModelRegistry::ViewClassChanged;
 TMap<UClass*, TArray<FViewModelPropertyReflection>> FViewModelRegistry::ViewModelProperties{};
 TMap<UClass*, UClass*> FViewModelRegistry::ViewModelClasses{};
+TMap<UClass*, FViewModelRegistry::FViewModelSetterPtr> FViewModelRegistry::ViewModelSetters{};
 TArray<FViewModelRegistry::FUnprocessedPropertyEntry> FViewModelRegistry::UnprocessedProperties{};
 TArray<FViewModelRegistry::FUnprocessedViewModelClassEntry> FViewModelRegistry::UnprocessedViewModelClasses{};
+
+template <typename TValue>
+TValue* FindByClass(TMap<UClass*, TValue*>& Map, UClass* ViewClass)
+{
+    UClass* Needle = ViewClass;
+
+    while (Needle)
+    {
+        TValue** FoundPtr = Map.Find(Needle);
+        if (FoundPtr)
+        {
+            return *FoundPtr;
+        }
+
+        Needle = Needle->GetSuperClass();
+    }
+
+    return nullptr;
+}
 
 const FViewModelPropertyReflection* FViewModelRegistry::FindProperty(UClass* InViewModelClass, const FName& InPropertyName)
 {
@@ -25,29 +46,33 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindProperty(UClass* InV
 
 UClass* FViewModelRegistry::GetViewModelClass(UClass* ViewClass)
 {
-    UClass* Needle = ViewClass;
-
-    while (Needle)
-    {
-        UClass** ClassPtr = ViewModelClasses.Find(Needle);
-        if (ClassPtr)
-        {
-            return *ClassPtr;
-        }
-
-        Needle = Needle->GetSuperClass();
-    }
-
-    return nullptr;
+    return FindByClass(ViewModelClasses, ViewClass);
 }
 
-uint8 FViewModelRegistry::RegisterViewModelClass(FViewModelRegistry::ClassGetterPtr ViewClassGetter, FViewModelRegistry::ClassGetterPtr ViewModelClassGetter)
+FViewModelRegistry::FViewModelSetterPtr FViewModelRegistry::GetViewModelSetter(UClass* ViewClass)
+{
+    return FindByClass(ViewModelSetters, ViewClass);
+}
+
+uint8 FViewModelRegistry::RegisterViewClass(FViewModelRegistry::FClassGetterPtr ViewClassGetter, FViewModelRegistry::FClassGetterPtr ViewModelClassGetter, FViewModelRegistry::FViewModelSetterPtr ViewModelSetter)
 {
     FUnprocessedViewModelClassEntry& Entry = UnprocessedViewModelClasses.AddDefaulted_GetRef();
     Entry.GetViewClass = ViewClassGetter;
     Entry.GetViewModelClass = ViewModelClassGetter;
+    Entry.ViewModelSetter = ViewModelSetter;
 
     return 1;
+}
+
+void FViewModelRegistry::RegisterViewClass(UClass* ViewClass, UClass* ViewModelClass)
+{
+    check(ViewClass);
+    check(ViewModelClass);
+
+    ViewModelClasses.Emplace(ViewClass, ViewModelClass);
+#if WITH_EDITOR
+    ViewClassChanged.Broadcast(ViewClass, ViewModelClass);
+#endif
 }
 
 void FViewModelRegistry::ProcessPendingRegistrations()
@@ -91,7 +116,19 @@ void FViewModelRegistry::ProcessPendingRegistrations()
     {
         for (auto& Entry : UnprocessedViewModelClasses)
         {
-            ViewModelClasses.Add(Entry.GetViewClass(), Entry.GetViewModelClass());
+            UClass* ViewClass = Entry.GetViewClass();
+            UClass* ViewModelClass = Entry.GetViewModelClass();
+
+            ViewModelClasses.Add(ViewClass, ViewModelClass);
+
+            if (Entry.ViewModelSetter)
+            {
+                ViewModelSetters.Add(ViewClass, Entry.ViewModelSetter);
+            }
+
+#if WITH_EDITOR
+            ViewClassChanged.Broadcast(ViewClass, ViewModelClass);
+#endif
         }
 
         UnprocessedViewModelClasses.Empty();

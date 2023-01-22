@@ -11,7 +11,7 @@
 /*
  * Base class for ViewModels
  */ 
-UCLASS()
+UCLASS(HideDropDown)
 class UNREALMVVM_API UBaseViewModel : public UObject
 {
     GENERATED_BODY()

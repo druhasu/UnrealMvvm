@@ -18,21 +18,12 @@ class UNREALMVVM_API UBaseView : public UUserWidget, public FListenManager
 
 public:
     /* Returns pointer to current BaseViewModel */
-    class UBaseViewModel* GetUntypedViewModel() const { return ViewModel; }
+    class UBaseViewModel* GetUntypedViewModel() const { return GetExtension<UBaseViewExtension>()->ViewModel; }
 
 protected:
+    bool Initialize() override;
     void NativeConstruct() override;
     void NativeDestruct() override;
 
     virtual void ListenEvents() {}
-
-private:
-    template<typename U, typename V>
-    friend class TBaseView;
-
-    UPROPERTY()
-    class UBaseViewModel* ViewModel;
-
-    DECLARE_DELEGATE_OneParam(FConstructedChanged, bool);
-    FConstructedChanged ConstructedChanged;
 };

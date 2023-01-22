@@ -2,7 +2,7 @@
 
 #include "ViewModelPropertyNodeHelper.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmBlueprintLibrary.h"
 #include "KismetCompiler.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "K2Node_CallFunction.h"

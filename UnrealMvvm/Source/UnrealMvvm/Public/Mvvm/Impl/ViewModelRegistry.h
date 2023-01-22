@@ -8,6 +8,8 @@
 #include "Templates/IsEnumClass.h"
 
 class UClass;
+class UUserWidget;
+class UBaseViewModel;
 
 template<typename TOwner, typename TValue>
 class TViewModelProperty;
@@ -18,7 +20,8 @@ namespace UnrealMvvm_Impl
     class UNREALMVVM_API FViewModelRegistry
     {
     public:
-        using ClassGetterPtr = UClass * (*)();
+        using FClassGetterPtr = UClass * (*)();
+        using FViewModelSetterPtr = void (*)(UUserWidget&, UBaseViewModel*);
 
         template <typename T>
         static const FViewModelPropertyReflection* FindProperty(const FName& InPropertyName)
@@ -30,28 +33,37 @@ namespace UnrealMvvm_Impl
 
         static UClass* GetViewModelClass(UClass* ViewClass);
 
+        static FViewModelSetterPtr GetViewModelSetter(UClass* ViewClass);
+
         static const TMap<UClass*, TArray<FViewModelPropertyReflection>>& GetAllProperties() { return ViewModelProperties; }
 
-        static uint8 RegisterViewModelClass(ClassGetterPtr ViewClassGetter, ClassGetterPtr ViewModelClassGetter);
+        static uint8 RegisterViewClass(FClassGetterPtr ViewClassGetter, FClassGetterPtr ViewModelClassGetter, FViewModelSetterPtr ViewModelSetter);
+        static void RegisterViewClass(UClass* ViewClass, UClass* ViewModelClass);
 
         template<typename TOwner, typename TValue>
         static uint8 RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr);
 
         static void ProcessPendingRegistrations();
 
+#if WITH_EDITOR
+        DECLARE_MULTICAST_DELEGATE_TwoParams(FViewModelClassChanged, UClass* /*ViewClass*/, UClass* /*ViewModelClass*/);
+        static FViewModelClassChanged ViewClassChanged;
+#endif
+
     private:
         friend class FViewModelPropertyIterator;
 
         struct FUnprocessedPropertyEntry
         {
-            ClassGetterPtr GetClass;
+            FClassGetterPtr GetClass;
             FViewModelPropertyReflection Reflection;
         };
 
         struct FUnprocessedViewModelClassEntry
         {
-            ClassGetterPtr GetViewClass;
-            ClassGetterPtr GetViewModelClass;
+            FClassGetterPtr GetViewClass;
+            FClassGetterPtr GetViewModelClass;
+            FViewModelSetterPtr ViewModelSetter;
         };
 
         static const FViewModelPropertyReflection* FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName);
@@ -64,6 +76,9 @@ namespace UnrealMvvm_Impl
 
         // Map of <ViewClass, ViewModelClass>
         static TMap<UClass*, UClass*> ViewModelClasses;
+
+        // Map of <ViewClass, Setter Function>
+        static TMap<UClass*, FViewModelSetterPtr> ViewModelSetters;
 
         // List of properties that were not yet added to lookup table
         static TArray<FUnprocessedPropertyEntry> UnprocessedProperties;

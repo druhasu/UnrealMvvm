@@ -2,7 +2,7 @@
 
 #include "K2Node_ViewModelPropertyChanged.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmBlueprintLibrary.h"
 #include "EdGraphSchema_K2.h"
 #include "KismetCompiler.h"
 #include "K2Node_CustomEvent.h"
@@ -28,11 +28,9 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
 
     if (ExecPin->LinkedTo.Num() > 0)
     {
-        TSharedPtr<FUserPinInfo> UserPin = MakeShared<FUserPinInfo>();
-        UserPin->DesiredPinDirection = EGPD_Output;
-        UserPin->PinName = ViewModelPropertyName;
+        FEdGraphPinType PinType;
 
-        if (FViewModelPropertyNodeHelper::FillPinType(UserPin->PinType, ViewModelPropertyName, ViewModelOwnerClass))
+        if (FViewModelPropertyNodeHelper::FillPinType(PinType, ViewModelPropertyName, ViewModelOwnerClass))
         {
             UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(this, ExecPin, SourceGraph);
 

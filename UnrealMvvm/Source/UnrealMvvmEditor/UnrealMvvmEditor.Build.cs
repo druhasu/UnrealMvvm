@@ -27,6 +27,7 @@ public class UnrealMvvmEditor : ModuleRules
 				"EditorStyle",
 				"BlueprintGraph",
 				"GraphEditor",
+				"UMGEditor",
 				"KismetCompiler",
 				"UnrealEd",
 				"UnrealMvvm",

@@ -1,37 +1,38 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "Modules/ModuleManager.h"
-#include "PropertyEditorModule.h"
 #include "BlueprintGraphModule.h"
+#include "UMGEditorModule.h"
 #include "BlueprintViewModelNodeSpawner.h"
-#include "BaseViewDetailCustomization.h"
+#include "ViewWidgetCustomizationExtender.h"
 
 class FUnrealMvvmEditorModule : public IModuleInterface
 {
 public:
 	using FFilterDelegate = FBlueprintGraphModule::FActionMenuRejectionTest;
 
+	FUnrealMvvmEditorModule()
+		: ViewWidgetCustomizationExtender(new FViewWidgetCustomizationExtender)
+	{
+		static_cast<FViewWidgetCustomizationExtender&>(*ViewWidgetCustomizationExtender).Init();
+	}
+
 	void StartupModule() override
 	{
-		FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		FBlueprintGraphModule& BlueprintGraphModule = FModuleManager::LoadModuleChecked<FBlueprintGraphModule>("BlueprintGraph");
-
-		PropertyModule.RegisterCustomClassLayout("BaseView", FOnGetDetailCustomizationInstance::CreateStatic(&FBaseViewDetailCustomization::MakeInstance));
+		IUMGEditorModule& UMGEditorModule = FModuleManager::LoadModuleChecked<IUMGEditorModule>("UMGEditor");
 
 		FFilterDelegate Dlg = FFilterDelegate::CreateStatic(&UBlueprintViewModelNodeSpawner::FilterAction);
 		FilterDelegateHandle = Dlg.GetHandle();
 		BlueprintGraphModule.GetExtendedActionMenuFilters().Add(Dlg);
+
+		UMGEditorModule.AddWidgetCustomizationExtender(ViewWidgetCustomizationExtender);
 	}
 
 	void ShutdownModule() override
 	{
-		FPropertyEditorModule* PropertyModule = FModuleManager::GetModulePtr<FPropertyEditorModule>("PropertyEditor");
 		FBlueprintGraphModule* BlueprintGraphModule = FModuleManager::GetModulePtr<FBlueprintGraphModule>("BlueprintGraph");
-
-		if (PropertyModule)
-		{
-			PropertyModule->UnregisterCustomClassLayout("BaseView");
-		}
+		IUMGEditorModule* UMGEditorModule = FModuleManager::GetModulePtr<IUMGEditorModule>("UMGEditor");
 
 		if (BlueprintGraphModule)
 		{
@@ -40,8 +41,14 @@ public:
 				return Dlg.GetHandle() == FilterDelegateHandle;
 			});
 		}
+
+		if (UMGEditorModule)
+		{
+			UMGEditorModule->RemoveWidgetCustomizationExtender(ViewWidgetCustomizationExtender);
+		}
 	}
 
+	TSharedRef<IBlueprintWidgetCustomizationExtender> ViewWidgetCustomizationExtender;
 	FDelegateHandle FilterDelegateHandle;
 };
 

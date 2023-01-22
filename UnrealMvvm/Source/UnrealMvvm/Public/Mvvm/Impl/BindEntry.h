@@ -12,12 +12,11 @@ namespace UnrealMvvm_Impl
     struct IPropertyChangeHandler
     {
         virtual ~IPropertyChangeHandler() = default;
-        virtual void Invoke(UBaseViewModel* ViewModel, const FViewModelPropertyBase* Property) = 0;
+        virtual void Invoke(UBaseViewModel* ViewModel, const FViewModelPropertyBase* Property) const = 0;
     };
 
     struct FBindEntry
     {
-        FBindEntry(FBindEntry&&) = default;
         FBindEntry(const FViewModelPropertyBase* InProperty)
             : Property(InProperty)
         {
