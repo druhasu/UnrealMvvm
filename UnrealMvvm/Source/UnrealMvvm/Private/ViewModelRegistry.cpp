@@ -8,7 +8,9 @@
 namespace UnrealMvvm_Impl
 {
 
+#if WITH_EDITOR
 FViewModelRegistry::FViewModelClassChanged FViewModelRegistry::ViewClassChanged;
+#endif
 TMap<UClass*, TArray<FViewModelPropertyReflection>> FViewModelRegistry::ViewModelProperties{};
 TMap<UClass*, UClass*> FViewModelRegistry::ViewModelClasses{};
 TMap<UClass*, FViewModelRegistry::FViewModelSetterPtr> FViewModelRegistry::ViewModelSetters{};
