@@ -5,7 +5,8 @@
 #include "Mvvm/Impl/BaseViewClassExtension.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 
-bool UBaseView::Initialize()
+UBaseView::UBaseView()
+    : Super(FObjectInitializer::Get())
 {
     if (!HasAnyFlags(RF_ClassDefaultObject))
     {
@@ -15,11 +16,9 @@ bool UBaseView::Initialize()
         if (!ClassExtension)
         {
             // if there is no UBaseViewClassExtension, we need to manually add UBaseViewExtension to itself
-            AddExtension(UBaseViewExtension::StaticClass());
+            UBaseViewExtension::Request(this);
         }
     }
-
-    return Super::Initialize();
 }
 
 void UBaseView::NativeConstruct()

@@ -19,28 +19,28 @@ public:
         // this way compiler will not optimize away initialization of Registered and this View will be recorded in Registry
         // this line though will be optimized away later and won't cost us anything
         const uint8& Register = Registered;
+
+        CachedExtension = UBaseViewExtension::Request(static_cast<TOwner*>(this));
     }
 
     virtual ~TBaseView() = default;
 
     TViewModel* GetViewModel() const
     {
-        return (TViewModel*)GetExtension()->ViewModel;
+        return (TViewModel*)CachedExtension->ViewModel;
     }
 
     void SetViewModel(TViewModel* InViewModel)
     {
-        UBaseViewExtension* Extension = GetExtension();
-
-        if (Extension->BindEntries.Num() == 0)
+        if (CachedExtension->BindEntries.Num() == 0)
         {
             BindProperties();
-            Extension->PrepareBindings(TViewModel::StaticClass());
+            CachedExtension->PrepareBindings(TViewModel::StaticClass());
         }
 
-        TViewModel* OldViewModel = (TViewModel*)Extension->ViewModel;
+        TViewModel* OldViewModel = (TViewModel*)CachedExtension->ViewModel;
 
-        Extension->SetViewModelInternal(InViewModel);
+        CachedExtension->SetViewModelInternal(InViewModel);
         OnViewModelChanged(OldViewModel, InViewModel);
     }
 
@@ -63,19 +63,9 @@ private:
         Owner.SetViewModel((TViewModel*)ViewModel);
     }
 
-    UBaseViewExtension* GetExtension() const
-    {
-        if (!CachedExtension)
-        {
-            CachedExtension = UBaseViewExtension::Request(static_cast<const TOwner*>(this));
-        }
-
-        return CachedExtension;
-    }
-
     auto& GetBindEntries()
     {
-        return GetExtension()->BindEntries;
+        return CachedExtension->BindEntries;
     }
 
     mutable UBaseViewExtension* CachedExtension = nullptr;

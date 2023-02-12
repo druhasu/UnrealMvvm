@@ -21,6 +21,7 @@ public:
     static const FName ViewModelChangedFunctionName;
 
 private:
+    /* There are a lot of friends here, but this class externals should not be made public */
     template<typename U, typename V>
     friend class TBaseView;
     friend class UBaseView;
@@ -28,7 +29,7 @@ private:
     friend class UBaseViewClassExtension;
 
     /* Returns Extension instance from a given widget. Creates new instance if not found */
-    static UBaseViewExtension* Request(const UUserWidget* Widget);
+    static UBaseViewExtension* Request(UUserWidget* Widget);
 
     /* Returns existing Extension instance or nullptr if not found */
     static UBaseViewExtension* Get(const UUserWidget* Widget);
