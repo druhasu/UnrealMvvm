@@ -43,8 +43,17 @@ public class UnrealMvvmTests : ModuleRules
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
-		
-		
+
+		if (Target.Type == TargetRules.TargetType.Editor)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new[]
+				{
+					"BlueprintGraph",
+					"UnrealMvvmEditor",
+				});
+		}
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{

@@ -32,10 +32,10 @@ void UK2Node_ViewModelPropertyValue::GetMenuActions(FBlueprintActionDatabaseRegi
     if (Blueprint)
     {
         UClass* BlueprintClass = Blueprint->GeneratedClass;
-        if (BlueprintClass->IsChildOf<UBaseView>())
-        {
-            UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(BlueprintClass);
+        UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(BlueprintClass);
 
+        if (ViewModelClass)
+        {
             for (UnrealMvvm_Impl::FViewModelPropertyIterator Iter(ViewModelClass, false); Iter; ++Iter)
             {
                 UBlueprintViewModelNodeSpawner* Spawner = UBlueprintViewModelNodeSpawner::CreateForProperty(GetClass(), BlueprintClass, ViewModelClass, Iter->GetProperty()->GetName());
