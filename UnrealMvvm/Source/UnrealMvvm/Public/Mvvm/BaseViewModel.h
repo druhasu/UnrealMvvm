@@ -11,7 +11,7 @@
 /*
  * Base class for ViewModels
  */ 
-UCLASS(HideDropDown)
+UCLASS(HideDropDown, BlueprintType)
 class UNREALMVVM_API UBaseViewModel : public UObject
 {
     GENERATED_BODY()
@@ -60,6 +60,13 @@ protected:
     {
         checkf(Property, TEXT("You should not call RaiseChanged with nullptr property"));
         Changed.Broadcast(Property);
+    }
+
+    /* Call this method to notify any connected View that given properties were changed */
+    template <typename... TProperty, TEMPLATE_REQUIRES(sizeof...(TProperty) >= 2)>
+    void RaiseChanged(const TProperty*... Props)
+    {
+        (RaiseChanged(Props), ...);
     }
 
     /*

@@ -1,7 +1,7 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "K2Node_ViewModelPropertyValue.h"
-#include "Mvvm/BaseView.h"
+#include "Mvvm/BaseViewModel.h"
 #include "Mvvm/Impl/ViewModelPropertyIterator.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
