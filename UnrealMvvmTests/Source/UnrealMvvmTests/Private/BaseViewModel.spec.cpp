@@ -71,4 +71,30 @@ void BaseViewModelSpec::Define()
             TestFalse("Wrong status received", ViewModel->LastSubscriptionStatus.Get(true));
         });
     });
+
+    Describe("RaiseChanged", [this]
+    {
+        It("Should notify view about single property", [this]
+        {
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            const FViewModelPropertyBase* Property;
+            ViewModel->Subscribe(FChangeDelegate::CreateLambda([&](auto* Prop) { Property = Prop; }));
+
+            ViewModel->RaiseSingleChange();
+            TestEqual("Changed property", Property, (const FViewModelPropertyBase*)UTestBaseViewModel::IntValueProperty());
+        });
+
+        It("Should notify view about multiple property", [this]
+        {
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            TArray<const FViewModelPropertyBase*> Properties;
+            ViewModel->Subscribe(FChangeDelegate::CreateLambda([&](auto* Prop) { Properties.Add(Prop); }));
+
+            ViewModel->RaiseMultipleChange();
+            TestTrue("IntValueProperty changed", Properties.Contains(UTestBaseViewModel::IntValueProperty()));
+            TestTrue("FloatValueProperty changed", Properties.Contains(UTestBaseViewModel::FloatValueProperty()));
+        });
+    });
 }
