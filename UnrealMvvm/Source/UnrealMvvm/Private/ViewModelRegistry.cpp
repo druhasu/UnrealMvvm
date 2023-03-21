@@ -165,7 +165,7 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindPropertyInternal(UCl
 
 void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 {
-    UClass* TempClass = NewObject<UClass>();
+    UClass* TempClass = NewObject<UClass>((UObject*)GetTransientPackage(), FName(), EObjectFlags::RF_Transient);
 #if ENGINE_MAJOR_VERSION >= 5
     TempClass->CppClassStaticFunctions.SetAddReferencedObjects(&UObject::AddReferencedObjects);
 #else

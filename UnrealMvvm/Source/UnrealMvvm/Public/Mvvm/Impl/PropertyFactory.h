@@ -27,7 +27,7 @@ namespace UnrealMvvm_Impl
 #if ENGINE_MAJOR_VERSION >= 5
 
     #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
-        Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_NoFlags, 1, nullptr, nullptr, ##__VA_ARGS__ }
+        Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, 1, nullptr, nullptr, ##__VA_ARGS__ }
 
     #define DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType) \
         new PropertyType(COMMON_PROPERTY_PARAMS( PropertyGenType, FieldOffset ));
@@ -40,10 +40,10 @@ namespace UnrealMvvm_Impl
     #define COMMON_PROPERTY_PARAMS(...)
 
     #define DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType) \
-        new PropertyType(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None);
+        new PropertyType(Scope, DebugName, EObjectFlags::RF_Transient, FieldOffset, EPropertyFlags::CPF_None);
 
     #define DECLARE_WRAPPER_PROPERTY_INNER(PropertyType, PropertyGenType, InnerClass) \
-        new PropertyType(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, InnerClass());
+        new PropertyType(Scope, DebugName, EObjectFlags::RF_Transient, FieldOffset, EPropertyFlags::CPF_None, InnerClass());
 
 #endif
 
