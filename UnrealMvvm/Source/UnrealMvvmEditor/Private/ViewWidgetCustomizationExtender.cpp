@@ -129,6 +129,12 @@ void FViewWidgetCustomizationExtender::OnObjectPreSave(UObject* Asset, FObjectPr
     UClass* NativeViewClass = FBlueprintEditorUtils::GetNativeParent(SavedBlueprint);
     UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(NativeViewClass);
 
+    if (NativeViewClass == nullptr)
+    {
+        // this widget was saved with base class that no longer exist, ignore it
+        return;
+    }
+
     if (NativeViewClass->IsChildOf<UBaseView>() || ViewModelClass == nullptr)
     {
         // it's either BaseView (that handles everything itself) or not a View at all, ignore
