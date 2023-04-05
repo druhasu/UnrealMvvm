@@ -17,12 +17,11 @@ class UNREALMVVM_API UBaseView : public UUserWidget, public FListenManager
     GENERATED_BODY()
 
 public:
-    UBaseView();
-
     /* Returns pointer to current BaseViewModel */
     class UBaseViewModel* GetUntypedViewModel() const { return GetExtension<UBaseViewExtension>()->ViewModel; }
 
 protected:
+    void NativePreConstruct() override;
     void NativeConstruct() override;
     void NativeDestruct() override;
 

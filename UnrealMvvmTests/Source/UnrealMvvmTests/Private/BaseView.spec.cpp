@@ -482,6 +482,17 @@ void FBaseViewSpec::Define()
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
         });
+
+        It("Should Support Nested View", [this]
+        {
+            FTempWorldHelper Helper;
+
+            UClass* WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_HostWidget.BP_HostWidget_C"));
+            UUserWidget* Widget = CreateWidget<UUserWidget>(Helper.World, WidgetClass);
+
+            auto WidgetRef = Widget->TakeWidget();
+            UMvvmBlueprintLibrary::SetViewModel(Widget, NewObject<UTestBaseViewModel>());
+        });
     });
 }
 

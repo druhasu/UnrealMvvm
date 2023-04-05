@@ -4,6 +4,7 @@
 
 #include "Components/Widget.h"
 #include "UObject/UObjectGlobals.h"
+#include "Blueprint/WidgetTree.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SButton.h"
@@ -26,6 +27,7 @@
 #include "Mvvm/BaseView.h"
 #include "Mvvm/Impl/BaseViewClassExtension.h"
 #include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/WidgetExtensionsAccessor.h"
 
 #include "BaseViewBlueprintExtension.h"
 #include "ViewModelPropertyNodeHelper.h"
@@ -144,6 +146,19 @@ void FViewWidgetCustomizationExtender::OnObjectPreSave(UObject* Asset, FObjectPr
     // save ViewModel class inside the asset
     UBaseViewBlueprintExtension* Extension = UWidgetBlueprintExtension::RequestExtension<UBaseViewBlueprintExtension>(Cast<UWidgetBlueprint>(SavedBlueprint));
     Extension->ViewModelClass = ViewModelClass;
+
+    // fixup corrupted Extensions from previous versions
+    // Extensions property is not marked Transient, so it will save all Extensions created during edit time
+    // but they won't load properly, leaving nullptrs instead
+    // here we remove all nullptrs from Extensions array before saving this widget blueprint
+    SavedBlueprint->WidgetTree->ForEachWidget([](UWidget* TemplateWidget)
+    {
+        if (UUserWidget* TemplateUserWidget = Cast<UUserWidget>(TemplateWidget))
+        {
+            TArray<TObjectPtr<UUserWidgetExtension>>& Extensions = TemplateUserWidget->*GetPrivate(ExtensionsAccessor());
+            Extensions.RemoveSwap(nullptr);
+        }
+    });
 }
 
 void FViewWidgetCustomizationExtender::CreateProperties(IDetailCategoryBuilder& Category, UClass* ViewModelClass, UBlueprint* Blueprint)

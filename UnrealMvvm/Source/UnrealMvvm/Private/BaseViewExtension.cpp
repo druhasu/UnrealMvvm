@@ -30,24 +30,6 @@ struct FNoopPropertyChangeHandler : public UnrealMvvm_Impl::IPropertyChangeHandl
     }
 };
 
-/*
- * Unfortunately we have to Hack and write directly to UUserWidget::Extensions, because it is not possible to use AddExtension<> method from constructor.
- * These classes allow us to write into private variable.
- */
-template<typename Accessor, typename Accessor::Member Member>
-struct AccessPrivate
-{
-    friend typename Accessor::Member GetPrivate(Accessor InAccessor) { return Member; }
-};
-
-struct ExtensionsAccessor
-{
-    using Member = TArray<TObjectPtr<UUserWidgetExtension>> UUserWidget::*;
-    friend Member GetPrivate(ExtensionsAccessor);
-};
-
-template struct AccessPrivate<ExtensionsAccessor, &UUserWidget::Extensions>;
-
 void UBaseViewExtension::Construct()
 {
     if (ViewModel)
@@ -77,16 +59,7 @@ UBaseViewExtension* UBaseViewExtension::Request(UUserWidget* Widget)
 
     if (!Result)
     {
-        if(FUObjectThreadContext::Get().IsInConstructor)
-        {
-            // call NewObject with a name to allow object creation inside a constructor
-            Result = NewObject<UBaseViewExtension>(Widget, "BaseViewExtension");
-            (Widget->*GetPrivate(ExtensionsAccessor())).Add(Result);
-        }
-        else
-        {
-            Result = Widget->AddExtension<UBaseViewExtension>();
-        }
+        Result = Widget->AddExtension<UBaseViewExtension>();
     }
 
     return Result;

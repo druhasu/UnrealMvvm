@@ -5,10 +5,11 @@
 #include "Mvvm/Impl/BaseViewClassExtension.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 
-UBaseView::UBaseView()
-    : Super(FObjectInitializer::Get())
+void UBaseView::NativePreConstruct()
 {
-    if (!HasAnyFlags(RF_ClassDefaultObject))
+    Super::NativePreConstruct();
+
+    if (!IsDesignTime())
     {
         UWidgetBlueprintGeneratedClass* WidgetClass = Cast<UWidgetBlueprintGeneratedClass>(GetClass());
         UBaseViewClassExtension* ClassExtension = WidgetClass ? WidgetClass->GetExtension<UBaseViewClassExtension>() : nullptr;
