@@ -24,6 +24,9 @@ public:
     static void SetViewModel(UUserWidget* View, UBaseViewModel* ViewModel);
 
 private:
+    // to access GetViewModelPropertyValue via GET_MEMBER_NAME_CHECKED
+    friend class FViewModelPropertyNodeHelper;
+
     UFUNCTION(BlueprintPure, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
     static void GetViewModelPropertyValue(UUserWidget* View, FName PropertyName, int32& Value, bool& HasValue);
 
