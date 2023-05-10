@@ -10,6 +10,7 @@
 #include "GraphEditorSettings.h"
 #include "KismetCompiler.h" // for FKismetCompilerContext
 #include "K2Node_CallFunction.h"
+#include "K2Node_DynamicCast.h"
 
 const FName UK2Node_ViewModelGetSet::ViewPinName{ "View" };
 const FName UK2Node_ViewModelGetSet::ViewModelPinName{ "ViewModel" };
@@ -19,18 +20,50 @@ const FText UK2Node_ViewModelGetSet::NodeCategory = FText::FromString("View Mode
 
 void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
+    UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(GetViewClass());
+    if (!ViewModelClass)
+    {
+        // do not expand if ViewModel class is unknown
+        return;
+    }
+
+    // call to GetViewModel/SetViewModel function
     UK2Node_CallFunction* CallFunctionNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
     CallFunctionNode->FunctionReference.SetExternalMember(GetFunctionName(), UMvvmBlueprintLibrary::StaticClass());
     CallFunctionNode->AllocateDefaultPins();
 
+    // connect View pin of this node to GetViewModel/SetViewModel function call
     UEdGraphPin* SrcViewPin = FindPin(ViewPinName);
     UEdGraphPin* DstViewPin = CallFunctionNode->FindPin(ViewPinName);
     CompilerContext.MovePinLinksToIntermediate(*SrcViewPin, *DstViewPin);
 
-    UEdGraphPin* ScrViewModelPin = FindPin(ViewModelPinName);
-    UEdGraphPin* DstViewModelPin = CallFunctionNode->FindPin(bIsSetter ? ViewModelPinName : FName("ReturnValue"));
-    CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
+    if (bIsSetter)
+    {
+        // connect ViewModel pin of this node to SetViewModel input pin
+        UEdGraphPin * ScrViewModelPin = FindPin(ViewModelPinName);
+        UEdGraphPin * DstViewModelPin = CallFunctionNode->FindPin(ViewModelPinName);
+        CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
+    }
+    else
+    {
+        // cast to appropriate ViewModel class
+        UK2Node_DynamicCast* CastNode = CompilerContext.SpawnIntermediateNode<UK2Node_DynamicCast>(this, SourceGraph);
+        CastNode->TargetType = ViewModelClass;
+        CastNode->SetPurity(true);
+        CastNode->AllocateDefaultPins();
 
+        // connect GetViewModel result to Cast input
+        UEdGraphPin* CallFunctionResult = CallFunctionNode->FindPin(FName("ReturnValue"));
+        UEdGraphPin* CastSource = CastNode->GetCastSourcePin();
+        CompilerContext.GetSchema()->TryCreateConnection(CallFunctionResult, CastSource);
+
+        // connect Cast result to output of this node
+        UEdGraphPin * ScrViewModelPin = FindPin(ViewModelPinName);
+        UEdGraphPin * DstViewModelPin = CastNode->GetCastResultPin();
+        CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
+    }
+
+    // if node is not pure, make sure to properly connect execute pins
     if (!IsNodePure())
     {
         const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();

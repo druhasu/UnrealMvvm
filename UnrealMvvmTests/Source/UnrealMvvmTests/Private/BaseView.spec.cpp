@@ -493,6 +493,17 @@ void FBaseViewSpec::Define()
             auto WidgetRef = Widget->TakeWidget();
             UMvvmBlueprintLibrary::SetViewModel(Widget, NewObject<UTestBaseViewModel>());
         });
+
+        It("Should Receive ViewModel via K2Node", [this]
+        {
+            FTempWorldHelper Helper;
+
+            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            TestEqual("NewViewModel", View->ViewModelFromGetter, ViewModel);
+        });
     });
 }
 

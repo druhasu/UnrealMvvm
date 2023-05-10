@@ -83,4 +83,7 @@ public:
 
     UPROPERTY(BlueprintReadWrite)
     UTestBaseViewModel* NewViewModel = nullptr;
+
+    UPROPERTY(BlueprintReadWrite)
+    UTestBaseViewModel* ViewModelFromGetter = nullptr;
 };
