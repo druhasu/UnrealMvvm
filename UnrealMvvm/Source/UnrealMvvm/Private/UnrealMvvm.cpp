@@ -15,6 +15,7 @@ public:
     void ShutdownModule() override
     {
         FModuleManager::Get().OnModulesChanged().RemoveAll(this);
+        UnrealMvvm_Impl::FViewModelRegistry::DeleteKeptProperties();
     }
 
 private:

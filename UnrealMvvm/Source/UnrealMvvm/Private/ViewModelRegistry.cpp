@@ -3,6 +3,7 @@
 #include "Mvvm/Impl/ViewModelRegistry.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/TokenStreamUtils.h"
 #include "Algo/Compare.h"
 
 namespace UnrealMvvm_Impl
@@ -16,6 +17,7 @@ TMap<UClass*, UClass*> FViewModelRegistry::ViewModelClasses{};
 TMap<UClass*, FViewModelRegistry::FViewModelSetterPtr> FViewModelRegistry::ViewModelSetters{};
 TArray<FViewModelRegistry::FUnprocessedPropertyEntry> FViewModelRegistry::UnprocessedProperties{};
 TArray<FViewModelRegistry::FUnprocessedViewModelClassEntry> FViewModelRegistry::UnprocessedViewModelClasses{};
+TArray<FField*> FViewModelRegistry::PropertiesToKeep{};
 
 template <typename TValue>
 TValue* FindByClass(TMap<UClass*, TValue*>& Map, UClass* ViewClass)
@@ -107,6 +109,12 @@ void FViewModelRegistry::ProcessPendingRegistrations()
         UnprocessedProperties.Empty();
     }
 
+    // Sort ViewModels so base clases are located before derived ones
+    // This way we guarantee that base classes' token streams will be generated first
+    // If they are in different modules, Unreal will handle module load ordering
+    // In monolithic mode all viewmodels are processed at once, like in a single module
+    FTokenStreamUtils::SortViewModelClasses(NewlyAddedViewModels);
+
     // Patch all new ViewModel classes, so their properties will be processed by GC
     for (UClass* ViewModelClass : NewlyAddedViewModels)
     {
@@ -137,6 +145,16 @@ void FViewModelRegistry::ProcessPendingRegistrations()
     }
 }
 
+void FViewModelRegistry::DeleteKeptProperties()
+{
+    for (FField* Field : PropertiesToKeep)
+    {
+        delete Field;
+    }
+
+    PropertiesToKeep.Reset();
+}
+
 const FViewModelPropertyReflection* FViewModelRegistry::FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName)
 {
     // find properties of requested class
@@ -165,144 +183,17 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindPropertyInternal(UCl
 
 void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 {
-    UClass* TempClass = NewObject<UClass>((UObject*)GetTransientPackage(), FName(), EObjectFlags::RF_Transient);
-#if ENGINE_MAJOR_VERSION >= 5
-    TempClass->CppClassStaticFunctions.SetAddReferencedObjects(&UObject::AddReferencedObjects);
-#else
-    TempClass->ClassAddReferencedObjects = &UObject::AddReferencedObjects;
-#endif
+    // We take only properties of current class, because AssembleTokenStream merges tokens with Super class
+    const TArray<FViewModelPropertyReflection>& Properties = ViewModelProperties[ViewModelClass];
 
-    // Create FProperty objects and add them to TempClass
-    for (FViewModelPropertyIterator Iter(ViewModelClass, false); Iter; ++Iter)
-    {
-        Iter->GetOperations().AddClassProperty(TempClass);
-    }
+    // Generate FProperties and add them to ViewModel class
+    FField* FirstOriginalField = FTokenStreamUtils::AddPropertiesToClass(ViewModelClass, MakeArrayView(Properties));
 
-    // Finalize Class and sssemble ReferenceTokenStream
-    TempClass->StaticLink();
-    TempClass->AssembleReferenceTokenStream();
+    // Create token stream that includes our new FProperties
+    ViewModelClass->AssembleReferenceTokenStream(true);
 
-    // Transfer properties from TempClass to ViewModelClass if needed
-    if (TransferTokenStream(TempClass, ViewModelClass))
-    {
-        // Pull out Map and Set properties and store them separately
-        // We need to do this, because TempClass will delete all properties that it owns
-        // TMap and TSet properties are used during garbage collection, so we must keep them alive
-        TArray<FField*> Props = ExtractMapAndSetProperties(TempClass);
-
-        // TODO: Keep Props somewhere and destroy them when time comes
-        // Maybe listen to ViewModelClass destruction or hot reload to perform cleanup 
-    }
-}
-
-bool FViewModelRegistry::TransferTokenStream(UClass* Source, UClass* Destination)
-{
-    // Helper class that mirrors layout of FGCReferenceTokenStream
-    // We cannot use its fields directly because they are private :(
-
-#if ENGINE_MAJOR_VERSION >= 5
-    struct FReferenceTokenStreamDouble
-    {
-        TArray<uint32> Tokens;
-        int32 StackSize;
-        EGCTokenType TokenType;
-#if ENABLE_GC_OBJECT_CHECKS
-        TArray<FName> TokenDebugInfo;
-#endif
-    };
-#else
-    struct FReferenceTokenStreamDouble
-    {
-        TArray<uint32> Tokens;
-#if ENABLE_GC_OBJECT_CHECKS
-        TArray<FName> TokenDebugInfo;
-#endif
-    };
-#endif
-
-    FReferenceTokenStreamDouble& SourceStream = reinterpret_cast<FReferenceTokenStreamDouble&>(Source->ReferenceTokenStream);
-    FReferenceTokenStreamDouble& DestinationStream = reinterpret_cast<FReferenceTokenStreamDouble&>(Destination->ReferenceTokenStream);
-
-    // Find which tokens to take from Source Stream
-    const uint32 OuterToken = 0x20300;
-
-    int32 LastSourceTokenIdx = SourceStream.Tokens.IndexOfByKey(OuterToken);
-    check(LastSourceTokenIdx != -1);
-
-    // Find where to insert tokens into DestinationStream
-    int32 LastDestinationTokenIdx = DestinationStream.Tokens.IndexOfByKey(OuterToken);
-    check(LastDestinationTokenIdx != -1);
-
-    // Insert tokens if Source has any
-    if (LastSourceTokenIdx > 0)
-    {
-        bool bWasPatched = false;
-
-        // Compare DestinationStream with SourceStream to determine if it was already patched
-        if (LastDestinationTokenIdx > LastSourceTokenIdx)
-        {
-            bWasPatched = Algo::Compare(
-                MakeArrayView(SourceStream.Tokens.GetData(), LastSourceTokenIdx),
-                MakeArrayView(DestinationStream.Tokens.GetData() + LastDestinationTokenIdx - LastSourceTokenIdx, LastDestinationTokenIdx)
-            );
-        }
-
-        // Insert only if we have not already
-        if (!bWasPatched)
-        {
-            const int32 NewDestinationNum = DestinationStream.Tokens.Num() + LastSourceTokenIdx;
-            DestinationStream.Tokens.Reserve(NewDestinationNum);
-            DestinationStream.Tokens.Insert(SourceStream.Tokens.GetData(), LastSourceTokenIdx, LastDestinationTokenIdx);
-
-#if ENGINE_MAJOR_VERSION >= 5
-            DestinationStream.StackSize = FMath::Max(DestinationStream.StackSize, SourceStream.StackSize);
-#endif
-
-#if ENABLE_GC_OBJECT_CHECKS
-            DestinationStream.TokenDebugInfo.Reserve(NewDestinationNum);
-            DestinationStream.TokenDebugInfo.Insert(SourceStream.TokenDebugInfo.GetData(), LastSourceTokenIdx, LastDestinationTokenIdx);
-#endif
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-TArray<FField*> FViewModelRegistry::ExtractMapAndSetProperties(UClass* InClass)
-{
-    TArray<FField*> Result;
-
-    FField* PrevField = nullptr;
-    FField* CurrentField = InClass->ChildProperties;
-
-    while (CurrentField)
-    {
-        FField* NextField = CurrentField->Next;
-
-        if (CurrentField->IsA<FMapProperty>() || CurrentField->IsA<FSetProperty>())
-        {
-            Result.Add(CurrentField);
-
-            if (PrevField)
-            {
-                PrevField->Next = NextField;
-            }
-            else
-            {
-                InClass->ChildProperties = NextField;
-            }
-        }
-        else
-        {
-            PrevField = CurrentField;
-        }
-
-        CurrentField = NextField;
-    }
-
-    return Result;
+    // delete all unrelevant properties and restore original list pointer
+    FTokenStreamUtils::CleanupProperties(ViewModelClass, FirstOriginalField, PropertiesToKeep);
 }
 
 }

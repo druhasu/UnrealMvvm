@@ -8,7 +8,11 @@
 
 BEGIN_DEFINE_SPEC(FViewModelGCSpec, "UnrealMvvm.BaseViewModel.Garbage Collect", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 
-void TestCommon(TFunction<void(UGCTestViewModel*,UGCTestObject*)>&& Action, bool bExpectAlive = true);
+void TestCommon(TFunctionRef<void(UGCTestViewModel*,UGCTestObject*)> Action, bool bExpectAlive = true);
+void TestDerived(TFunctionRef<void(UGCTestDerivedViewModel*, UGCTestObject*)> Action, bool bExpectAlive = true);
+
+template <typename TViewModel, typename TAction>
+void TestImpl(TAction Action, bool bExpectAlive);
 
 END_DEFINE_SPEC(FViewModelGCSpec)
 
@@ -219,12 +223,42 @@ void FViewModelGCSpec::Define()
             });
         });
     });
+
+    Describe("Derived", [this]
+    {
+        It("Should keep object stored in base field of Derived ViewModel", [this]
+        {
+            TestDerived([](UGCTestDerivedViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetPointer({ Obj });
+            });
+        });
+
+        It("Should keep object stored in own field of Derived ViewModel", [this]
+        {
+            TestDerived([](UGCTestDerivedViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetDerivedPointer({ Obj });
+            });
+        });
+    });
 }
 
 
-void FViewModelGCSpec::TestCommon(TFunction<void(UGCTestViewModel*, UGCTestObject*)>&& Action, bool bExpectAlive)
+void FViewModelGCSpec::TestCommon(TFunctionRef<void(UGCTestViewModel*, UGCTestObject*)> Action, bool bExpectAlive)
 {
-    TStrongObjectPtr<UGCTestViewModel> VM{ NewObject<UGCTestViewModel>() };
+    TestImpl<UGCTestViewModel>(Action, bExpectAlive);
+}
+
+void FViewModelGCSpec::TestDerived(TFunctionRef<void(UGCTestDerivedViewModel*, UGCTestObject*)> Action, bool bExpectAlive)
+{
+    TestImpl<UGCTestDerivedViewModel>(Action, bExpectAlive);
+}
+
+template <typename TViewModel, typename TAction>
+void FViewModelGCSpec::TestImpl(TAction Action, bool bExpectAlive)
+{
+    TStrongObjectPtr<TViewModel> VM{ NewObject<TViewModel>() };
     TWeakObjectPtr<UGCTestObject> Ptr = NewObject<UGCTestObject>();
 
     TestTrue("Object Alive", Ptr.IsValid());

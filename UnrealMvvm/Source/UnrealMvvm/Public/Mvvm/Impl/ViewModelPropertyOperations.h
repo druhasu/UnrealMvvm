@@ -44,7 +44,7 @@ namespace UnrealMvvm_Impl
                 OutHasValue = Value.IsSet();
                 if (OutHasValue)
                 {
-                    *((typename TBaseOp::TDecayedValue*)OutValue) = Value.GetValue();
+                    *((typename TBaseOp::TDecayedValue::ElementType*)OutValue) = Value.GetValue();
                 }
             }
         };

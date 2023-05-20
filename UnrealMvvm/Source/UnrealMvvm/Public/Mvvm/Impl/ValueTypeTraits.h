@@ -4,6 +4,7 @@
 
 #include "Templates/UnrealTypeTraits.h"
 #include "Templates/Decay.h"
+#include <type_traits>
 
 namespace UnrealMvvm_Impl
 {
@@ -21,8 +22,8 @@ namespace UnrealMvvm_Impl
 
         using JustT = typename TDecay<T>::Type;
 
-        static const bool IsStruct = TIsSame<decltype(Test1<JustT>(0)), UScriptStruct*>::Value;
-        static const bool IsClass = TIsSame<decltype(Test1<JustT>(0)), UClass*>::Value;
-        static const bool IsInterface = !TIsSame< char, decltype(Test2<JustT>(0)) >::Value && !TIsDerivedFrom<JustT, UObject>::Value;
+        static const bool IsStruct = std::is_same_v<decltype(Test1<JustT>(0)), UScriptStruct*>;
+        static const bool IsClass = std::is_same_v<decltype(Test1<JustT>(0)), UClass*>;
+        static const bool IsInterface = !std::is_same_v< char, decltype(Test2<JustT>(0)) > && !TIsDerivedFrom<JustT, UObject>::Value;
     };
 }

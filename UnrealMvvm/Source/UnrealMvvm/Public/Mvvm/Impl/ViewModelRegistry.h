@@ -44,6 +44,7 @@ namespace UnrealMvvm_Impl
         static uint8 RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr);
 
         static void ProcessPendingRegistrations();
+        static void DeleteKeptProperties();
 
 #if WITH_EDITOR
         DECLARE_MULTICAST_DELEGATE_TwoParams(FViewModelClassChanged, UClass* /*ViewClass*/, UClass* /*ViewModelClass*/);
@@ -68,8 +69,6 @@ namespace UnrealMvvm_Impl
 
         static const FViewModelPropertyReflection* FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName);
         static void GenerateReferenceTokenStream(class UClass* ViewModelClass);
-        static bool TransferTokenStream(UClass* Source, UClass* Destination);
-        static TArray<FField*> ExtractMapAndSetProperties(UClass* InClass);
 
         // Map of <ViewModelClass, Properties>
         static TMap<UClass*, TArray<FViewModelPropertyReflection>> ViewModelProperties;
@@ -85,6 +84,9 @@ namespace UnrealMvvm_Impl
 
         // List of view model classes that were not yet added to lookup table
         static TArray<FUnprocessedViewModelClassEntry> UnprocessedViewModelClasses;
+
+        // List of properties that we keep for GC (TMap and TSet properties)
+        static TArray<FField*> PropertiesToKeep;
     };
 
 }

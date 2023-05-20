@@ -4,11 +4,15 @@
 
 #include "DerivedViewModel.h"
 #include "PinTraitsViewModel.h"
+#include "TokenStreamTestViewModel.h"
 #include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/TokenStreamUtils.h"
 
 using namespace UnrealMvvm_Impl;
 
 BEGIN_DEFINE_SPEC(ViewModelRegistrySpec, "UnrealMvvm.ViewModelRegistry", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
+TArray<FField*> GetFields(UClass* Class);
+UClass* MakeTempClass(UClass* Class);
 END_DEFINE_SPEC(ViewModelRegistrySpec)
 
 void ViewModelRegistrySpec::Define()
@@ -64,6 +68,112 @@ void ViewModelRegistrySpec::Define()
 
             TestNotNull("Property", Property);
             TestEqual("Property Pointer", Property->GetProperty(), (const FViewModelPropertyBase*)UBaseClassViewModel::BaseClassValueProperty());
+        });
+    });
+
+    Describe("ReferenceTokenStream", [this]
+    {
+        It("Should Sort Classes By Inheritance Hierarchy", [this]
+        {
+            TArray<UClass*> Classes = { AActor::StaticClass(), UObject::StaticClass(), APlayerController::StaticClass(), AController::StaticClass() };
+            FTokenStreamUtils::SortViewModelClasses(Classes);
+
+            TestEqual("Classes[0]", Classes[0], UObject::StaticClass());
+            TestEqual("Classes[1]", Classes[1], AActor::StaticClass());
+            TestEqual("Classes[2]", Classes[2], AController::StaticClass());
+            TestEqual("Classes[3]", Classes[3], APlayerController::StaticClass());
+        });
+
+        It("Should Add Properties To Class Without Own Properties", [this]
+        {
+            UClass* TargetClass = MakeTempClass(UTokenStreamTargetClass_NoProperties::StaticClass());
+            auto Properties = FViewModelRegistry::GetAllProperties()[UTokenStreamTestViewModel::StaticClass()];
+            FField* ExpectedFirstField = TargetClass->ChildProperties;
+
+            FField* FirstField = FTokenStreamUtils::AddPropertiesToClass(TargetClass, MakeArrayView(Properties));
+            TArray<FField*> Fields = GetFields(TargetClass);
+
+            TestEqual("FirstField", FirstField, ExpectedFirstField);
+
+            TestEqual("Fields.Num()", Fields.Num(), 3);
+            TestEqual("Fields[0]", Fields[0]->GetName(), TEXT("Pointer"));
+            TestEqual("Fields[1]", Fields[1]->GetName(), TEXT("PointerMap"));
+            TestEqual("Fields[2]", Fields[2]->GetName(), TEXT("PointerSet"));
+        });
+
+        It("Should Add Properties To Class With Own Properties", [this]
+        {
+            UClass* TargetClass = MakeTempClass(UTokenStreamTargetClass_WithProperties::StaticClass());
+            auto Properties = FViewModelRegistry::GetAllProperties()[UTokenStreamTestViewModel::StaticClass()];
+            FField* ExpectedFirstField = TargetClass->ChildProperties;
+
+            FField* FirstField = FTokenStreamUtils::AddPropertiesToClass(TargetClass, MakeArrayView(Properties));
+            TArray<FField*> Fields = GetFields(TargetClass);
+
+            TestEqual("FirstField", FirstField, ExpectedFirstField);
+
+            TestEqual("Fields.Num()", Fields.Num(), 4);
+            TestEqual("Fields[0]", Fields[0]->GetName(), TEXT("Pointer"));
+            TestEqual("Fields[1]", Fields[1]->GetName(), TEXT("PointerMap"));
+            TestEqual("Fields[2]", Fields[2]->GetName(), TEXT("PointerSet"));
+            TestEqual("Fields[3]", Fields[3]->GetName(), TEXT("FirstProperty"));
+        });
+
+        It("Should Remove Properties From Class Without Own Properties", [this]
+        {
+            UClass* TargetClass = MakeTempClass(UTokenStreamTargetClass_NoProperties::StaticClass());
+            auto Properties = FViewModelRegistry::GetAllProperties()[UTokenStreamTestViewModel::StaticClass()];
+            FField* ExpectedFirstField = TargetClass->ChildProperties;
+
+            FField* FirstField = FTokenStreamUtils::AddPropertiesToClass(TargetClass, MakeArrayView(Properties));
+
+            TArray<FField*> KeptProperties;
+            FTokenStreamUtils::CleanupProperties(TargetClass, FirstField, KeptProperties);
+
+            TArray<FField*> Fields = GetFields(TargetClass);
+
+            TestEqual("TargetClass->ChildProperties", TargetClass->ChildProperties, ExpectedFirstField);
+
+            TestEqual("Fields.Num()", Fields.Num(), 0);
+
+            TestEqual("KeptProperties.Num()", KeptProperties.Num(), 2);
+            TestEqual("KeptProperties[0]", KeptProperties[0]->GetName(), TEXT("PointerMap"));
+            TestEqual("KeptProperties[1]", KeptProperties[1]->GetName(), TEXT("PointerSet"));
+
+            // perform cleanup
+            for (FField* Field : KeptProperties)
+            {
+                delete Field;
+            }
+        });
+
+        It("Should Remove Properties From Class With Own Properties", [this]
+        {
+            UClass* TargetClass = MakeTempClass(UTokenStreamTargetClass_WithProperties::StaticClass());
+            auto Properties = FViewModelRegistry::GetAllProperties()[UTokenStreamTestViewModel::StaticClass()];
+            FField* ExpectedFirstField = TargetClass->ChildProperties;
+
+            FField* FirstField = FTokenStreamUtils::AddPropertiesToClass(TargetClass, MakeArrayView(Properties));
+
+            TArray<FField*> KeptProperties;
+            FTokenStreamUtils::CleanupProperties(TargetClass, FirstField, KeptProperties);
+
+            TArray<FField*> Fields = GetFields(TargetClass);
+
+            TestEqual("TargetClass->ChildProperties", TargetClass->ChildProperties, ExpectedFirstField);
+
+            TestEqual("Fields.Num()", Fields.Num(), 1);
+            TestEqual("Fields[0]", Fields[0]->GetName(), TEXT("FirstProperty"));
+
+            TestEqual("KeptProperties.Num()", KeptProperties.Num(), 2);
+            TestEqual("KeptProperties[0]", KeptProperties[0]->GetName(), TEXT("PointerMap"));
+            TestEqual("KeptProperties[1]", KeptProperties[1]->GetName(), TEXT("PointerSet"));
+
+            // perform cleanup
+            for (FField* Field : KeptProperties)
+            {
+                delete Field;
+            }
         });
     });
 
@@ -178,4 +288,24 @@ void ViewModelRegistrySpec::Define()
             });
         });
     });
+}
+
+TArray<FField*> ViewModelRegistrySpec::GetFields(UClass* Class)
+{
+    TArray<FField*> Result;
+
+    for (TFieldIterator<FField> It(Class); It; ++It)
+    {
+        Result.Add(*It);
+    }
+
+    return Result;
+}
+
+UClass* ViewModelRegistrySpec::MakeTempClass(UClass* Class)
+{
+    FObjectDuplicationParameters Params(Class, GetTransientPackage());
+    Params.bSkipPostLoad = true; // prevent Fatal error during duplication
+
+    return CastChecked<UClass>(StaticDuplicateObjectEx(Params));
 }

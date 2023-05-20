@@ -6,6 +6,7 @@
 // Use #include "Mvvm/BaseView.h"
 
 #include "Mvvm/Impl/BindEntry.h"
+#include <type_traits>
 
 namespace UnrealMvvm_Impl
 {
@@ -26,7 +27,7 @@ namespace UnrealMvvm_Impl
         template<typename U> static decltype(FText::AsNumber(DeclVal<U>())) Test(int);
         template<typename U> static char Test(...);
 
-        static const bool Value = TIsSame<decltype(Test<T>(0)), FText>::Value;
+        static const bool Value = std::is_same_v<decltype(Test<T>(0)), FText>;
     };
 
     template <typename TOwner, typename TValue, typename TCallback>

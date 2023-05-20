@@ -71,3 +71,11 @@ class UGCTestViewModel : public UBaseViewModel
 public:
     UGCTestObject* PlainField;
 };
+
+UCLASS()
+class UGCTestDerivedViewModel : public UGCTestViewModel
+{
+    GENERATED_BODY()
+
+    VM_PROP_AG_AS(UGCTestObject*, DerivedPointer, public, public);
+};
