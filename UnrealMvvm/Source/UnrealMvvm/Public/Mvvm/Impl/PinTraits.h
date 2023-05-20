@@ -7,6 +7,7 @@
 #include "Templates/IntegralConstant.h"
 #include "Mvvm/Impl/ValueTypeTraits.h"
 #include "Math/MathFwd.h"
+#include "Misc/EngineVersionComparison.h"
 
 // forward declare all structs from Core module
 struct FLinearColor;
@@ -78,6 +79,23 @@ namespace UnrealMvvm_Impl
     DEFINE_BASE_STRUCTURE(FPolyglotTextData);
     DEFINE_BASE_STRUCTURE(FAssetBundleData);
     DEFINE_BASE_STRUCTURE(FTestUninitializedScriptStructMembersTest);
+
+#if !UE_VERSION_OLDER_THAN(5,1,0)
+    // these types were exposed in 5.1
+    DEFINE_BASE_STRUCTURE(FIntPoint);
+    DEFINE_BASE_STRUCTURE(FIntVector);
+    DEFINE_BASE_STRUCTURE(FIntVector4);
+    DEFINE_BASE_STRUCTURE(FDoubleRangeBound);
+    DEFINE_BASE_STRUCTURE(FDoubleRange);
+    DEFINE_BASE_STRUCTURE(FDoubleInterval);
+    DEFINE_BASE_STRUCTURE(FTopLevelAssetPath);
+#endif
+
+#if !UE_VERSION_OLDER_THAN(5,2,0)
+    // these types were exposed in 5.2
+    DEFINE_BASE_STRUCTURE(FRay);
+    DEFINE_BASE_STRUCTURE(FSphere);
+#endif
 
 #undef DEFINE_BASE_STRUCTURE
 
