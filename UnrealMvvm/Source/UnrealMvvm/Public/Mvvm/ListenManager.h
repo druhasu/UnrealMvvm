@@ -47,10 +47,26 @@ public:
     typename TEnableIf< TIsDynamicMulticastDelegate<TEventPtr>::Value, UnrealMvvm_Impl::TDynamicEventListenHelper<TWidget, TEventPtr> >::Type
     Listen(TWidget* Widget, TEventPtr Event);
 
+    /* Setup listening to Dynamic Multicast Delegate */
+    template<typename TWidget, typename TEventPtr>
+    typename TEnableIf< TIsDynamicMulticastDelegate<TEventPtr>::Value, UnrealMvvm_Impl::TDynamicEventListenHelper<TWidget, TEventPtr> >::Type
+    Listen(TObjectPtr<TWidget> Widget, TEventPtr Event)
+    {
+        return Listen(Widget.Get(), Event);
+    }
+
     /* Setup listening to NonDynamic Multicast Delegate */
     template<typename TWidget, typename TEventPtr>
     typename TEnableIf< TIsSimpleMulticastDelegate<TEventPtr>::Value, UnrealMvvm_Impl::TSimpleEventListenHelper<TWidget, TEventPtr> >::Type
     Listen(TWidget* Widget, TEventPtr Event);
+
+    /* Setup listening to NonDynamic Multicast Delegate */
+    template<typename TWidget, typename TEventPtr>
+    typename TEnableIf< TIsSimpleMulticastDelegate<TEventPtr>::Value, UnrealMvvm_Impl::TSimpleEventListenHelper<TWidget, TEventPtr> >::Type
+    Listen(TObjectPtr<TWidget> Widget, TEventPtr Event)
+    {
+        return Listen(Widget.Get(), Event);
+    }
 
     /* Removes all subscriptions */
     void UnsubscribeAll()

@@ -33,3 +33,15 @@ public:
 
     bool Invoked = false;
 };
+
+UCLASS()
+class UTestEventHolder : public UObject
+{
+    GENERATED_BODY()
+
+public:
+    DECLARE_MULTICAST_DELEGATE(FTestDelegate);
+    FTestDelegate DelegateField;
+
+    FTestDynamicDelegate DynamicDelegateField;
+};
