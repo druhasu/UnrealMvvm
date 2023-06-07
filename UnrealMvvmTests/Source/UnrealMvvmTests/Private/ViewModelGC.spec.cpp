@@ -10,6 +10,7 @@ BEGIN_DEFINE_SPEC(FViewModelGCSpec, "UnrealMvvm.BaseViewModel.Garbage Collect", 
 
 void TestCommon(TFunctionRef<void(UGCTestViewModel*,UGCTestObject*)> Action, bool bExpectAlive = true);
 void TestDerived(TFunctionRef<void(UGCTestDerivedViewModel*, UGCTestObject*)> Action, bool bExpectAlive = true);
+void TestDerivedEmpty(TFunctionRef<void(UGCTestDerivedEmptyViewModel*, UGCTestObject*)> Action, bool bExpectAlive = true);
 
 template <typename TViewModel, typename TAction>
 void TestImpl(TAction Action, bool bExpectAlive);
@@ -241,6 +242,14 @@ void FViewModelGCSpec::Define()
                 ViewModel->SetDerivedPointer({ Obj });
             });
         });
+
+        It("Should keep object stored in base field of Derived ViewModel without own properties", [this]
+        {
+            TestDerivedEmpty([](UGCTestDerivedEmptyViewModel* ViewModel, auto Obj)
+            {
+                ViewModel->SetPointer({ Obj });
+            });
+        });
     });
 }
 
@@ -253,6 +262,11 @@ void FViewModelGCSpec::TestCommon(TFunctionRef<void(UGCTestViewModel*, UGCTestOb
 void FViewModelGCSpec::TestDerived(TFunctionRef<void(UGCTestDerivedViewModel*, UGCTestObject*)> Action, bool bExpectAlive)
 {
     TestImpl<UGCTestDerivedViewModel>(Action, bExpectAlive);
+}
+
+void FViewModelGCSpec::TestDerivedEmpty(TFunctionRef<void(UGCTestDerivedEmptyViewModel*, UGCTestObject*)> Action, bool bExpectAlive)
+{
+    TestImpl<UGCTestDerivedEmptyViewModel>(Action, bExpectAlive);
 }
 
 template <typename TViewModel, typename TAction>

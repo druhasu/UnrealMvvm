@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "4.2.1",
+	"VersionName": "4.2.2",
 	"FriendlyName": "UnrealMvvm",
 	"Description": "MVVM framework for Unreal",
 	"Category": "Other",

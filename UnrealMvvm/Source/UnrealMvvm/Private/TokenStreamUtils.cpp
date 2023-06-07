@@ -1,6 +1,25 @@
 #include "Mvvm/Impl/TokenStreamUtils.h"
 #include "Mvvm/Impl/ViewModelPropertyReflection.h"
 
+void UnrealMvvm_Impl::FTokenStreamUtils::EnrichWithDerivedClasses(TArray<UClass*>& Classes)
+{
+    TArray<UClass*> DerivedClasses;
+    DerivedClasses.Reserve(64); // start with big enough buffer, because we will collect all derived classes here
+
+    // collect all derived classes in the same array
+    for (UClass* ViewModelClass : Classes)
+    {
+        GetDerivedClasses(ViewModelClass, DerivedClasses, true);
+    }
+
+    // add DerivedClasses back to our Classes array
+    for (UClass* DerivedClass : DerivedClasses)
+    {
+        // make sure we don't have duplicates here
+        Classes.AddUnique(DerivedClass);
+    }
+}
+
 void UnrealMvvm_Impl::FTokenStreamUtils::SortViewModelClasses(TArray<UClass*>& Classes)
 {
     Algo::Sort(Classes, [](UClass* Left, UClass* Right)
@@ -64,4 +83,7 @@ void UnrealMvvm_Impl::FTokenStreamUtils::CleanupProperties(UClass* TargetClass, 
     }
 
     TargetClass->ChildProperties = FirstFieldToKeep;
+
+    // Link class to restore PropertyLink and others
+    TargetClass->StaticLink();
 }

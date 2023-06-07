@@ -8,6 +8,10 @@
 #include "Mvvm/Impl/ViewModelPropertyIterator.h"
 #include "Mvvm/Impl/TokenStreamUtils.h"
 
+#include "Components/PanelWidget.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CheckBox.h"
+
 using namespace UnrealMvvm_Impl;
 
 BEGIN_DEFINE_SPEC(ViewModelRegistrySpec, "UnrealMvvm.ViewModelRegistry", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
@@ -73,6 +77,18 @@ void ViewModelRegistrySpec::Define()
 
     Describe("ReferenceTokenStream", [this]
     {
+        It("Should Add Derived Classes To List", [this]
+        {
+            TArray<UClass*> Classes = { UPanelWidget::StaticClass() };
+            FTokenStreamUtils::EnrichWithDerivedClasses(Classes);
+
+            // check for direct descendant
+            TestTrue("Contains UCanvasPanel", Classes.Contains(UCanvasPanel::StaticClass()));
+
+            // check for transitive descendant
+            TestTrue("Contains UCheckBox", Classes.Contains(UCheckBox::StaticClass()));
+        });
+
         It("Should Sort Classes By Inheritance Hierarchy", [this]
         {
             TArray<UClass*> Classes = { AActor::StaticClass(), UObject::StaticClass(), APlayerController::StaticClass(), AController::StaticClass() };
@@ -124,6 +140,7 @@ void ViewModelRegistrySpec::Define()
             UClass* TargetClass = MakeTempClass(UTokenStreamTargetClass_NoProperties::StaticClass());
             auto Properties = FViewModelRegistry::GetAllProperties()[UTokenStreamTestViewModel::StaticClass()];
             FField* ExpectedFirstField = TargetClass->ChildProperties;
+            FProperty* ExpectedFirstProperty = TargetClass->PropertyLink;
 
             FField* FirstField = FTokenStreamUtils::AddPropertiesToClass(TargetClass, MakeArrayView(Properties));
 
@@ -133,6 +150,7 @@ void ViewModelRegistrySpec::Define()
             TArray<FField*> Fields = GetFields(TargetClass);
 
             TestEqual("TargetClass->ChildProperties", TargetClass->ChildProperties, ExpectedFirstField);
+            TestEqual("TargetClass->PropertyLink", TargetClass->PropertyLink, ExpectedFirstProperty);
 
             TestEqual("Fields.Num()", Fields.Num(), 0);
 
@@ -152,6 +170,7 @@ void ViewModelRegistrySpec::Define()
             UClass* TargetClass = MakeTempClass(UTokenStreamTargetClass_WithProperties::StaticClass());
             auto Properties = FViewModelRegistry::GetAllProperties()[UTokenStreamTestViewModel::StaticClass()];
             FField* ExpectedFirstField = TargetClass->ChildProperties;
+            FProperty* ExpectedFirstProperty = TargetClass->PropertyLink;
 
             FField* FirstField = FTokenStreamUtils::AddPropertiesToClass(TargetClass, MakeArrayView(Properties));
 
@@ -161,6 +180,7 @@ void ViewModelRegistrySpec::Define()
             TArray<FField*> Fields = GetFields(TargetClass);
 
             TestEqual("TargetClass->ChildProperties", TargetClass->ChildProperties, ExpectedFirstField);
+            TestEqual("TargetClass->PropertyLink", TargetClass->PropertyLink, ExpectedFirstProperty);
 
             TestEqual("Fields.Num()", Fields.Num(), 1);
             TestEqual("Fields[0]", Fields[0]->GetName(), TEXT("FirstProperty"));
@@ -181,7 +201,7 @@ void ViewModelRegistrySpec::Define()
     {
         Describe("Regular", [this]()
         {
-            It("Should Copy int32", [this]()
+            It("Should Read int32", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyInt"));
@@ -196,7 +216,7 @@ void ViewModelRegistrySpec::Define()
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Copy UObject*", [this]()
+            It("Should Read UObject*", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyObject"));
@@ -211,7 +231,7 @@ void ViewModelRegistrySpec::Define()
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Copy TArray", [this]()
+            It("Should Read TArray", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntArray"));
@@ -231,7 +251,7 @@ void ViewModelRegistrySpec::Define()
 
         Describe("Optional", [this]()
         {
-            It("Should Copy Optional int32", [this]()
+            It("Should Read Optional int32", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntOptional"));
@@ -249,7 +269,7 @@ void ViewModelRegistrySpec::Define()
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Copy Optional UObject*", [this]()
+            It("Should Read Optional UObject*", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyObjectOptional"));
@@ -267,7 +287,7 @@ void ViewModelRegistrySpec::Define()
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Copy Optional TArray", [this]()
+            It("Should Read Optional TArray", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntArrayOptional"));
@@ -307,5 +327,8 @@ UClass* ViewModelRegistrySpec::MakeTempClass(UClass* Class)
     FObjectDuplicationParameters Params(Class, GetTransientPackage());
     Params.bSkipPostLoad = true; // prevent Fatal error during duplication
 
-    return CastChecked<UClass>(StaticDuplicateObjectEx(Params));
+    UClass* Result = CastChecked<UClass>(StaticDuplicateObjectEx(Params));
+    Result->StaticLink(true);
+
+    return Result;
 }

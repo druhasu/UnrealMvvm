@@ -13,6 +13,9 @@ namespace UnrealMvvm_Impl
 
     struct UNREALMVVM_API FTokenStreamUtils
     {
+        /* Adds all derived classes to a provided list */
+        static void EnrichWithDerivedClasses(TArray<UClass*>& Classes);
+
         /* Sorts classes so Base ones goes before Derived ones */
         static void SortViewModelClasses(TArray<UClass*>& Classes);
 

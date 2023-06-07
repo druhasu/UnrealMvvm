@@ -79,3 +79,9 @@ class UGCTestDerivedViewModel : public UGCTestViewModel
 
     VM_PROP_AG_AS(UGCTestObject*, DerivedPointer, public, public);
 };
+
+UCLASS()
+class UGCTestDerivedEmptyViewModel : public UGCTestViewModel
+{
+    GENERATED_BODY()
+};

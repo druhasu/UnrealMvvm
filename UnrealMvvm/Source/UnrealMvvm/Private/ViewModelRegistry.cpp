@@ -109,7 +109,12 @@ void FViewModelRegistry::ProcessPendingRegistrations()
         UnprocessedProperties.Empty();
     }
 
-    // Sort ViewModels so base clases are located before derived ones
+    // Add all derived classes of NewlyAddedViewModels to the list
+    // Some derived classes may have no properties, but their token streams must still be adjusted to account for tokens of base classes
+    // We need to add them manually because we won't know about them otherwise
+    FTokenStreamUtils::EnrichWithDerivedClasses(NewlyAddedViewModels);
+
+    // Sort ViewModels so base classes are located before derived ones
     // This way we guarantee that base classes' token streams will be generated first
     // If they are in different modules, Unreal will handle module load ordering
     // In monolithic mode all viewmodels are processed at once, like in a single module
@@ -184,10 +189,17 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindPropertyInternal(UCl
 void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 {
     // We take only properties of current class, because AssembleTokenStream merges tokens with Super class
-    const TArray<FViewModelPropertyReflection>& Properties = ViewModelProperties[ViewModelClass];
+    const TArray<FViewModelPropertyReflection>* Properties = ViewModelProperties.Find(ViewModelClass);
+
+    if (Properties == nullptr)
+    {
+        // this ViewModel class does not have its own properties, just update token stream to include tokens from parent class
+        ViewModelClass->AssembleReferenceTokenStream(true);
+        return;
+    }
 
     // Generate FProperties and add them to ViewModel class
-    FField* FirstOriginalField = FTokenStreamUtils::AddPropertiesToClass(ViewModelClass, MakeArrayView(Properties));
+    FField* FirstOriginalField = FTokenStreamUtils::AddPropertiesToClass(ViewModelClass, MakeArrayView(*Properties));
 
     // Create token stream that includes our new FProperties
     ViewModelClass->AssembleReferenceTokenStream(true);
