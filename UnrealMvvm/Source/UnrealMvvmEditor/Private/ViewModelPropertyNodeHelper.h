@@ -28,8 +28,14 @@ public:
     static FName GetPinSubCategoryNameFromType(UnrealMvvm_Impl::EPinCategoryType CategoryType);
 
     /* Spawns intermediate node equivalent to Self -> GetViewModelPropertyValue(View, ViewModelPropertyName) and connects its output to a given ValuePin */
-    static void SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, UEdGraphPin* HasValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
+    static void SpawnGetSetPropertyValueNodes(const FName& FunctionName, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
 
     /* Pin Name for HasValue */
     static const FName HasValuePinName;
+
+    /* Name of function that gets value from ViewModel property */
+    static const FName GetPropertyValueFunctionName;
+
+    /* Name of function that sets value to ViewModel property */
+    static const FName SetPropertyValueFunctionName;
 };

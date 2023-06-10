@@ -173,7 +173,7 @@ FString FListViewModelPropertiesCommand::GetAttributes(const UnrealMvvm_Impl::FV
         Attributes.Emplace(TEXT("HasReference"));
     }
 
-    if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(Reflection))
+    if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(Reflection) && Reflection.Flags.HasPublicGetter)
     {
         Attributes.Emplace(TEXT("UmgBindable"));
     }
@@ -181,6 +181,16 @@ FString FListViewModelPropertiesCommand::GetAttributes(const UnrealMvvm_Impl::FV
     if (Reflection.Flags.IsOptional)
     {
         Attributes.Emplace(TEXT("Optional"));
+    }
+
+    if (Reflection.Flags.HasPublicGetter)
+    {
+        Attributes.Emplace(TEXT("PublicGetter"));
+    }
+
+    if (Reflection.Flags.HasPublicSetter)
+    {
+        Attributes.Emplace(TEXT("PublicSetter"));
     }
 
     if (Attributes.Num() > 0)

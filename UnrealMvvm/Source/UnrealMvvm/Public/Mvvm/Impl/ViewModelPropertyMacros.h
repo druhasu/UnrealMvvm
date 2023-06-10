@@ -12,10 +12,11 @@
 // shorthand for remove parentheses
 #define VM_PROP_RP PREPROCESSOR_REMOVE_OPTIONAL_PARENS
 
-#define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr, FieldOffset) \
+#define VM_PROP_PROPERTY_GETTER(Name, ValueType, GetterPtr, SetterPtr, GetterVisibility, SetterVisibility, FieldOffset) \
     static const TViewModelProperty<ThisClass, ValueType>* Name##Property() \
     { \
-        static constexpr TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property> Property = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>{ GetterPtr, SetterPtr, FieldOffset, #Name }; \
+        using EVisibility = TViewModelProperty<ThisClass, ValueType>::EAccessorVisibility; \
+        static constexpr TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property> Property = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>{ GetterPtr, SetterPtr, FieldOffset, EVisibility::V_##GetterVisibility, EVisibility::V_##SetterVisibility, #Name }; \
         const uint8& Register = TViewModelPropertyRegistered<ThisClass, ValueType, Name##Property>::Registered; \
         return &Property; \
     }
@@ -27,7 +28,7 @@ SetterVisibility: \
     void Set##Name(typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
     SetterBody \
 public: \
-    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name, STRUCT_OFFSET(ThisClass, Name##Field)) \
+    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name, GetterVisibility, SetterVisibility, STRUCT_OFFSET(ThisClass, Name##Field)) \
 private: \
     FieldBody
 
@@ -38,7 +39,7 @@ SetterVisibility: \
     void Set##Name(typename UnrealMvvm_Impl::TPropertyTypeSelector<ValueType>::SetterType InNewValue) \
     SetterBody \
 public: \
-    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name, 0)
+    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, &ThisClass::Set##Name, GetterVisibility, SetterVisibility, 0)
 
 #define VM_PROP_AUTO_GETTER(Name) \
     { return Name##Field; }
@@ -97,4 +98,4 @@ public: \
 GetterVisibility: \
     typename UnrealMvvm_Impl::TPropertyTypeSelector<VM_PROP_RP(ValueType)>::GetterType Get##Name() const; \
 public: \
-    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, nullptr, 0)
+    VM_PROP_PROPERTY_GETTER(Name, VM_PROP_RP(ValueType), &ThisClass::Get##Name, nullptr, GetterVisibility, private, 0)

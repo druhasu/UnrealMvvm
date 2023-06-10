@@ -42,7 +42,10 @@ namespace UnrealMvvm_Impl
         virtual ~FViewModelPropertyOperations() {}
 
         // Reads value from InViewModel and writes to memory pointed by OutValue. OutHasValue denotes whether TOptional property has value
-        virtual void CopyValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const = 0;
+        virtual void GetValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const = 0;
+
+        // Writes value to InViewModel from memory pointer by InValue
+        virtual void SetValue(UBaseViewModel* InViewModel, void* InValue, bool InHasValue) const = 0;
 
         // Adds new FProperty to given class
         virtual void AddClassProperty(UClass* TargetClass) const = 0;
@@ -63,6 +66,8 @@ namespace UnrealMvvm_Impl
         struct FFlags
         {
             bool IsOptional : 1;
+            bool HasPublicGetter : 1;
+            bool HasPublicSetter : 1;
         };
 
         // this union is for debugging only, that way we can see names of properties

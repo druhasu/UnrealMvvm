@@ -5,10 +5,13 @@
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "KismetCompiler.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "BlueprintNodeSpawner.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_Self.h"
 
 const FName FViewModelPropertyNodeHelper::HasValuePinName("HasValue");
+const FName FViewModelPropertyNodeHelper::GetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValue));
+const FName FViewModelPropertyNodeHelper::SetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValue));
 
 bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMvvm_Impl::FViewModelPropertyReflection& Property)
 {
@@ -141,39 +144,53 @@ FName FViewModelPropertyNodeHelper::GetPinSubCategoryNameFromType(UnrealMvvm_Imp
     }
 }
 
-void FViewModelPropertyNodeHelper::SpawnReadPropertyValueNodes(UEdGraphPin* ValuePin, UEdGraphPin* HasValuePin, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName)
+void FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(const FName& FunctionName, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName)
 {
-    if (ValuePin->LinkedTo.Num() > 0)
+    UEdGraphPin* ValuePin = SourceNode->FindPin(ViewModelPropertyName);
+    if (ValuePin == nullptr)
     {
-        const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
+        // if SourceNode is referencing a removed property, the pin will not exist
+        // no need to expand anything in this case
+        return;
+    }
 
-        UK2Node_CallFunction* GetViewModelPropertyValueCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(SourceNode, SourceGraph);
-        GetViewModelPropertyValueCall->FunctionReference.SetExternalMember(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValue), UMvvmBlueprintLibrary::StaticClass());
-        GetViewModelPropertyValueCall->AllocateDefaultPins();
+    const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
 
-        UK2Node_Self* Self = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(SourceNode, SourceGraph);
-        Self->AllocateDefaultPins();
+    UK2Node_CallFunction* GetSetViewModelPropertyValueCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(SourceNode, SourceGraph);
+    GetSetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FunctionName, UMvvmBlueprintLibrary::StaticClass());
+    GetSetViewModelPropertyValueCall->AllocateDefaultPins();
 
-        UEdGraphPin* SelfOutPin = Self->FindPin(UEdGraphSchema_K2::PN_Self);
-        UEdGraphPin* ViewInPin = GetViewModelPropertyValueCall->FindPin(TEXT("View"));
-        Schema->TryCreateConnection(SelfOutPin, ViewInPin);
+    UK2Node_Self* Self = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(SourceNode, SourceGraph);
+    Self->AllocateDefaultPins();
 
-        UEdGraphPin* PropertyNamePin = GetViewModelPropertyValueCall->FindPin(TEXT("PropertyName"));
-        PropertyNamePin->DefaultValue = ViewModelPropertyName.ToString();
+    UEdGraphPin* SelfOutPin = Self->FindPin(UEdGraphSchema_K2::PN_Self);
+    UEdGraphPin* ViewInPin = GetSetViewModelPropertyValueCall->FindPin(TEXT("View"));
+    Schema->TryCreateConnection(SelfOutPin, ViewInPin);
 
-        UEdGraphPin* ValueOutPin = GetViewModelPropertyValueCall->FindPin(TEXT("Value"));
-        ValueOutPin->PinType.PinCategory = ValuePin->PinType.PinCategory;
-        ValueOutPin->PinType.PinValueType = ValuePin->PinType.PinValueType;
-        ValueOutPin->PinType.PinSubCategory = ValuePin->PinType.PinSubCategory;
-        ValueOutPin->PinType.PinSubCategoryObject = ValuePin->PinType.PinSubCategoryObject;
-        ValueOutPin->PinType.ContainerType = ValuePin->PinType.ContainerType;
+    UEdGraphPin* PropertyNamePin = GetSetViewModelPropertyValueCall->FindPin(TEXT("PropertyName"));
+    PropertyNamePin->DefaultValue = ViewModelPropertyName.ToString();
 
-        CompilerContext.MovePinLinksToIntermediate(*ValuePin, *ValueOutPin);
+    UEdGraphPin* ValueOutPin = GetSetViewModelPropertyValueCall->FindPin(TEXT("Value"));
+    ValueOutPin->PinType.PinCategory = ValuePin->PinType.PinCategory;
+    ValueOutPin->PinType.PinValueType = ValuePin->PinType.PinValueType;
+    ValueOutPin->PinType.PinSubCategory = ValuePin->PinType.PinSubCategory;
+    ValueOutPin->PinType.PinSubCategoryObject = ValuePin->PinType.PinSubCategoryObject;
+    ValueOutPin->PinType.ContainerType = ValuePin->PinType.ContainerType;
 
-        if (HasValuePin)
-        {
-            UEdGraphPin* HasValueOutPin = GetViewModelPropertyValueCall->FindPin(TEXT("HasValue"));
-            CompilerContext.MovePinLinksToIntermediate(*HasValuePin, *HasValueOutPin);
-        }
+    CompilerContext.MovePinLinksToIntermediate(*ValuePin, *ValueOutPin);
+
+    UEdGraphPin* SourceExecutePin = Schema->FindExecutionPin(*SourceNode, EGPD_Input);
+    UEdGraphPin* SourceThenPin = Schema->FindExecutionPin(*SourceNode, EGPD_Output);
+    if (SourceExecutePin && SourceThenPin)
+    {
+        CompilerContext.MovePinLinksToIntermediate(*SourceExecutePin, *Schema->FindExecutionPin(*GetSetViewModelPropertyValueCall, EGPD_Input));
+        CompilerContext.MovePinLinksToIntermediate(*SourceThenPin, *Schema->FindExecutionPin(*GetSetViewModelPropertyValueCall, EGPD_Output));
+    }
+
+    UEdGraphPin* HasValuePin = SourceNode->FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
+    if (HasValuePin)
+    {
+        UEdGraphPin* HasValueOutPin = GetSetViewModelPropertyValueCall->FindPin(HasValuePinName);
+        CompilerContext.MovePinLinksToIntermediate(*HasValuePin, *HasValueOutPin);
     }
 }

@@ -198,37 +198,54 @@ void FViewWidgetCustomizationExtender::CreateProperties(IDetailCategoryBuilder& 
 
         if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*Iter))
         {
-            DetailRow
-            .ValueContent()
-            .MinDesiredWidth(150)
-            .MaxDesiredWidth(200)
-            [
-                SNew(SButton)
-                .ButtonStyle(FAppStyle::Get(), "FlatButton.Success")
-                .HAlign(HAlign_Center)
-                .OnClicked(this, &FViewWidgetCustomizationExtender::HandleAddOrViewEventForProperty, ViewModelClass, PropertyName, Blueprint)
-                .ForegroundColor(FSlateColor::UseForeground())
+            if(Iter->Flags.HasPublicGetter)
+            {
+                DetailRow
+                .ValueContent()
                 [
-                    SNew(SBox)
-                    .MinDesiredHeight(14)
-                    .VAlign(VAlign_Center)
+                    SNew(SButton)
+                    .HAlign(HAlign_Center)
+                    .ContentPadding(FMargin(3.0, 2.0))
+                    .ToolTipText(this, &ThisClass::GetAddOrViewButtonTooltip, ViewModelClass, PropertyName, Blueprint)
+                    .OnClicked(this, &FViewWidgetCustomizationExtender::HandleAddOrViewEventForProperty, ViewModelClass, PropertyName, Blueprint)
                     [
-                        SNew(SWidgetSwitcher)
-                        .WidgetIndex(this, &FViewWidgetCustomizationExtender::HandleAddOrViewIndexForButton, ViewModelClass, PropertyName, Blueprint)
-                        + SWidgetSwitcher::Slot()
+                        SNew(SBox)
+                        .MinDesiredHeight(14)
+                        .VAlign(VAlign_Center)
                         [
-                            SNew(STextBlock)
-                            .Font(FAppStyle::GetFontStyle(TEXT("BoldFont")))
-                            .Text(NSLOCTEXT("UnrealMvvm", "ViewEvent", "View"))
-                        ]
-                        + SWidgetSwitcher::Slot()
-                        [
-                            SNew(SImage)
-                            .Image(FAppStyle::GetBrush("Plus"))
+                            SNew(SWidgetSwitcher)
+                            .WidgetIndex(this, &FViewWidgetCustomizationExtender::HandleAddOrViewIndexForButton, ViewModelClass, PropertyName, Blueprint)
+                            + SWidgetSwitcher::Slot()
+                            [
+                                SNew(SImage)
+                                .ColorAndOpacity(FSlateColor::UseForeground())
+                                .Image(FAppStyle::Get().GetBrush("Icons.SelectInViewport"))
+                            ]
+                            + SWidgetSwitcher::Slot()
+                            [
+                                SNew(SImage)
+                                .ColorAndOpacity(FSlateColor::UseForeground())
+                                .Image(FAppStyle::Get().GetBrush("Icons.Plus"))
+                            ]
                         ]
                     ]
-                ]
-            ];
+                ];
+            }
+            else
+            {
+                DetailRow
+                .ValueContent()
+                [
+                    SNew(SBox)
+                    .MinDesiredHeight(22)
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(STextBlock)
+                        .Font(IDetailLayoutBuilder::GetDetailFont())
+                        .Text(NSLOCTEXT("UnrealMvvm", "PropertyHasNoPublicGetter", "Has no public Getter"))
+                    ]
+                ];
+            }
         }
         else
         {
@@ -312,6 +329,15 @@ void FViewWidgetCustomizationExtender::HandleSetClass(const UClass* NewClass, ID
 
     DetailBuilder->ForceRefreshDetails();
     FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+}
+
+FText FViewWidgetCustomizationExtender::GetAddOrViewButtonTooltip(UClass* ViewModelClass, FName PropertyName, UBlueprint* Blueprint) const
+{
+    UK2Node_ViewModelPropertyChanged* EventNode = FindEventNode(ViewModelClass, PropertyName, Blueprint);
+
+    return EventNode ?
+        NSLOCTEXT("UnrealMvvm", "ViewEventTooltip", "View property changed handler") :
+        NSLOCTEXT("UnrealMvvm", "AddEventTooltip", "Add property changed handler");
 }
 
 FReply FViewWidgetCustomizationExtender::HandleAddOrViewEventForProperty(UClass* ViewModelClass, FName PropertyName, UBlueprint* Blueprint)

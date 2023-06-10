@@ -21,6 +21,12 @@ void UBaseViewClassExtension::PreConstruct(UUserWidget* UserWidget, bool IsDesig
 
 void UBaseViewClassExtension::PostLoad()
 {
-    UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(Cast<UClass>(GetOuter()), ViewModelClass);
+    if (ViewModelClass)
+    {
+        // ViewModel class may be removed, thus we get nullptr here
+        // in this case do not register class until it is fixed
+        UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(Cast<UClass>(GetOuter()), ViewModelClass);
+    }
+
     Super::PostLoad();
 }

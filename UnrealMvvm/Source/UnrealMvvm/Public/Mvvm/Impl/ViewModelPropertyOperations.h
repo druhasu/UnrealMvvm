@@ -29,16 +29,17 @@ namespace UnrealMvvm_Impl
             }
         };
 
-        /* Implementation of CopyValue method */
+        /* Implementation of GetValue method */
         template <typename TBaseOp, typename TOwner, typename TValue, bool bOptional>
-        struct TCopyValueOperation;
+        struct TGetValueOperation;
 
         template <typename TBaseOp, typename TOwner, typename TValue>
-        struct TCopyValueOperation<TBaseOp, TOwner, TValue, true> : public TBaseOp
+        struct TGetValueOperation<TBaseOp, TOwner, TValue, true> : public TBaseOp
         {
-            void CopyValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const override
+            void GetValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const override
             {
                 check(InViewModel);
+                check(OutValue);
 
                 TValue Value = this->GetCastedProperty()->GetValue((TOwner*)InViewModel);
                 OutHasValue = Value.IsSet();
@@ -50,14 +51,50 @@ namespace UnrealMvvm_Impl
         };
 
         template <typename TBaseOp, typename TOwner, typename TValue>
-        struct TCopyValueOperation<TBaseOp, TOwner, TValue, false> : public TBaseOp
+        struct TGetValueOperation<TBaseOp, TOwner, TValue, false> : public TBaseOp
         {
-            void CopyValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const override
+            void GetValue(UBaseViewModel* InViewModel, void* OutValue, bool& OutHasValue) const override
             {
                 check(InViewModel);
+                check(OutValue);
 
                 *((typename TBaseOp::TDecayedValue*)OutValue) = this->GetCastedProperty()->GetValue((TOwner*)InViewModel);
                 OutHasValue = true;
+            }
+        };
+
+        /* Implementation of SetValue method */
+        template <typename TBaseOp, typename TOwner, typename TValue, bool bOptional>
+        struct TSetValueOperation;
+
+        template <typename TBaseOp, typename TOwner, typename TValue>
+        struct TSetValueOperation<TBaseOp, TOwner, TValue, false> : public TBaseOp
+        {
+            void SetValue(UBaseViewModel* InViewModel, void* InValue, bool InHasValue) const override
+            {
+                check(InViewModel);
+                check(InValue);
+
+                this->GetCastedProperty()->SetValue((TOwner*)InViewModel, *((TBaseOp::TDecayedValue*)InValue));
+            }
+        };
+
+        template <typename TBaseOp, typename TOwner, typename TValue>
+        struct TSetValueOperation<TBaseOp, TOwner, TValue, true> : public TBaseOp
+        {
+            void SetValue(UBaseViewModel* InViewModel, void* InValue, bool InHasValue) const override
+            {
+                check(InViewModel);
+                check(InValue);
+
+                if (InHasValue)
+                {
+                    this->GetCastedProperty()->SetValue((TOwner*)InViewModel, TBaseOp::TDecayedValue(*(TBaseOp::TDecayedValue::ElementType*)InValue));
+                }
+                else
+                {
+                    this->GetCastedProperty()->SetValue((TOwner*)InViewModel, TBaseOp::TDecayedValue());
+                }
             }
         };
 
@@ -67,6 +104,8 @@ namespace UnrealMvvm_Impl
         {
             void AddClassProperty(UClass* TargetClass) const override
             {
+                check(TargetClass);
+
                 const TViewModelProperty<TOwner, TValue>* Prop = this->GetCastedProperty();
                 if (Prop->GetFieldOffset() > 0)
                 {

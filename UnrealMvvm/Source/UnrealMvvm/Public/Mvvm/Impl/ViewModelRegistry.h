@@ -105,8 +105,9 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
 
     using FBaseOps    = Details::TBaseOperation<TOwner, TValue>;
-    using FCopyOps    = Details::TCopyValueOperation<FBaseOps, TOwner, TValue, IsOptional>;
-    using FAddPropOps = Details::TAddClassPropertyOperation<FCopyOps, TOwner, TValue>;
+    using FGetOps     = Details::TGetValueOperation<FBaseOps, TOwner, TValue, IsOptional>;
+    using FSetOps     = Details::TSetValueOperation<FGetOps, TOwner, TValue, IsOptional>;
+    using FAddPropOps = Details::TAddClassPropertyOperation<FSetOps, TOwner, TValue>;
     using FGetVMOps   = Details::TGetViewModelClassOperation<FAddPropOps, TOwner, TValue>;
 
     using FEffectiveOpsType = TViewModelPropertyOperations<FGetVMOps>;
@@ -119,6 +120,8 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     new (Item.OpsBuffer.Buffer.GetTypedPtr()) FEffectiveOpsType(Prop);
 
     Item.Flags.IsOptional = IsOptional;
+    Item.Flags.HasPublicGetter = Prop->HasPublicGetter();
+    Item.Flags.HasPublicSetter = Prop->HasPublicSetter();
 
 #if WITH_EDITOR
     Item.PinCategoryType = TPinTraits<TDecayedValue>::PinCategoryType;

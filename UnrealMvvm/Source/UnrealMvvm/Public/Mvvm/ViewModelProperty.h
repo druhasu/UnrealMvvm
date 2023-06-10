@@ -49,11 +49,15 @@ public:
     using FGetterPtr = FGetterReturnType (TOwner::*) () const;
     using FSetterPtr = void (TOwner::*) (FSetterArgumentType);
 
-    constexpr TViewModelProperty(FGetterPtr InGetter, FSetterPtr InSetter, int32 InFieldOffset, const ANSICHAR* InName)
+    enum class EAccessorVisibility { V_public, V_protected, V_private };
+
+    constexpr TViewModelProperty(FGetterPtr InGetter, FSetterPtr InSetter, int32 InFieldOffset, EAccessorVisibility GetterVisibility, EAccessorVisibility SetterVisibility, const ANSICHAR* InName)
         : FViewModelPropertyBase(InName)
         , Getter(InGetter)
         , Setter(InSetter)
         , FieldOffset(InFieldOffset)
+        , bGetterIsPublic(GetterVisibility == EAccessorVisibility::V_public)
+        , bSetterIsPublic(SetterVisibility == EAccessorVisibility::V_public)
     {
     }
 
@@ -61,6 +65,11 @@ public:
     FGetterReturnType GetValue(FViewModelType* Owner) const
     {
         return (Owner->*Getter)();
+    }
+
+    bool HasPublicGetter() const
+    {
+        return bGetterIsPublic;
     }
 
     /* Sets value of this property to given ViewModel */
@@ -72,6 +81,11 @@ public:
         }
     }
 
+    bool HasPublicSetter() const
+    {
+        return bSetterIsPublic;
+    }
+
     int32 GetFieldOffset() const
     {
         return FieldOffset;
@@ -81,6 +95,8 @@ private:
     FGetterPtr Getter;
     FSetterPtr Setter;
     int32 FieldOffset;
+    uint8 bGetterIsPublic : 1;
+    uint8 bSetterIsPublic : 1;
 };
 
 /* Helper class that registers a property into reflection system */
@@ -95,8 +111,8 @@ class TViewModelPropertyRegistered : public TViewModelProperty<TOwner, TValue>
     using Super = TViewModelProperty<TOwner, TValue>;
 
 public:
-    constexpr TViewModelPropertyRegistered(typename Super::FGetterPtr InGetter, typename Super::FSetterPtr InSetter, int32 InFieldOffset, const ANSICHAR* InName)
-        : Super(InGetter, InSetter, InFieldOffset, InName)
+    constexpr TViewModelPropertyRegistered(typename Super::FGetterPtr InGetter, typename Super::FSetterPtr InSetter, int32 InFieldOffset, typename Super::EAccessorVisibility GetterVisibility, typename Super::EAccessorVisibility SetterVisibility, const ANSICHAR* InName)
+        : Super(InGetter, InSetter, InFieldOffset, GetterVisibility, SetterVisibility, InName)
     {
     }
 

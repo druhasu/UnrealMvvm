@@ -75,6 +75,12 @@ class UTestBaseViewBlueprint : public UUserWidget
     GENERATED_BODY()
 
 public:
+    UFUNCTION(BlueprintImplementableEvent)
+    void SetValueToViewModel(int32 NewValue);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    int32 GetValueFromViewModel();
+
     UPROPERTY(BlueprintReadWrite)
     int32 MyValue = 0;
 

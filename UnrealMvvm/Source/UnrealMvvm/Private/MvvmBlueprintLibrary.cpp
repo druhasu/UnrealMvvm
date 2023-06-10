@@ -67,6 +67,11 @@ void UMvvmBlueprintLibrary::GetViewModelPropertyValue(UUserWidget* View, FName P
     checkNoEntry();
 }
 
+void UMvvmBlueprintLibrary::SetViewModelPropertyValue(UUserWidget* View, FName PropertyName, int32 Value, bool HasValue)
+{
+    checkNoEntry();
+}
+
 DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
 {
     P_GET_OBJECT(UUserWidget, View);
@@ -86,7 +91,34 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
 
             if (MyProperty)
             {
-                MyProperty->GetOperations().CopyValue(ViewModel, OutValuePtr, OutHasValueRef);
+                MyProperty->GetOperations().GetValue(ViewModel, OutValuePtr, OutHasValueRef);
+            }
+        }
+    }
+
+    P_FINISH;
+}
+
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
+{
+    P_GET_OBJECT(UUserWidget, View);
+    P_GET_PROPERTY(FNameProperty, PropertyName);
+
+    Stack.StepCompiledIn<FProperty>(nullptr);
+    void* OutValuePtr = Stack.MostRecentPropertyAddress;
+
+    P_GET_UBOOL(HasValue);
+
+    if (View)
+    {
+        UBaseViewModel* ViewModel = GetViewModel(View);
+        if (ViewModel)
+        {
+            const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName);
+
+            if (MyProperty)
+            {
+                MyProperty->GetOperations().SetValue(ViewModel, OutValuePtr, HasValue);
             }
         }
     }

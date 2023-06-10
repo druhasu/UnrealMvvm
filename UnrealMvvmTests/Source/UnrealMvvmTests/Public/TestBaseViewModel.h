@@ -13,6 +13,9 @@ class UTestBaseViewModel : public UBaseViewModel
     VM_PROP_AG_AS(int32, IntValue, public, public);
     VM_PROP_AG_AS(float, FloatValue, public, public);
 
+    VM_PROP_AG_AS(int32, NoPublicGetter, private, public);
+    VM_PROP_AG_AS(int32, NoPublicSetter, public, private);
+
 public:
     using UBaseViewModel::HasConnectedViews;
 

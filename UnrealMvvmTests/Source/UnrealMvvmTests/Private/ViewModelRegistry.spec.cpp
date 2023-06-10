@@ -197,11 +197,11 @@ void ViewModelRegistrySpec::Define()
         });
     });
 
-    Describe("CopyValueToMemory", [this]()
+    Describe("GetValue Operation", [this]()
     {
         Describe("Regular", [this]()
         {
-            It("Should Read int32", [this]()
+            It("Should Get int32", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyInt"));
@@ -210,13 +210,13 @@ void ViewModelRegistrySpec::Define()
                 bool HasValue = false;
 
                 ViewModel->SetMyInt(123);
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, 123);
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Read UObject*", [this]()
+            It("Should Get UObject*", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyObject"));
@@ -225,13 +225,13 @@ void ViewModelRegistrySpec::Define()
                 bool HasValue = false;
 
                 ViewModel->SetMyObject(ViewModel);
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, (UObject*)ViewModel);
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Read TArray", [this]()
+            It("Should Get TArray", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntArray"));
@@ -240,7 +240,7 @@ void ViewModelRegistrySpec::Define()
                 bool HasValue = false;
 
                 ViewModel->SetMyIntArray({ 123, 321 });
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue.Num", OutValue.Num(), 2);
                 TestEqual("OutValue[0]", OutValue[0], 123);
@@ -251,7 +251,7 @@ void ViewModelRegistrySpec::Define()
 
         Describe("Optional", [this]()
         {
-            It("Should Read Optional int32", [this]()
+            It("Should Get Optional int32", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntOptional"));
@@ -259,17 +259,17 @@ void ViewModelRegistrySpec::Define()
                 int32 OutValue = 0;
                 bool HasValue = false;
 
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
                 TestFalse("HasValue", HasValue);
 
                 ViewModel->SetMyIntOptional(123);
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, 123);
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Read Optional UObject*", [this]()
+            It("Should Get Optional UObject*", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyObjectOptional"));
@@ -277,17 +277,17 @@ void ViewModelRegistrySpec::Define()
                 UObject* OutValue = 0;
                 bool HasValue = false;
 
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
                 TestFalse("HasValue", HasValue);
 
                 ViewModel->SetMyObjectOptional(ViewModel);
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue", OutValue, (UObject*)ViewModel);
                 TestTrue("HasValue", HasValue);
             });
 
-            It("Should Read Optional TArray", [this]()
+            It("Should Get Optional TArray", [this]()
             {
                 UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
                 const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntArrayOptional"));
@@ -295,16 +295,116 @@ void ViewModelRegistrySpec::Define()
                 TArray<int32> OutValue;
                 bool HasValue = false;
 
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
                 TestFalse("HasValue", HasValue);
 
                 ViewModel->SetMyIntArrayOptional(TArray<int32>({ 123, 321 }));
-                Property->GetOperations().CopyValue(ViewModel, &OutValue, HasValue);
+                Property->GetOperations().GetValue(ViewModel, &OutValue, HasValue);
 
                 TestEqual("OutValue.Num", OutValue.Num(), 2);
                 TestEqual("OutValue[0]", OutValue[0], 123);
                 TestEqual("OutValue[1]", OutValue[1], 321);
                 TestTrue("HasValue", HasValue);
+            });
+        });
+    });
+
+    Describe("SetValue Operation", [this]()
+    {
+        Describe("Regular", [this]()
+        {
+            It("Should Set int32", [this]()
+            {
+                UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
+                const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyInt"));
+
+                int32 InValue = 123;
+                bool HasValue = false; // we intentionally pass false here, because nonoptional property must ignore it
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, HasValue);
+                
+                TestEqual("Value", ViewModel->GetMyInt(), InValue);
+            });
+
+            It("Should Set UObject*", [this]()
+            {
+                UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
+                const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyObject"));
+
+                UObject* InValue = ViewModel;
+                bool HasValue = false; // we intentionally pass false here, because nonoptional property must ignore it
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, HasValue);
+
+                TestEqual("Value", ViewModel->GetMyObject(), InValue);
+            });
+
+            It("Should Set TArray", [this]()
+            {
+                UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
+                const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntArray"));
+
+                TArray<int32> InValue{ 123, 321 };
+                bool HasValue = false; // we intentionally pass false here, because nonoptional property must ignore it
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, HasValue);
+                TArray<int32> OutValue = ViewModel->GetMyIntArray();
+
+                TestEqual("OutValue.Num", OutValue.Num(), InValue.Num());
+                TestEqual("OutValue[0]", OutValue[0], InValue[0]);
+                TestEqual("OutValue[1]", OutValue[1], InValue[1]);
+            });
+        });
+
+        Describe("Optional", [this]()
+        {
+            It("Should Set Optional int32", [this]()
+            {
+                UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
+                const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntOptional"));
+
+                int32 InValue = 123;
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, true);                
+                TestEqual("Value", ViewModel->GetMyIntOptional(), TOptional<int32>(123));
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, false);
+                TestEqual("Value", ViewModel->GetMyIntOptional(), TOptional<int32>());
+            });
+
+            It("Should Set Optional UObject*", [this]()
+            {
+                UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
+                const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyObjectOptional"));
+
+                UObject* InValue = ViewModel;
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, true);
+                TestEqual("Value", ViewModel->GetMyObjectOptional(), TOptional<UObject*>(ViewModel));
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, false);
+                TestEqual("Value", ViewModel->GetMyObjectOptional(), TOptional<UObject*>());
+            });
+
+            It("Should Set Optional TArray", [this]()
+            {
+                UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
+                const FViewModelPropertyReflection* Property = FViewModelRegistry::FindProperty<UPinTraitsViewModel>(TEXT("MyIntArrayOptional"));
+
+                TArray<int32> InValue{ 123, 321 };
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, true);
+                TOptional<TArray<int32>> OutValue = ViewModel->GetMyIntArrayOptional();
+
+                TestTrue("OutValue.IsSet", OutValue.IsSet());
+                TestEqual("OutValue.Num", OutValue->Num(), InValue.Num());
+                TestEqual("OutValue[0]", OutValue.GetValue()[0], InValue[0]);
+                TestEqual("OutValue[1]", OutValue.GetValue()[1], InValue[1]);
+
+                Property->GetOperations().SetValue(ViewModel, &InValue, false);
+                OutValue = ViewModel->GetMyIntArrayOptional();
+
+                TestFalse("OutValue.IsSet", OutValue.IsSet());
             });
         });
     });

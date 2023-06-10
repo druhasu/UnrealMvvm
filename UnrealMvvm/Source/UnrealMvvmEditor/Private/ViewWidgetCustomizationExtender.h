@@ -8,6 +8,8 @@ class IDetailCategoryBuilder;
 
 class FViewWidgetCustomizationExtender : public IBlueprintWidgetCustomizationExtender
 {
+    using ThisClass = FViewWidgetCustomizationExtender;
+
 public:
     void Init();
     void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder, const TArrayView<UWidget*> InWidgets, const TSharedRef<FWidgetBlueprintEditor>& InWidgetBlueprintEditor) override;
@@ -27,6 +29,8 @@ private:
 
     void HandleNavigateToViewModelClass(UBlueprint* Blueprint);
     void HandleSetClass(const UClass* NewClass, IDetailLayoutBuilder* DetailBuilder, UBlueprint* Blueprint);
+
+    FText GetAddOrViewButtonTooltip(UClass* ViewModelClass, FName PropertyName, UBlueprint* Blueprint) const;
     FReply HandleAddOrViewEventForProperty(UClass* ViewModelClass, FName PropertyName, UBlueprint* Blueprint);
     int32 HandleAddOrViewIndexForButton(UClass* ViewModelClass, FName PropertyName, UBlueprint* Blueprint) const;
 
