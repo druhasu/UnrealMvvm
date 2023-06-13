@@ -7,6 +7,7 @@
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
+#include "Kismet2/CompilerResultsLog.h"
 
 bool UK2Node_ViewModelPropertyBase::Modify(bool bAlwaysMarkDirty)
 {
