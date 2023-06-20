@@ -5,6 +5,73 @@
 #include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/Impl/BindImpl.h"
 #include "Mvvm/Impl/BaseViewExtension.h"
+#include "Mvvm/Impl/BaseViewComponent.h"
+
+template<typename TOwner, typename TViewModel>
+class TBaseView;
+
+namespace UnrealMvvm_Impl
+{
+    template<typename TOwner, typename TViewModel, typename TComponent>
+    class TBaseViewImplWithComponent
+    {
+    public:
+        using FView = TBaseView<TOwner, TViewModel>;
+
+        static TViewModel* GetViewModel(const FView* BaseView)
+        {
+            return (TViewModel*)GetExtension(BaseView)->ViewModel;
+        }
+
+        static void SetViewModel(FView* BaseView, TViewModel* InViewModel)
+        {
+            TComponent* Extension = GetExtension(BaseView);
+
+            if (Extension->BindEntries.Num() == 0)
+            {
+                BaseView->BindProperties();
+                Extension->PrepareBindings(TViewModel::StaticClass());
+            }
+
+            TViewModel* OldViewModel = (TViewModel*)Extension->ViewModel;
+
+            Extension->SetViewModelInternal(InViewModel);
+            BaseView->OnViewModelChanged(OldViewModel, InViewModel);
+        }
+
+        static TComponent* GetExtension(const FView* BaseView)
+        {
+            if (!BaseView->CachedComponent)
+            {
+                const_cast<FView*>(BaseView)->CachedComponent = TComponent::Request(const_cast<TOwner*>(static_cast<const TOwner*>(BaseView)));
+            }
+
+            return (TComponent*)BaseView->CachedComponent;
+        }
+
+        static auto& GetBindEntries(const FView* BaseView)
+        {
+            return GetExtension(BaseView)->BindEntries;
+        }
+    };
+
+    template<typename TOwner, typename TViewModel, typename = void>
+    class TBaseViewImpl;
+
+    /* Implementation for UserWidget */
+    template<typename TOwner, typename TViewModel>
+    class TBaseViewImpl<TOwner, TViewModel, typename TEnableIf<TIsDerivedFrom<TOwner, UUserWidget>::Value>::Type>
+        : public TBaseViewImplWithComponent<TOwner, TViewModel, UBaseViewExtension>
+    {
+    };
+
+    /* Implementation for Actor */
+    template<typename TOwner, typename TViewModel>
+    class TBaseViewImpl<TOwner, TViewModel, typename TEnableIf<TIsDerivedFrom<TOwner, AActor>::Value>::Type>
+        : public TBaseViewImplWithComponent<TOwner, TViewModel, UBaseViewComponent>
+    {
+    };
+}
 
 template<typename TOwner, typename TViewModel>
 class TBaseView
@@ -25,23 +92,12 @@ public:
 
     TViewModel* GetViewModel() const
     {
-        return (TViewModel*)GetExtension()->ViewModel;
+        return UnrealMvvm_Impl::TBaseViewImpl<TOwner, TViewModel>::GetViewModel(this);
     }
 
     void SetViewModel(TViewModel* InViewModel)
     {
-        UBaseViewExtension* Extension = GetExtension();
-
-        if (Extension->BindEntries.Num() == 0)
-        {
-            BindProperties();
-            Extension->PrepareBindings(TViewModel::StaticClass());
-        }
-
-        TViewModel* OldViewModel = (TViewModel*)Extension->ViewModel;
-
-        Extension->SetViewModelInternal(InViewModel);
-        OnViewModelChanged(OldViewModel, InViewModel);
+        UnrealMvvm_Impl::TBaseViewImpl<TOwner, TViewModel>::SetViewModel(this, InViewModel);
     }
 
 protected:
@@ -55,30 +111,23 @@ private:
     template<typename T, typename P, typename C>
     friend void __BindImpl(T*, P*, C&&);
 
-    static void SetViewModelStatic(UUserWidget& Widget, UBaseViewModel* ViewModel)
+    template<typename O, typename V, typename U>
+    friend class UnrealMvvm_Impl::TBaseViewImplWithComponent;
+
+    static void SetViewModelStatic(UObject& ViewObject, UBaseViewModel* ViewModel)
     {
-        TOwner& Owner = static_cast<TOwner&>(Widget);
+        TOwner& Owner = static_cast<TOwner&>(ViewObject);
         TBaseView<TOwner, TViewModel>& TypedView = static_cast<TBaseView<TOwner, TViewModel>&>(Owner);
 
         Owner.SetViewModel((TViewModel*)ViewModel);
     }
 
-    UBaseViewExtension* GetExtension() const
-    {
-        if (!CachedExtension)
-        {
-            CachedExtension = UBaseViewExtension::Request(const_cast<TOwner*>(static_cast<const TOwner*>(this)));
-        }
-
-        return CachedExtension;
-    }
-
     auto& GetBindEntries()
     {
-        return GetExtension()->BindEntries;
+        return UnrealMvvm_Impl::TBaseViewImpl<TOwner, TViewModel>::GetBindEntries(this);
     }
 
-    mutable UBaseViewExtension* CachedExtension = nullptr;
+    UObject* CachedComponent = nullptr;
     static uint8 Registered;
 };
 

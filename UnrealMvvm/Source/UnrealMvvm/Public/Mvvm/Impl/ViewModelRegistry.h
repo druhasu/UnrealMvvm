@@ -21,7 +21,7 @@ namespace UnrealMvvm_Impl
     {
     public:
         using FClassGetterPtr = UClass * (*)();
-        using FViewModelSetterPtr = void (*)(UUserWidget&, UBaseViewModel*);
+        using FViewModelSetterPtr = void (*)(UObject&, UBaseViewModel*);
 
         template <typename T>
         static const FViewModelPropertyReflection* FindProperty(const FName& InPropertyName)

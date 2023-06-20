@@ -54,7 +54,7 @@ void UK2Node_GetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerR
     if (PropertyInfo && !PropertyInfo->Flags.HasPublicGetter)
     {
         FText Message = FText::Format(
-            NSLOCTEXT("UnrealMvvm", "Error.PropertyHasNoGetter", "@@ - Property {ViewModel}.{PropertyName} does not have public Getter"),
+            NSLOCTEXT("UnrealMvvm", "Error.PropertyHasNoGetter", "@@ - Property {0}.{1} does not have public Getter"),
             FText::FromString(ViewModelOwnerClass->GetName()),
             FText::FromName(ViewModelPropertyName)
         );
@@ -66,11 +66,11 @@ void UK2Node_GetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerR
 FText UK2Node_GetViewModelPropertyValue::GetNodeTitleForCache(ENodeTitleType::Type TitleType) const
 {
     return TitleType == ENodeTitleType::FullTitle
-        ? FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_TitleFull", "Get {PropertyName}\nTarget is {ViewModelName}"), FText::FromName(ViewModelPropertyName), GetViewModelDisplayName())
-        : FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Title", "Get {PropertyName}"), FText::FromName(ViewModelPropertyName));
+        ? FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_TitleFull", "Get {0}\nTarget is {1}"), FText::FromName(ViewModelPropertyName), GetViewModelDisplayName())
+        : FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Title", "Get {0}"), FText::FromName(ViewModelPropertyName));
 }
 
 FText UK2Node_GetViewModelPropertyValue::GetTooltipTextForCache() const 
 {
-    return FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Tooltip", "Returns the value of property {PropertyName}"), FText::FromName(ViewModelPropertyName));
+    return FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Tooltip", "Returns the value of property {0}"), FText::FromName(ViewModelPropertyName));
 }

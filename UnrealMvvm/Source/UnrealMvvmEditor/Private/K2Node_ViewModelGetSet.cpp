@@ -204,8 +204,8 @@ UClass* UK2Node_ViewModelGetSet::GetViewClass() const
 FName UK2Node_ViewModelGetSet::GetFunctionName() const
 {
     return bIsSetter ?
-        GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModel) :
-        GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModel);
+        GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelToWidget) :
+        GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromWidget);
 }
 
 void UK2Node_ViewModelGetSet::OnViewClassChanged(UClass* ViewClass, UClass* ViewModelClass)

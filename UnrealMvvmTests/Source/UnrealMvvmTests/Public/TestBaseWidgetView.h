@@ -4,11 +4,11 @@
 
 #include "Mvvm/BaseView.h"
 #include "TestBaseViewModel.h"
-#include "TestBaseView.generated.h"
+#include "TestBaseWidgetView.generated.h"
 
 /* Test View based on BaseView class */
 UCLASS()
-class UTestBaseView : public UBaseView, public TBaseView<UTestBaseView, UTestBaseViewModel>
+class UTestBaseWidgetView : public UBaseView, public TBaseView<UTestBaseWidgetView, UTestBaseViewModel>
 {
     GENERATED_BODY()
 
@@ -30,16 +30,16 @@ protected:
     }
 };
 
-/* Same as UTestBaseView, but without registered bindings */
+/* Same as UTestBaseWidgetView, but without registered bindings */
 UCLASS()
-class UTestBaseViewNoBind : public UBaseView, public TBaseView<UTestBaseViewNoBind, UTestBaseViewModel>
+class UTestBaseWidgetViewNoBind : public UBaseView, public TBaseView<UTestBaseWidgetViewNoBind, UTestBaseViewModel>
 {
     GENERATED_BODY()
 };
 
 /* Test View based on UserWidget class */
 UCLASS()
-class UTestBaseViewPure : public UUserWidget, public TBaseView<UTestBaseViewPure, UTestBaseViewModel>
+class UTestBaseWidgetViewPure : public UUserWidget, public TBaseView<UTestBaseWidgetViewPure, UTestBaseViewModel>
 {
     GENERATED_BODY()
 
@@ -61,16 +61,16 @@ protected:
     }
 };
 
-/* Same as UTestBaseViewPure, but without registered bindings */
+/* Same as UTestBaseWidgetViewPure, but without registered bindings */
 UCLASS()
-class UTestBaseViewPureNoBind : public UUserWidget, public TBaseView<UTestBaseViewPureNoBind, UTestBaseViewModel>
+class UTestBaseWidgetViewPureNoBind : public UUserWidget, public TBaseView<UTestBaseWidgetViewPureNoBind, UTestBaseViewModel>
 {
     GENERATED_BODY()
 };
 
 /* Test View base class for Blueprint-only view */
 UCLASS()
-class UTestBaseViewBlueprint : public UUserWidget
+class UTestBaseWidgetViewBlueprint : public UUserWidget
 {
     GENERATED_BODY()
 

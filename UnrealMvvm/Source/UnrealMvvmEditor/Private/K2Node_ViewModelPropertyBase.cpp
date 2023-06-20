@@ -54,7 +54,7 @@ void UK2Node_ViewModelPropertyBase::ValidateNodeDuringCompilation(FCompilerResul
     if (!PropertyInfo)
     {
         FText Message = FText::Format(
-            NSLOCTEXT("UnrealMvvm", "Error.InvalidProperty", "@@ - Property {ViewModel}.{PropertyName} does not exist"),
+            NSLOCTEXT("UnrealMvvm", "Error.InvalidProperty", "@@ - Property {0}.{1} does not exist"),
             FText::FromString(GetNameSafe(ViewModelOwnerClass)),
             FText::FromName(ViewModelPropertyName)
         );
@@ -66,7 +66,7 @@ void UK2Node_ViewModelPropertyBase::ValidateNodeDuringCompilation(FCompilerResul
     if (!FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*PropertyInfo))
     {
         FText Message = FText::Format(
-            NSLOCTEXT("UnrealMvvm", "Error.PropertyNotAvailableInBlueprint", "@@ - Property {ViewModel}.{PropertyName} is not available in Blueprint"),
+            NSLOCTEXT("UnrealMvvm", "Error.PropertyNotAvailableInBlueprint", "@@ - Property {0}.{1} is not available in Blueprint"),
             FText::FromString(GetNameSafe(ViewModelOwnerClass)),
             FText::FromName(ViewModelPropertyName)
         );

@@ -3,28 +3,31 @@
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "Mvvm/Impl/ViewModelRegistry.h"
 #include "Mvvm/Impl/BaseViewExtension.h"
+#include "Mvvm/Impl/BaseViewComponent.h"
 #include "Mvvm/BaseView.h"
 #include "Mvvm/BaseViewModel.h"
 
-UBaseViewModel* UMvvmBlueprintLibrary::GetViewModel(UUserWidget* View)
+template <typename TView, typename TViewComponent>
+UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelInternal(TView* View)
 {
     if (!ensureAlways(View))
     {
         return nullptr;
     }
 
-    UBaseViewExtension* Extension = View->GetExtension<UBaseViewExtension>();
-    if (!Extension)
+    TViewComponent* ViewComponent = TViewComponent::Get(View);
+    if (!ViewComponent)
     {
-        // this is a valid case, not every widget must have it
-        // even if it is a View, it may not have Extension yet. in this case ViewModel is also not set
+        // this is a valid case, not every View must have it
+        // even if it is a View, it may not have ViewComponent yet. in this case ViewModel is also not set
         return nullptr;
     }
 
-    return Extension->ViewModel;
+    return ViewComponent->ViewModel;
 }
 
-void UMvvmBlueprintLibrary::SetViewModel(UUserWidget* View, UBaseViewModel* ViewModel)
+template <typename TView, typename TViewComponent>
+void UMvvmBlueprintLibrary::SetViewModelInternal(TView* View, UBaseViewModel* ViewModel)
 {
     using namespace UnrealMvvm_Impl;
 
@@ -36,7 +39,7 @@ void UMvvmBlueprintLibrary::SetViewModel(UUserWidget* View, UBaseViewModel* View
     UClass* ExpectedViewModelClass = FViewModelRegistry::GetViewModelClass(View->GetClass());
     if (!ExpectedViewModelClass)
     {
-        // This widget is not a View, nothing to do here
+        // This Object is not a View, nothing to do here
         return;
     }
 
@@ -57,24 +60,15 @@ void UMvvmBlueprintLibrary::SetViewModel(UUserWidget* View, UBaseViewModel* View
     }
     else
     {
-        UBaseViewExtension* Extension = UBaseViewExtension::Request(View);
-        Extension->SetViewModelInternal(ViewModel);
+        TViewComponent* Component = TViewComponent::Request(View);
+        Component->SetViewModelInternal(ViewModel);
     }
 }
 
-void UMvvmBlueprintLibrary::GetViewModelPropertyValue(UUserWidget* View, FName PropertyName, int32& Value, bool& HasValue)
+template <typename TView>
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValueInternal)
 {
-    checkNoEntry();
-}
-
-void UMvvmBlueprintLibrary::SetViewModelPropertyValue(UUserWidget* View, FName PropertyName, int32 Value, bool HasValue)
-{
-    checkNoEntry();
-}
-
-DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
-{
-    P_GET_OBJECT(UUserWidget, View);
+    P_GET_OBJECT(TView, View);
     P_GET_PROPERTY(FNameProperty, PropertyName);
 
     Stack.StepCompiledIn<FProperty>(nullptr);
@@ -99,9 +93,10 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
     P_FINISH;
 }
 
-DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
+template <typename TView>
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValueInternal)
 {
-    P_GET_OBJECT(UUserWidget, View);
+    P_GET_OBJECT(TView, View);
     P_GET_PROPERTY(FNameProperty, PropertyName);
 
     Stack.StepCompiledIn<FProperty>(nullptr);

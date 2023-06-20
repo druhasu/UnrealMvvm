@@ -16,7 +16,7 @@ void FNodesActionsSpec::Define()
     BeforeEach([]
     {
         // load Blueprint class, so node actions are added to database
-        StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseView.BP_TestBaseView_C"));
+        StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView.BP_TestBaseWidgetView_C"));
     });
 
     It("Should provide GetPropertyValue node for public property", [this]

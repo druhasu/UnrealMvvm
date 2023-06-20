@@ -92,7 +92,7 @@ Bind(TOwner* ThisPtr, TProperty* Property, TMemberPtr Callback)
 
 // Binds FText property to UTextBlock or any other class that has SetText method
 template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<TIsSame<typename TProperty::FValueType, FText>::Value&& UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
+typename TEnableIf<std::is_same_v<typename TProperty::FValueType, FText> && UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
 Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
 {
     check(Text);
@@ -101,7 +101,7 @@ Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
 
 // Binds FString property to UTextBlock or any other class that has SetText method
 template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<TIsSame<typename TProperty::FValueType, FString>::Value&& UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
+typename TEnableIf<std::is_same_v<typename TProperty::FValueType, FString> && UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
 Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
 {
     check(Text);

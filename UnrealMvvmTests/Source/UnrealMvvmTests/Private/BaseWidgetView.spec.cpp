@@ -2,19 +2,19 @@
 
 #include "Misc/AutomationTest.h"
 
-#include "TestBaseView.h"
+#include "TestBaseWidgetView.h"
 #include "TestBaseViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
 
 #include "TempWorldHelper.h"
 
-BEGIN_DEFINE_SPEC(FBaseViewSpec, "UnrealMvvm.BaseView", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
+BEGIN_DEFINE_SPEC(FBaseWidgetViewSpec, "UnrealMvvm.BaseWidgetView", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 
-UTestBaseViewBlueprint* CreateBlueprintBasedView(UWorld* World, bool bWithBindings = true) const;
+UTestBaseWidgetViewBlueprint* CreateBlueprintBasedView(UWorld* World, bool bWithBindings = true) const;
 
-END_DEFINE_SPEC(FBaseViewSpec)
+END_DEFINE_SPEC(FBaseWidgetViewSpec)
 
-void FBaseViewSpec::Define()
+void FBaseWidgetViewSpec::Define()
 {
     Describe("UBaseView derived", [this]
     {
@@ -23,7 +23,7 @@ void FBaseViewSpec::Define()
             // this test just checks our assumptions about what leads to NativeDestruct and NativeConstruct calls
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             TestNotNull("View not created", View);
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -37,7 +37,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
@@ -55,7 +55,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
@@ -73,7 +73,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -88,7 +88,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -103,7 +103,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -120,7 +120,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -137,7 +137,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             View->SetViewModel(ViewModel);
 
@@ -148,7 +148,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseView* View = CreateWidget<UTestBaseView>(Helper.World);
+            UTestBaseWidgetView* View = CreateWidget<UTestBaseWidgetView>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -164,7 +164,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewNoBind* View = CreateWidget<UTestBaseViewNoBind>(Helper.World);
+            UTestBaseWidgetViewNoBind* View = CreateWidget<UTestBaseWidgetViewNoBind>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -179,7 +179,7 @@ void FBaseViewSpec::Define()
             // this test just checks our assumptions about what leads to NativeDestruct and NativeConstruct calls
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             TestNotNull("View not created", View);
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -193,7 +193,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
@@ -211,7 +211,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
@@ -229,7 +229,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -244,7 +244,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -259,7 +259,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -276,7 +276,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -293,7 +293,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             View->SetViewModel(ViewModel);
 
@@ -304,7 +304,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPure* View = CreateWidget<UTestBaseViewPure>(Helper.World);
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -320,7 +320,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewPureNoBind* View = CreateWidget<UTestBaseViewPureNoBind>(Helper.World);
+            UTestBaseWidgetViewPureNoBind* View = CreateWidget<UTestBaseWidgetViewPureNoBind>(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -335,7 +335,7 @@ void FBaseViewSpec::Define()
             // this test just checks our assumptions about what leads to NativeDestruct and NativeConstruct calls
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             TestNotNull("View not created", View);
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -349,7 +349,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
@@ -367,7 +367,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
@@ -385,7 +385,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -400,7 +400,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
@@ -415,7 +415,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -432,7 +432,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
@@ -449,7 +449,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
 
@@ -460,7 +460,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
@@ -476,7 +476,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World, false);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World, false);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
@@ -498,7 +498,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
@@ -509,7 +509,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
 
@@ -522,7 +522,7 @@ void FBaseViewSpec::Define()
         {
             FTempWorldHelper Helper;
 
-            UTestBaseViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
 
@@ -533,11 +533,11 @@ void FBaseViewSpec::Define()
     });
 }
 
-UTestBaseViewBlueprint* FBaseViewSpec::CreateBlueprintBasedView(UWorld* World, bool bWithBindings) const
+UTestBaseWidgetViewBlueprint* FBaseWidgetViewSpec::CreateBlueprintBasedView(UWorld* World, bool bWithBindings) const
 {
     UClass* WidgetClass = bWithBindings ?
-        StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseView.BP_TestBaseView_C")) :
-        StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseView_NoBind.BP_TestBaseView_NoBind_C"));
+        StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView.BP_TestBaseWidgetView_C")) :
+        StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_NoBind.BP_TestBaseWidgetView_NoBind_C"));
 
-    return CreateWidget<UTestBaseViewBlueprint>(World, WidgetClass);
+    return CreateWidget<UTestBaseWidgetViewBlueprint>(World, WidgetClass);
 }

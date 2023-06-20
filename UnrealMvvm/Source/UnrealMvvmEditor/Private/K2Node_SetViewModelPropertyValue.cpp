@@ -55,7 +55,7 @@ void UK2Node_SetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerR
     if (PropertyInfo && !PropertyInfo->Flags.HasPublicSetter)
     {
         FText Message = FText::Format(
-            NSLOCTEXT("UnrealMvvm", "Error.PropertyHasNoSetter", "@@ - Property {ViewModel}.{PropertyName} does not have public Setter"),
+            NSLOCTEXT("UnrealMvvm", "Error.PropertyHasNoSetter", "@@ - Property {0}.{1} does not have public Setter"),
             FText::FromString(ViewModelOwnerClass->GetName()),
             FText::FromName(ViewModelPropertyName)
         );
@@ -67,11 +67,11 @@ void UK2Node_SetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerR
 FText UK2Node_SetViewModelPropertyValue::GetNodeTitleForCache(ENodeTitleType::Type TitleType) const
 {
     return TitleType == ENodeTitleType::FullTitle
-        ? FText::Format(NSLOCTEXT("UnrealMvvm", "SetViewModelPropertyValue_TitleFull", "Set {PropertyName}\nTarget is {ViewModelName}"), FText::FromName(ViewModelPropertyName), GetViewModelDisplayName())
-        : FText::Format(NSLOCTEXT("UnrealMvvm", "SetViewModelPropertyValue_Title", "Set {PropertyName}"), FText::FromName(ViewModelPropertyName));
+        ? FText::Format(NSLOCTEXT("UnrealMvvm", "SetViewModelPropertyValue_TitleFull", "Set {0}\nTarget is {1}"), FText::FromName(ViewModelPropertyName), GetViewModelDisplayName())
+        : FText::Format(NSLOCTEXT("UnrealMvvm", "SetViewModelPropertyValue_Title", "Set {0}"), FText::FromName(ViewModelPropertyName));
 }
 
 FText UK2Node_SetViewModelPropertyValue::GetTooltipTextForCache() const
 {
-    return FText::Format(NSLOCTEXT("UnrealMvvm", "SetViewModelPropertyValue_Tooltip", "Changes the value of property {PropertyName}"), FText::FromName(ViewModelPropertyName));
+    return FText::Format(NSLOCTEXT("UnrealMvvm", "SetViewModelPropertyValue_Tooltip", "Changes the value of property {0}"), FText::FromName(ViewModelPropertyName));
 }

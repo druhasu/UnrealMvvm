@@ -2,7 +2,7 @@
 
 #include "K2Node_ViewModelChanged.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/BaseViewExtension.h"
+#include "Mvvm/Impl/BaseViewComponentImpl.h"
 #include "Mvvm/Impl/ViewModelRegistry.h"
 #include "GraphEditorSettings.h"
 #include "EdGraphSchema_K2.h"
@@ -43,7 +43,7 @@ void UK2Node_ViewModelChanged::ExpandNode(FKismetCompilerContext& CompilerContex
     UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(this, ExecPin, SourceGraph);
     CustomEvent->UserDefinedPins.Emplace(MakePinInfo(OldViewModelPinName));
     CustomEvent->UserDefinedPins.Emplace(MakePinInfo(NewViewModelPinName));
-    CustomEvent->CustomFunctionName = UBaseViewExtension::ViewModelChangedFunctionName;
+    CustomEvent->CustomFunctionName = FBaseViewComponentImpl::ViewModelChangedFunctionName;
     CustomEvent->AllocateDefaultPins();
 
     const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();

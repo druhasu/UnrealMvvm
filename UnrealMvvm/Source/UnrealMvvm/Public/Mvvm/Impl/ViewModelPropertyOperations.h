@@ -75,7 +75,7 @@ namespace UnrealMvvm_Impl
                 check(InViewModel);
                 check(InValue);
 
-                this->GetCastedProperty()->SetValue((TOwner*)InViewModel, *((TBaseOp::TDecayedValue*)InValue));
+                this->GetCastedProperty()->SetValue((TOwner*)InViewModel, *((typename TBaseOp::TDecayedValue*)InValue));
             }
         };
 
@@ -89,11 +89,11 @@ namespace UnrealMvvm_Impl
 
                 if (InHasValue)
                 {
-                    this->GetCastedProperty()->SetValue((TOwner*)InViewModel, TBaseOp::TDecayedValue(*(TBaseOp::TDecayedValue::ElementType*)InValue));
+                    this->GetCastedProperty()->SetValue((TOwner*)InViewModel, typename TBaseOp::TDecayedValue(*(typename TBaseOp::TDecayedValue::ElementType*)InValue));
                 }
                 else
                 {
-                    this->GetCastedProperty()->SetValue((TOwner*)InViewModel, TBaseOp::TDecayedValue());
+                    this->GetCastedProperty()->SetValue((TOwner*)InViewModel, typename TBaseOp::TDecayedValue());
                 }
             }
         };
