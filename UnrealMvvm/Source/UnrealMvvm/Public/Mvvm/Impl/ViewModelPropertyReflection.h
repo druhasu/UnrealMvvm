@@ -92,6 +92,7 @@ namespace UnrealMvvm_Impl
         }
 
         FOpsBuffer OpsBuffer;
+        int32 SizeOfValue;
         FFlags Flags;
 
 #if WITH_EDITOR

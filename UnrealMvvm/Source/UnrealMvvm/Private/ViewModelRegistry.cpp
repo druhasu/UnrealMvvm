@@ -13,14 +13,14 @@ namespace UnrealMvvm_Impl
 FViewModelRegistry::FViewModelClassChanged FViewModelRegistry::ViewClassChanged;
 #endif
 TMap<UClass*, TArray<FViewModelPropertyReflection>> FViewModelRegistry::ViewModelProperties{};
-TMap<UClass*, UClass*> FViewModelRegistry::ViewModelClasses{};
+TMap<TWeakObjectPtr<UClass>, UClass*> FViewModelRegistry::ViewModelClasses{};
 TMap<UClass*, FViewModelRegistry::FViewModelSetterPtr> FViewModelRegistry::ViewModelSetters{};
 TArray<FViewModelRegistry::FUnprocessedPropertyEntry> FViewModelRegistry::UnprocessedProperties{};
 TArray<FViewModelRegistry::FUnprocessedViewModelClassEntry> FViewModelRegistry::UnprocessedViewModelClasses{};
 TArray<FField*> FViewModelRegistry::PropertiesToKeep{};
 
-template <typename TValue>
-TValue* FindByClass(TMap<UClass*, TValue*>& Map, UClass* ViewClass)
+template <typename TKey, typename TValue>
+TValue* FindByClass(TMap<TKey, TValue*>& Map, UClass* ViewClass)
 {
     UClass* Needle = ViewClass;
 
@@ -50,6 +50,16 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindProperty(UClass* InV
 
 UClass* FViewModelRegistry::GetViewModelClass(UClass* ViewClass)
 {
+    // remove all entries where keys are no longer valid
+    // we store BP classes there, so they may become unloaded or garbage collected
+    for (auto It = ViewModelClasses.CreateIterator(); It; ++It)
+    {
+        if (!It.Key().IsValid())
+        {
+            It.RemoveCurrent();
+        }
+    }
+
     return FindByClass(ViewModelClasses, ViewClass);
 }
 

@@ -12,6 +12,11 @@ class UBaseViewExtension;
 class AActor;
 class UBaseViewComponent;
 
+namespace UnrealMvvm_Impl
+{
+    struct FViewModelPropertyReflection;
+}
+
 UCLASS()
 class UNREALMVVM_API UMvvmBlueprintLibrary : public UBlueprintFunctionLibrary
 {
@@ -128,4 +133,7 @@ private:
 
     template<typename TView>
     DECLARE_FUNCTION(execSetViewModelPropertyValueInternal);
+
+    template <typename TView>
+    static TTuple<UBaseViewModel*, const UnrealMvvm_Impl::FViewModelPropertyReflection*> GetViewModelAndProperty(TView* View, FName PropertyName);
 };

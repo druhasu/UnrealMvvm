@@ -76,18 +76,17 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValueInternal)
 
     P_GET_UBOOL_REF(OutHasValueRef);
 
-    if (View)
-    {
-        UBaseViewModel* ViewModel = GetViewModel(View);
-        if (ViewModel)
-        {
-            const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName);
+    auto [ViewModel, MyProperty] = GetViewModelAndProperty(View, PropertyName);
 
-            if (MyProperty)
-            {
-                MyProperty->GetOperations().GetValue(ViewModel, OutValuePtr, OutHasValueRef);
-            }
-        }
+    if (MyProperty)
+    {
+        MyProperty->GetOperations().GetValue(ViewModel, OutValuePtr, OutHasValueRef);
+    }
+    else
+    {
+        // althoguh we can safely continue execution of this function, we abort it for consistency with execSetViewModelPropertyValueInternal below
+        FBlueprintExceptionInfo ExceptionInfo(EBlueprintExceptionType::AbortExecution, NSLOCTEXT("UnrealMvvm", "AccessInvalidProperty", "Cannot find ViewModel property"));
+        FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
     }
 
     P_FINISH;
@@ -98,25 +97,40 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValueInternal)
 {
     P_GET_OBJECT(TView, View);
     P_GET_PROPERTY(FNameProperty, PropertyName);
+    
+    auto [ViewModel, MyProperty] = GetViewModelAndProperty(View, PropertyName);
 
-    Stack.StepCompiledIn<FProperty>(nullptr);
-    void* OutValuePtr = Stack.MostRecentPropertyAddress;
+    if (MyProperty)
+    {
+        void* StorageSpace = FMemory_Alloca(MyProperty->SizeOfValue);
+        Stack.StepCompiledIn<FProperty>(StorageSpace);
 
-    P_GET_UBOOL(HasValue);
+        P_GET_UBOOL(HasValue);
 
+        MyProperty->GetOperations().SetValue(ViewModel, StorageSpace, HasValue);
+    }
+    else
+    {
+        // we need to know exact size of this property's value to be able to allocate enough memory for it otherwise the script VM will crash.
+        // so we abort the Blueprint execution, rather than whole process
+        FBlueprintExceptionInfo ExceptionInfo(EBlueprintExceptionType::AbortExecution, NSLOCTEXT("UnrealMvvm", "AccessInvalidProperty", "Cannot find ViewModel property"));
+        FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+    }
+
+    P_FINISH;
+}
+
+template <typename TView>
+TTuple<UBaseViewModel*, const UnrealMvvm_Impl::FViewModelPropertyReflection*> UMvvmBlueprintLibrary::GetViewModelAndProperty(TView* View, FName PropertyName)
+{
     if (View)
     {
         UBaseViewModel* ViewModel = GetViewModel(View);
         if (ViewModel)
         {
-            const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName);
-
-            if (MyProperty)
-            {
-                MyProperty->GetOperations().SetValue(ViewModel, OutValuePtr, HasValue);
-            }
+            return { ViewModel, UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName) };
         }
     }
 
-    P_FINISH;
+    return { nullptr, nullptr };
 }

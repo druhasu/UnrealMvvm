@@ -74,7 +74,7 @@ namespace UnrealMvvm_Impl
         static TMap<UClass*, TArray<FViewModelPropertyReflection>> ViewModelProperties;
 
         // Map of <ViewClass, ViewModelClass>
-        static TMap<UClass*, UClass*> ViewModelClasses;
+        static TMap<TWeakObjectPtr<UClass>, UClass*> ViewModelClasses;
 
         // Map of <ViewClass, Setter Function>
         static TMap<UClass*, FViewModelSetterPtr> ViewModelSetters;
@@ -118,6 +118,8 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
 
     const TViewModelProperty<TOwner, TValue>* Prop = PropertyGetterPtr();
     new (Item.OpsBuffer.Buffer.GetTypedPtr()) FEffectiveOpsType(Prop);
+
+    Item.SizeOfValue = sizeof(TDecayedValue);
 
     Item.Flags.IsOptional = IsOptional;
     Item.Flags.HasPublicGetter = Prop->HasPublicGetter();

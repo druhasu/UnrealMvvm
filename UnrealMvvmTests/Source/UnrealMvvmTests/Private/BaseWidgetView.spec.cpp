@@ -530,6 +530,19 @@ void FBaseWidgetViewSpec::Define()
 
             TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
         });
+
+        It("Should Set Value To ViewModel via K2Node From Constant", [this]
+        {
+            FTempWorldHelper Helper;
+
+            UTestBaseWidgetViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            View->SetValueToViewModelConstant();
+
+            TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
+        });
     });
 }
 
