@@ -4,7 +4,8 @@
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "Mvvm/Impl/ViewModelRegistry.h"
-#include "BaseViewBlueprintExtension.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/Actor.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "GraphEditorSettings.h"
@@ -121,7 +122,7 @@ void UK2Node_ViewModelGetSet::AllocateDefaultPins()
     }
 
     // Create View input pin
-    CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UUserWidget::StaticClass(), ViewPinName);
+    CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), ViewPinName);
 
     // Create ViewModel input or output pin
     CreatePin(bIsSetter ? EGPD_Input : EGPD_Output, UEdGraphSchema_K2::PC_Wildcard, nullptr, ViewModelPinName);
@@ -153,9 +154,9 @@ FSlateIcon UK2Node_ViewModelGetSet::GetIconAndTint(FLinearColor& OutColor) const
 
 FText UK2Node_ViewModelGetSet::GetTooltipText() const
 {
-    // copy tooltip from existing UFunction
-    UFunction* Function = UMvvmBlueprintLibrary::StaticClass()->FindFunctionByName(GetFunctionName());
-    return FText::FromString(UK2Node_CallFunction::GetDefaultTooltipForFunction(Function));
+    return bIsSetter ?
+        INVTEXT("Sets ViewModel to a View") :
+        INVTEXT("Returns ViewModel from a View");
 }
 
 void UK2Node_ViewModelGetSet::UpdateViewModelPinType()
@@ -203,9 +204,21 @@ UClass* UK2Node_ViewModelGetSet::GetViewClass() const
 
 FName UK2Node_ViewModelGetSet::GetFunctionName() const
 {
-    return bIsSetter ?
-        GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelToWidget) :
-        GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromWidget);
+    UClass* ViewClass = GetViewClass();
+
+    if (ViewClass->IsChildOf<UUserWidget>())
+    {
+        return bIsSetter ?
+            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelToWidget) :
+            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromWidget);
+    }
+    else
+    {
+        ensureAlways(ViewClass->IsChildOf<AActor>());
+        return bIsSetter ?
+            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelToActor) :
+            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromActor);
+    }
 }
 
 void UK2Node_ViewModelGetSet::OnViewClassChanged(UClass* ViewClass, UClass* ViewModelClass)

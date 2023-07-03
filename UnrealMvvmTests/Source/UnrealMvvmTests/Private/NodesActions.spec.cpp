@@ -1,7 +1,7 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "Misc/AutomationTest.h"
-#include "UnrealMvvmEditor/Private/K2Node_ViewModelPropertyBase.h"
+#include "UnrealMvvmEditor/Private/Nodes/K2Node_ViewModelPropertyBase.h"
 #include "TestBaseViewModel.h"
 #include "BlueprintActionDatabase.h"
 #include "BlueprintNodeSpawner.h"

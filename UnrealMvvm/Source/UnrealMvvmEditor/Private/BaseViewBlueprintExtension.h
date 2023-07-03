@@ -2,21 +2,33 @@
 
 #pragma once
 
-#include "WidgetBlueprintExtension.h"
+#include "Blueprint/BlueprintExtension.h"
 #include "BaseViewBlueprintExtension.generated.h"
 
+/*
+ * Blueprint extension class that stores ViewModel association and creates required nodes
+ */
 UCLASS()
-class UBaseViewBlueprintExtension : public UWidgetBlueprintExtension
+class UBaseViewBlueprintExtension : public UBlueprintExtension
 {
     GENERATED_BODY()
 
 public:
-    void HandleBeginCompilation(FWidgetBlueprintCompilerContext& InCreationContext) override;
-    void HandleFinishCompilingClass(UWidgetBlueprintGeneratedClass* Class) override;
+    static UBaseViewBlueprintExtension* Request(UBlueprint* Blueprint);
+    static UBaseViewBlueprintExtension* Get(UBlueprint* Blueprint);
+    static void Remove(UBlueprint* Blueprint);
+
+    void Serialize(FArchive& Ar) override;
+
+    UClass* GetViewModelClass() const { return ViewModelClass; }
+    void SetViewModelClass(UClass* InViewModelClass);
+
+protected:
+    void HandleGenerateFunctionGraphs(FKismetCompilerContext* CompilerContext) override;
+
+private:
+    void TryRegisterViewModelClass();
 
     UPROPERTY()
     UClass* ViewModelClass;
-
-private:
-    FWidgetBlueprintCompilerContext* Context;
 };

@@ -79,48 +79,21 @@ private:
     }
 
     UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
-    static UBaseViewModel* GetViewModelFromWidget(UUserWidget* View)
-    {
-        return GetViewModelInternal<UUserWidget, UBaseViewExtension>(View);
-    }
+    static UBaseViewModel* GetViewModelFromWidget(UUserWidget* View);
 
     UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
-    static UBaseViewModel* GetViewModelFromActor(AActor* View)
-    {
-        return GetViewModelInternal<AActor, UBaseViewComponent>(View);
-    }
+    static UBaseViewModel* GetViewModelFromActor(AActor* View);
 
     UFUNCTION(BlueprintCallable, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
-    static void SetViewModelToWidget(UUserWidget* View, UBaseViewModel* ViewModel)
-    {
-        SetViewModelInternal<UUserWidget, UBaseViewExtension>(View, ViewModel);
-    }
+    static void SetViewModelToWidget(UUserWidget* View, UBaseViewModel* ViewModel);
 
     UFUNCTION(BlueprintCallable, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
-    static void SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel)
-    {
-        SetViewModelInternal<AActor, UBaseViewComponent>(View, ViewModel);
-    }
+    static void SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel);
 
-    DECLARE_FUNCTION(execGetViewModelPropertyValueFromWidget)
-    {
-        execGetViewModelPropertyValueInternal<UUserWidget>(Context, Stack, RESULT_PARAM);
-    }
-    
-    DECLARE_FUNCTION(execSetViewModelPropertyValueToWidget)
-    {
-        execSetViewModelPropertyValueInternal<UUserWidget>(Context, Stack, RESULT_PARAM);
-    }
-
-    DECLARE_FUNCTION(execGetViewModelPropertyValueFromActor)
-    {
-        execGetViewModelPropertyValueInternal<AActor>(Context, Stack, RESULT_PARAM);
-    }
-
-    DECLARE_FUNCTION(execSetViewModelPropertyValueToActor)
-    {
-        execSetViewModelPropertyValueInternal<AActor>(Context, Stack, RESULT_PARAM);
-    }
+    DECLARE_FUNCTION(execGetViewModelPropertyValueFromWidget);
+    DECLARE_FUNCTION(execSetViewModelPropertyValueToWidget);
+    DECLARE_FUNCTION(execGetViewModelPropertyValueFromActor);
+    DECLARE_FUNCTION(execSetViewModelPropertyValueToActor);
 
     template <typename TView, typename TViewComponent>
     static UBaseViewModel* GetViewModelInternal(TView* View);

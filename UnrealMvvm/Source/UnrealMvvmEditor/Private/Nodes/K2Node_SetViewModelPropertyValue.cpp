@@ -8,12 +8,14 @@
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
 void UK2Node_SetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
     Super::ExpandNode(CompilerContext, SourceGraph);
 
-    FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FViewModelPropertyNodeHelper::SetPropertyValueFunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
+    FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForSetPropertyValue(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this)->GeneratedClass);
+    FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
 }
 
 void UK2Node_SetViewModelPropertyValue::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const

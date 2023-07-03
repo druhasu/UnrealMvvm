@@ -21,6 +21,7 @@ public class UnrealMvvmEditor : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
+				"InputCore",
 				"Slate",
 				"SlateCore",
 				"PropertyEditor",

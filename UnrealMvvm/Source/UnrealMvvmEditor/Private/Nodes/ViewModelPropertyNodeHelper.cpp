@@ -3,6 +3,7 @@
 #include "ViewModelPropertyNodeHelper.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "KismetCompiler.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintNodeSpawner.h"
@@ -10,8 +11,6 @@
 #include "K2Node_Self.h"
 
 const FName FViewModelPropertyNodeHelper::HasValuePinName("HasValue");
-const FName FViewModelPropertyNodeHelper::GetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValueFromWidget));
-const FName FViewModelPropertyNodeHelper::SetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValueToWidget));
 
 bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMvvm_Impl::FViewModelPropertyReflection& Property)
 {
@@ -193,4 +192,20 @@ void FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(const FName& Fu
         UEdGraphPin* HasValueOutPin = GetSetViewModelPropertyValueCall->FindPin(HasValuePinName);
         CompilerContext.MovePinLinksToIntermediate(*HasValuePin, *HasValueOutPin);
     }
+}
+
+FName FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue(UClass* ViewClass)
+{
+    static const FName GetFromWidgetName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValueFromWidget));
+    static const FName GetFromActorName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValueFromActor));
+
+    return ViewClass->IsChildOf<UUserWidget>() ? GetFromWidgetName : GetFromActorName;
+}
+
+FName FViewModelPropertyNodeHelper::GetFunctionNameForSetPropertyValue(UClass* ViewClass)
+{
+    static const FName SetToWidgetName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValueToWidget));
+    static const FName SetToActorName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValueToActor));
+
+    return ViewClass->IsChildOf<UUserWidget>() ? SetToWidgetName : SetToActorName;
 }

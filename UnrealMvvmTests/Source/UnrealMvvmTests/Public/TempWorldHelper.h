@@ -9,6 +9,7 @@ struct FTempWorldHelper
     FTempWorldHelper()
     {
         World = UWorld::CreateWorld(EWorldType::PIE, false);
+        World->bActorsInitialized = 1;
     }
 
     ~FTempWorldHelper()

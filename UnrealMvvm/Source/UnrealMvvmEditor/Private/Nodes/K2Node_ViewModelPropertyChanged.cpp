@@ -10,6 +10,7 @@
 #include "K2Node_Self.h"
 #include "GraphEditorSettings.h"
 #include "ViewModelPropertyNodeHelper.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
 void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
@@ -28,7 +29,8 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
             CustomEvent->CustomFunctionName = UnrealMvvm_Impl::FViewModelPropertyNamesCache::MakeCallbackName(ViewModelPropertyName);
             CustomEvent->AllocateDefaultPins();
 
-            FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
+            FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this)->GeneratedClass);
+            FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
 
             const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
             CompilerContext.MovePinLinksToIntermediate(*ExecPin, *Schema->FindExecutionPin(*CustomEvent, EGPD_Output));

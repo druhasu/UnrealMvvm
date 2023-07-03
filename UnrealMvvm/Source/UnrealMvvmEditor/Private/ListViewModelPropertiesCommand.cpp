@@ -3,7 +3,7 @@
 #include "Misc/CoreMisc.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/Impl/ViewModelRegistry.h"
-#include "ViewModelPropertyNodeHelper.h"
+#include "Nodes/ViewModelPropertyNodeHelper.h"
 
 class FListViewModelPropertiesCommand : public FSelfRegisteringExec
 {

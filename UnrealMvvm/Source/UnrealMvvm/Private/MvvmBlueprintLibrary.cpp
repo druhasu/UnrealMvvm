@@ -7,6 +7,46 @@
 #include "Mvvm/BaseView.h"
 #include "Mvvm/BaseViewModel.h"
 
+UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelFromWidget(UUserWidget* View)
+{
+    return GetViewModelInternal<UUserWidget, UBaseViewExtension>(View);
+}
+
+UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelFromActor(AActor* View)
+{
+    return GetViewModelInternal<AActor, UBaseViewComponent>(View);
+}
+
+void UMvvmBlueprintLibrary::SetViewModelToWidget(UUserWidget* View, UBaseViewModel* ViewModel)
+{
+    SetViewModelInternal<UUserWidget, UBaseViewExtension>(View, ViewModel);
+}
+
+void UMvvmBlueprintLibrary::SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel)
+{
+    SetViewModelInternal<AActor, UBaseViewComponent>(View, ViewModel);
+}
+
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValueFromWidget)
+{
+    execGetViewModelPropertyValueInternal<UUserWidget>(Context, Stack, RESULT_PARAM);
+}
+
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValueToWidget)
+{
+    execSetViewModelPropertyValueInternal<UUserWidget>(Context, Stack, RESULT_PARAM);
+}
+
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValueFromActor)
+{
+    execGetViewModelPropertyValueInternal<AActor>(Context, Stack, RESULT_PARAM);
+}
+
+DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValueToActor)
+{
+    execSetViewModelPropertyValueInternal<AActor>(Context, Stack, RESULT_PARAM);
+}
+
 template <typename TView, typename TViewComponent>
 UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelInternal(TView* View)
 {

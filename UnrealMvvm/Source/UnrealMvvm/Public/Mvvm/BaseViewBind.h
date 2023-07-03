@@ -114,6 +114,9 @@ private:
     template<typename O, typename V, typename U>
     friend class UnrealMvvm_Impl::TBaseViewImplWithComponent;
 
+    template<typename O, typename V, typename U>
+    friend class UnrealMvvm_Impl::TBaseViewImpl;
+
     static void SetViewModelStatic(UObject& ViewObject, UBaseViewModel* ViewModel)
     {
         TOwner& Owner = static_cast<TOwner&>(ViewObject);
