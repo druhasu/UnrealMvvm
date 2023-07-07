@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Templates/SubclassOf.h"
 
 namespace UnrealMvvm_Impl
 {

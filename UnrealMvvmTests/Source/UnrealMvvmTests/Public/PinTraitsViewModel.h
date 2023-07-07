@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Engine/Texture2D.h"
+#include "Templates/SubclassOf.h"
 #include "UObject/Interface.h"
 #include "Mvvm/BaseViewModel.h"
 #include "PinTraitsViewModel.generated.h"

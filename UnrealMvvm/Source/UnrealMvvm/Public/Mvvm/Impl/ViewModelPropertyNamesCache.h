@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "Containers/Map.h"
+#include "UObject/NameTypes.h"
+
 class FViewModelPropertyBase;
 
 namespace UnrealMvvm_Impl

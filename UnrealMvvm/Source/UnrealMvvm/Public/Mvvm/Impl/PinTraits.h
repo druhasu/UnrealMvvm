@@ -7,6 +7,7 @@
 #include "Templates/IntegralConstant.h"
 #include "Mvvm/Impl/ValueTypeTraits.h"
 #include "Math/MathFwd.h"
+#include "Launch/Resources/Version.h"
 #include "Misc/EngineVersionComparison.h"
 
 // forward declare all structs from Core module
