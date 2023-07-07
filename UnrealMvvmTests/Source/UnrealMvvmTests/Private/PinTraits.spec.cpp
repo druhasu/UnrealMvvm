@@ -51,7 +51,9 @@ void TestMap(const FTestCase& TestCase)
 template <typename TType>
 void TestBaseStructure(UObject* Struct)
 {
-    TestEqual("PinType", TPinTraits<TType>::PinCategoryType, EPinCategoryType::Struct);
+    // separate variable to fix weird XCode DebugGameEditor linkage error
+    static constexpr EPinCategoryType PinCategoryType = TPinTraits<TType>::PinCategoryType;
+    TestEqual("PinType", PinCategoryType, EPinCategoryType::Struct);
     TestEqual("SubCategoryObject", TPinTraits<TType>::GetSubCategoryObject(), Struct);
 }
 
