@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Launch/Resources/Version.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/Package.h"
 #include "Templates/IsEnumClass.h"
