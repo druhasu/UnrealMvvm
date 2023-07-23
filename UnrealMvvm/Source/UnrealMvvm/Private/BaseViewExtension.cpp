@@ -4,20 +4,14 @@
 
 void UBaseViewExtension::Construct()
 {
-    if (ViewModel)
-    {
-        // View is constructed (i.e. visible), start listening and update current state
-        StartListening();
-    }
+    // View is constructed (i.e. visible), start listening and update current state
+    StartListening();
 }
 
 void UBaseViewExtension::Destruct()
 {
-    if (ViewModel)
-    {
-        // View is no longer attached to anything, stop listening to ViewModel
-        StopListening();
-    }
+    // View is no longer attached to anything, stop listening to ViewModel
+    StopListening();
 }
 
 UBaseViewExtension* UBaseViewExtension::Request(UUserWidget* Widget)

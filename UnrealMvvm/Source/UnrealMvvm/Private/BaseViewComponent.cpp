@@ -6,22 +6,16 @@ void UBaseViewComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (ViewModel)
-    {
-        // View is constructed, start listening and update current state
-        StartListening();
-    }
+    // View is constructed, start listening and update current state
+    StartListening();
 }
 
 void UBaseViewComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 
-    if (ViewModel)
-    {
-        // View is no longer in play, stop listening to ViewModel
-        StopListening();
-    }
+    // View is no longer in play, stop listening to ViewModel
+    StopListening();
 }
 
 UBaseViewComponent* UBaseViewComponent::Request(AActor* Actor)

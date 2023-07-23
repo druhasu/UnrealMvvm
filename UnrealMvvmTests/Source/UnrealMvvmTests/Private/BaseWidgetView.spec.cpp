@@ -5,6 +5,7 @@
 #include "TestBaseWidgetView.h"
 #include "TestBaseViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Slate/SObjectWidget.h"
 
 #include "TempWorldHelper.h"
 
@@ -325,6 +326,26 @@ void FBaseWidgetViewSpec::Define()
 
             View->SetViewModel(ViewModel);
             TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
+        });
+
+        It("Should Subscribe Once If ViewModel Set During Construction", [this]
+        {
+            FTempWorldHelper Helper;
+
+            UTestBaseWidgetViewPure* View = CreateWidget<UTestBaseWidgetViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            // when using CommonUI, this is how ViewModels may be injected into widgets created via UserWidgetPool
+            TSharedPtr<SWidget> SWidgetPtr = View->TakeDerivedWidget([&](UUserWidget* Widget, TSharedRef<SWidget> Content)
+            {
+                View->SetViewModel(ViewModel);
+                return SNew(SObjectWidget, Widget)[Content];
+            });
+            
+            ViewModel->SetIntValue(1);
+
+            SWidgetPtr.Reset();
+            TestFalse("ViewModel has connected Views", ViewModel->HasConnectedViews());
         });
     });
 

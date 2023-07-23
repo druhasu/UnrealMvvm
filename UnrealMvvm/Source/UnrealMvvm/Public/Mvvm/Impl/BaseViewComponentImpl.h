@@ -142,9 +142,7 @@ namespace UnrealMvvm_Impl
         /* Subscribes to ViewModel */
         void StartListening()
         {
-            check(ThisView()->ViewModel); // this is ensured by caller
-
-            if (HasBindings(ThisView()->BindEntries))
+            if (ThisView()->ViewModel && !ThisView()->SubscriptionHandle.IsValid() && HasBindings(ThisView()->BindEntries))
             {
                 ThisView()->SubscriptionHandle = ThisView()->ViewModel->Subscribe(UBaseViewModel::FPropertyChangedDelegate::FDelegate::CreateUObject(ThisView(), &TView::OnPropertyChanged));
 
@@ -158,11 +156,10 @@ namespace UnrealMvvm_Impl
         /* Unsubscribes from ViewModel */
         void StopListening()
         {
-            check(ThisView()->ViewModel); // this is ensured by caller
-
-            if (HasBindings(ThisView()->BindEntries))
+            if (ThisView()->ViewModel && HasBindings(ThisView()->BindEntries))
             {
                 ThisView()->ViewModel->Unsubscribe(ThisView()->SubscriptionHandle);
+                ThisView()->SubscriptionHandle.Reset();
             }
         }
 
