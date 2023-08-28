@@ -75,8 +75,11 @@ void UBaseViewBlueprintExtension::HandleGenerateFunctionGraphs(FKismetCompilerCo
 
 void UBaseViewBlueprintExtension::TryRegisterViewModelClass()
 {
-    if (ViewModelClass)
+    // ViewClass may be nullptr if Blueprint did not compile successfully
+    UClass* ViewClass = GetTypedOuter<UBlueprint>()->GeneratedClass;
+
+    if (ViewClass && ViewModelClass)
     {
-        UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(GetTypedOuter<UBlueprint>()->GeneratedClass, ViewModelClass);
+        UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(ViewClass, ViewModelClass);
     }
 }
