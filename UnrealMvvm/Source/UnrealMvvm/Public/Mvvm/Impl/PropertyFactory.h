@@ -21,15 +21,20 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = false;
             static constexpr bool ContainsObjectReference = false;
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
             }
         };
 
 #if ENGINE_MAJOR_VERSION >= 5
 
-    #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
-        Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, 1, nullptr, nullptr, ##__VA_ARGS__ }
+    #if ENGINE_MINOR_VERSION >= 3
+        #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
+            Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, nullptr, nullptr, 1, ##__VA_ARGS__ }
+    #else
+        #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
+            Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, 1, nullptr, nullptr, ##__VA_ARGS__ }
+    #endif
 
     #define DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType) \
         new PropertyType(COMMON_PROPERTY_PARAMS( PropertyGenType, FieldOffset ));
@@ -55,7 +60,7 @@ namespace UnrealMvvm_Impl
         { \
             static constexpr bool IsSupportedByUnreal = true; \
             static constexpr bool ContainsObjectReference = false; \
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName) \
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName) \
             { \
                 DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType); \
             } \
@@ -67,11 +72,21 @@ namespace UnrealMvvm_Impl
         { \
             static constexpr bool IsSupportedByUnreal = true; \
             static constexpr bool ContainsObjectReference = ContainsReference; \
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName) \
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName) \
             { \
                 DECLARE_WRAPPER_PROPERTY_INNER(PropertyType, PropertyGenType, InnerClass); \
             } \
         }
+
+        // We have to use this hack, because Epic "forgot" to export constructor of FTextProperty that we were using. So we create our own property that may contain FText
+        // It doesn't behave like proper FTextProperty, but we use it only to calculate sizes of TMap entries, so it doesn't matter
+        class FFakeTextProperty : public FTextProperty_Super
+        {
+        public:
+            FFakeTextProperty(FFieldVariant InOwner, const UECodeGen_Private::FTextPropertyParams& Prop)
+                : FTextProperty_Super(InOwner, (const UECodeGen_Private::FPropertyParamsBaseWithOffset&)Prop)
+            {}
+        };
 
         DECLARE_SIMPLE_PROPERTY(uint8, FByteProperty, Byte);
         DECLARE_SIMPLE_PROPERTY(double, FDoubleProperty, Double);
@@ -82,7 +97,7 @@ namespace UnrealMvvm_Impl
         DECLARE_SIMPLE_PROPERTY(int32, FIntProperty, Int);
         DECLARE_SIMPLE_PROPERTY(FName, FNameProperty, Name);
         DECLARE_SIMPLE_PROPERTY(FString, FStrProperty, Str);
-        DECLARE_SIMPLE_PROPERTY(FText, FTextProperty, Text);
+        DECLARE_SIMPLE_PROPERTY(FText, FFakeTextProperty, Text); // should be FTextProperty, but its constructor is not exported in 5.3
         DECLARE_SIMPLE_PROPERTY(uint16, FUInt16Property, UInt16);
         DECLARE_SIMPLE_PROPERTY(uint32, FUInt32Property, UInt32);
         DECLARE_SIMPLE_PROPERTY(uint64, FUInt64Property, UInt64);
@@ -99,7 +114,7 @@ namespace UnrealMvvm_Impl
         {
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = false;
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
 #if ENGINE_MAJOR_VERSION >= 5
                 new FBoolProperty(COMMON_PROPERTY_PARAMS(Bool, sizeof(bool), 0, nullptr));
@@ -116,7 +131,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = true;
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
                 DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, TValue::StaticClass);
             }
@@ -130,7 +145,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = true;
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
                 DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, TValue::StaticClass);
             }
@@ -144,7 +159,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = true; // assume true, we cannot easily check this in compile time
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
                 DECLARE_WRAPPER_PROPERTY_INNER(FStructProperty, Struct, TValue::StaticStruct);
             }
@@ -157,7 +172,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = TPropertyFactory<TValue>::ContainsObjectReference;
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
                 if (ContainsObjectReference)
                 {
@@ -178,7 +193,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = TPropertyFactory<TValue>::ContainsObjectReference;
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
                 if (ContainsObjectReference)
                 {
@@ -199,7 +214,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool IsSupportedByUnreal = true;
             static constexpr bool ContainsObjectReference = TPropertyFactory<TKey>::ContainsObjectReference || TPropertyFactory<TValue>::ContainsObjectReference;
 
-            static void AddProperty(FFieldVariant Scope, int32 FieldOffset, const FName& DebugName)
+            static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
                 // if either TKey or TValue has references, then both of them MUST be supported
                 // 
