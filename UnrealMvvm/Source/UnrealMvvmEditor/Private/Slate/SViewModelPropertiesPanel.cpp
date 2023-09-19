@@ -29,8 +29,10 @@ void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<F
     ColumnSizeData = MakeShared<FDetailColumnSizeData>();
     ColumnSizeData->SetValueColumnWidth(0.5f);
 
-    CacheViewModelClass();
+    CacheViewModelClass(false); // false - so we are not marking Blueprint as modified right when it is opened
     RegenerateProperties();
+
+    UnrealMvvm_Impl::FViewModelRegistry::ViewClassChanged.AddSP(this, &ThisClass::OnViewClassChanged);
 
     TSharedRef<SScrollBar> ScrollBar = SNew(SScrollBar);
 
@@ -113,7 +115,7 @@ TSharedRef<SWidget> SViewModelPropertiesPanel::MakeViewModelSelector()
             .ShowDisplayNames(true)
             .SelectedClass(this, &ThisClass::GetViewModelClass)
             .OnSetClass(this, &ThisClass::OnViewModelClassSelected)
-            .IsEnabled(IsClassSelectorEnabled())
+            .IsEnabled(this, &ThisClass::IsClassSelectorEnabled)
         ]
 
         // Add "Go to Source" button
@@ -246,7 +248,7 @@ void SViewModelPropertiesPanel::RegenerateProperties()
     }
 }
 
-void SViewModelPropertiesPanel::CacheViewModelClass()
+void SViewModelPropertiesPanel::CacheViewModelClass(bool bMayRemoveExtension)
 {
     ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(Blueprint->ParentClass);
     bParentHasViewModel = ViewModelClass != nullptr;
@@ -257,6 +259,23 @@ void SViewModelPropertiesPanel::CacheViewModelClass()
         {
             ViewModelClass = Extension->GetViewModelClass();
         }
+    }
+    else if(bMayRemoveExtension)
+    {
+        // our parent class defines ViewModel, no need to keep our own extension
+        UBaseViewBlueprintExtension::Remove(Blueprint.Get());
+
+        FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint.Get());
+    }
+}
+
+void SViewModelPropertiesPanel::OnViewClassChanged(UClass* ViewClass, UClass* InViewModelClass)
+{
+    if (Blueprint->ParentClass->IsChildOf(ViewClass))
+    {
+        CacheViewModelClass(true);
+        RegenerateProperties();
+        PropertyList->RebuildList();
     }
 }
 

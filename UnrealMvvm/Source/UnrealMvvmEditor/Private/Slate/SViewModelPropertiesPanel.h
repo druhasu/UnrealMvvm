@@ -42,7 +42,8 @@ private:
     TSharedRef<SWidget> MakePropertyValueContent(const UnrealMvvm_Impl::FViewModelPropertyReflection* Item, FName PropertyName);
 
     void RegenerateProperties();
-    void CacheViewModelClass();
+    void CacheViewModelClass(bool bMayRemoveExtension);
+    void OnViewClassChanged(UClass* ViewClass, UClass* ViewModelClass);
 
     FText GetClassSelectorTooltip() const;
     bool IsClassSelectorEnabled() const;

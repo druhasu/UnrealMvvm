@@ -115,29 +115,32 @@ private:
 
     void OnObjectPreSave(UObject* Asset, FObjectPreSaveContext Context)
     {
-        using namespace UnrealMvvm_Impl;
-
-        UWidgetBlueprint* SavedBlueprint = Cast<UWidgetBlueprint>(Asset);
+        UBlueprint* SavedBlueprint = Cast<UBlueprint>(Asset);
         if (!SavedBlueprint)
         {
-            // it's not a widget, ignore
+            // it's not a Blueprint, ignore
             return;
         }
 
         UClass* NativeViewClass = FBlueprintEditorUtils::GetNativeParent(SavedBlueprint);
-        UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(NativeViewClass);
 
         if (NativeViewClass == nullptr)
         {
-            // this widget was saved with base class that no longer exist, ignore it
+            // this Blueprint was saved with base class that no longer exist, ignore it
             return;
         }
 
-        if (NativeViewClass->IsChildOf<UBaseView>() || ViewModelClass == nullptr)
+        if (UWidgetBlueprint* WidgetBlueprint = Cast<UWidgetBlueprint>(SavedBlueprint))
         {
-            // it's either BaseView (that handles everything itself) or not a View at all, ignore
-            return;
+            FixupWidgetExtensions(WidgetBlueprint);
         }
+
+        FixupRedundantBlueprintExtensions(SavedBlueprint);
+    }
+
+    void FixupWidgetExtensions(UWidgetBlueprint* SavedBlueprint)
+    {
+        using namespace UnrealMvvm_Impl;
 
         // fixup corrupted Extensions from previous versions
         // Extensions property is not marked Transient, so it will save all Extensions created during edit time
@@ -151,6 +154,17 @@ private:
                 Extensions.RemoveSwap(nullptr);
             }
         });
+    }
+
+    void FixupRedundantBlueprintExtensions(UBlueprint* SavedBlueprint)
+    {
+        using namespace UnrealMvvm_Impl;
+
+        if (FViewModelRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
+        {
+            // if our parent class have ViewModel defined, then we don't need our own BlueprintExtension
+            UBaseViewBlueprintExtension::Remove(SavedBlueprint);
+        }
     }
 };
 

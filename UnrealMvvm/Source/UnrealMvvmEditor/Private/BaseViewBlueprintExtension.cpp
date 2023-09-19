@@ -33,6 +33,7 @@ void UBaseViewBlueprintExtension::Remove(UBlueprint* Blueprint)
     UBaseViewBlueprintExtension* Extension = Get(Blueprint);
     if (Extension)
     {
+        Extension->SetViewModelClass(nullptr);
         Blueprint->RemoveExtension(Extension);
     }
 }
@@ -78,8 +79,15 @@ void UBaseViewBlueprintExtension::TryRegisterViewModelClass()
     // ViewClass may be nullptr if Blueprint did not compile successfully
     UClass* ViewClass = GetTypedOuter<UBlueprint>()->GeneratedClass;
 
-    if (ViewClass && ViewModelClass)
+    if (ViewClass)
     {
-        UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(ViewClass, ViewModelClass);
+        if (ViewModelClass)
+        {
+            UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(ViewClass, ViewModelClass);
+        }
+        else
+        {
+            UnrealMvvm_Impl::FViewModelRegistry::UnregisterViewClass(ViewClass);
+        }
     }
 }

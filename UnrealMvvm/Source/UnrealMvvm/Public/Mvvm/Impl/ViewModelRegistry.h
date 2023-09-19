@@ -40,6 +40,10 @@ namespace UnrealMvvm_Impl
         static uint8 RegisterViewClass(FClassGetterPtr ViewClassGetter, FClassGetterPtr ViewModelClassGetter, FViewModelSetterPtr ViewModelSetter);
         static void RegisterViewClass(UClass* ViewClass, UClass* ViewModelClass);
 
+#if WITH_EDITOR
+        static void UnregisterViewClass(UClass* ViewClass);
+#endif
+
         template<typename TOwner, typename TValue>
         static uint8 RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr);
 

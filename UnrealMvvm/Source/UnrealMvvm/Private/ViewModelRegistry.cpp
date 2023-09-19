@@ -89,6 +89,16 @@ void FViewModelRegistry::RegisterViewClass(UClass* ViewClass, UClass* ViewModelC
 #endif
 }
 
+#if WITH_EDITOR
+void FViewModelRegistry::UnregisterViewClass(UClass* ViewClass)
+{
+    check(ViewClass);
+
+    ViewModelClasses.Remove(ViewClass);
+    ViewClassChanged.Broadcast(ViewClass, nullptr);
+}
+#endif
+
 void FViewModelRegistry::ProcessPendingRegistrations()
 {
     if (GIsInitialLoad)
