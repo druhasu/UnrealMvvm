@@ -16,7 +16,7 @@ You can use [UnrealDI](https://github.com/druhasu/UnrealDI) plugin in Model laye
 
 ## Supported versions
 
-This plugin was tested to work with Unreal 5.1 and 5.2. It should probably work with 5.0 too, but I cannot properly test it, because Blueprint test classes are already saved with 5.1 version. It is difficult to downgrade them
+This plugin was tested to work with Unreal 5.1, 5.2 and 5.3. It should probably work with 5.0 too, but I cannot properly test it, because Blueprint test classes are already saved with 5.1 version. It is difficult to downgrade them
 
 The goal is to provide support for latest Unreal version and 2 previous versions.
 
