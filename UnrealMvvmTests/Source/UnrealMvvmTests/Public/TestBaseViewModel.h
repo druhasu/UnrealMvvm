@@ -6,7 +6,7 @@
 #include "TestBaseViewModel.generated.h"
 
 UCLASS()
-class UTestBaseViewModel : public UBaseViewModel
+class UNREALMVVMTESTS_API UTestBaseViewModel : public UBaseViewModel
 {
     GENERATED_BODY()
 

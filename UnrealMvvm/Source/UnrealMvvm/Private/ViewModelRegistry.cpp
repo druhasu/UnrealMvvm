@@ -15,8 +15,6 @@ FViewModelRegistry::FViewModelClassChanged FViewModelRegistry::ViewClassChanged;
 TMap<UClass*, TArray<FViewModelPropertyReflection>> FViewModelRegistry::ViewModelProperties{};
 TMap<TWeakObjectPtr<UClass>, UClass*> FViewModelRegistry::ViewModelClasses{};
 TMap<UClass*, FViewModelRegistry::FViewModelSetterPtr> FViewModelRegistry::ViewModelSetters{};
-TArray<FViewModelRegistry::FUnprocessedPropertyEntry> FViewModelRegistry::UnprocessedProperties{};
-TArray<FViewModelRegistry::FUnprocessedViewModelClassEntry> FViewModelRegistry::UnprocessedViewModelClasses{};
 TArray<FField*> FViewModelRegistry::PropertiesToKeep{};
 
 template <typename TKey, typename TValue>
@@ -70,7 +68,7 @@ FViewModelRegistry::FViewModelSetterPtr FViewModelRegistry::GetViewModelSetter(U
 
 uint8 FViewModelRegistry::RegisterViewClass(FViewModelRegistry::FClassGetterPtr ViewClassGetter, FViewModelRegistry::FClassGetterPtr ViewModelClassGetter, FViewModelRegistry::FViewModelSetterPtr ViewModelSetter)
 {
-    FUnprocessedViewModelClassEntry& Entry = UnprocessedViewModelClasses.AddDefaulted_GetRef();
+    FUnprocessedViewModelClassEntry& Entry = GetUnprocessedViewModelClasses().AddDefaulted_GetRef();
     Entry.GetViewClass = ViewClassGetter;
     Entry.GetViewModelClass = ViewModelClassGetter;
     Entry.ViewModelSetter = ViewModelSetter;
@@ -110,9 +108,9 @@ void FViewModelRegistry::ProcessPendingRegistrations()
     // Process properties and add them into lookup tables
     TArray<UClass*> NewlyAddedViewModels;
 
-    if (UnprocessedProperties.Num())
+    if (GetUnprocessedProperties().Num())
     {
-        for (auto& Property : UnprocessedProperties)
+        for (auto& Property : GetUnprocessedProperties())
         {
             UClass* NewClass = Property.GetClass();
 
@@ -126,7 +124,7 @@ void FViewModelRegistry::ProcessPendingRegistrations()
             NewArray->Add(Property.Reflection);
         }
 
-        UnprocessedProperties.Empty();
+        GetUnprocessedProperties().Empty();
     }
 
     // Add all derived classes of NewlyAddedViewModels to the list
@@ -147,9 +145,9 @@ void FViewModelRegistry::ProcessPendingRegistrations()
     }
 
     // Process classes and add them into lookup tables
-    if (UnprocessedViewModelClasses.Num())
+    if (GetUnprocessedViewModelClasses().Num())
     {
-        for (auto& Entry : UnprocessedViewModelClasses)
+        for (auto& Entry : GetUnprocessedViewModelClasses())
         {
             UClass* ViewClass = Entry.GetViewClass();
             UClass* ViewModelClass = Entry.GetViewModelClass();
@@ -166,7 +164,7 @@ void FViewModelRegistry::ProcessPendingRegistrations()
 #endif
         }
 
-        UnprocessedViewModelClasses.Empty();
+        GetUnprocessedViewModelClasses().Empty();
     }
 }
 
@@ -226,6 +224,18 @@ void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 
     // delete all unrelevant properties and restore original list pointer
     FTokenStreamUtils::CleanupProperties(ViewModelClass, FirstOriginalField, PropertiesToKeep);
+}
+
+TArray<FViewModelRegistry::FUnprocessedPropertyEntry>& FViewModelRegistry::GetUnprocessedProperties()
+{
+    static TArray<FUnprocessedPropertyEntry> Result;
+    return Result;
+}
+
+TArray<FViewModelRegistry::FUnprocessedViewModelClassEntry>& FViewModelRegistry::GetUnprocessedViewModelClasses()
+{
+    static TArray<FUnprocessedViewModelClassEntry> Result;
+    return Result;
 }
 
 }

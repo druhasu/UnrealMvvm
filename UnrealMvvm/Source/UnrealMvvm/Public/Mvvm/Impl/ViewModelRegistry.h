@@ -74,6 +74,12 @@ namespace UnrealMvvm_Impl
         static const FViewModelPropertyReflection* FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName);
         static void GenerateReferenceTokenStream(class UClass* ViewModelClass);
 
+        // List of properties that were not yet added to lookup table
+        static TArray<FUnprocessedPropertyEntry>& GetUnprocessedProperties();
+
+        // List of view model classes that were not yet added to lookup table
+        static TArray<FUnprocessedViewModelClassEntry>& GetUnprocessedViewModelClasses();
+
         // Map of <ViewModelClass, Properties>
         static TMap<UClass*, TArray<FViewModelPropertyReflection>> ViewModelProperties;
 
@@ -82,12 +88,6 @@ namespace UnrealMvvm_Impl
 
         // Map of <ViewClass, Setter Function>
         static TMap<UClass*, FViewModelSetterPtr> ViewModelSetters;
-
-        // List of properties that were not yet added to lookup table
-        static TArray<FUnprocessedPropertyEntry> UnprocessedProperties;
-
-        // List of view model classes that were not yet added to lookup table
-        static TArray<FUnprocessedViewModelClassEntry> UnprocessedViewModelClasses;
 
         // List of properties that we keep for GC (TMap and TSet properties)
         static TArray<FField*> PropertiesToKeep;
@@ -103,7 +103,7 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     using namespace UnrealMvvm_Impl;
     using TDecayedValue = typename TDecay<TValue>::Type;
 
-    FUnprocessedPropertyEntry& Entry = UnprocessedProperties.AddDefaulted_GetRef();
+    FUnprocessedPropertyEntry& Entry = GetUnprocessedProperties().AddDefaulted_GetRef();
     Entry.GetClass = &StaticClass<TOwner>;
 
     const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;

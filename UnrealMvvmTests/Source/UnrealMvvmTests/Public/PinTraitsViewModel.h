@@ -9,9 +9,9 @@
 #include "PinTraitsViewModel.generated.h"
 
 UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
-class UPinTraitsInterface : public UInterface { GENERATED_BODY() };
+class UNREALMVVMTESTS_API UPinTraitsInterface : public UInterface { GENERATED_BODY() };
 
-class IPinTraitsInterface
+class UNREALMVVMTESTS_API IPinTraitsInterface
 {
     GENERATED_BODY()
 
@@ -48,7 +48,7 @@ enum class EPinTraitsSimpleEnum : uint8
     VM_PROP_AG_AS(TOptional<TArray<ValueType>>, Name##ArrayOptional, public, public);
 
 UCLASS()
-class UPinTraitsViewModel : public UBaseViewModel
+class UNREALMVVMTESTS_API UPinTraitsViewModel : public UBaseViewModel
 {
     GENERATED_BODY()
 
