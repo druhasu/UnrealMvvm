@@ -57,14 +57,22 @@ class UMyViewModel : public UBaseViewModel
 
     /*
        Define Icon property of type UTexture2D*
-       This property will prevent GC from destryoing stored object
+       This property will prevent GC from destroying stored object
      */
     VM_PROP_AG_AS(UTexture2D*, Icon, public, public);
 };
 
 ```
 
-Note `VM_PROP_AG_AS` macro. It is used to define ViewModel properties. There are multiple flavours of this macro allowing you to manually define Getter and Setter methods:
+Note `VM_PROP_AG_AS` macro. It is used to define ViewModel properties. It has following parameters:
+1. Type of Property. May be a value (`FText`), a pointer (`UTexture2D*`) or a const reference (`const TArray<FString>&`). This type defines return value from Getter method.  
+   If you need to use TMap here just wrap whole type name in parantheses, like this:  
+   `VM_PROP_AG_AS((TMap<int32, int32>), MyMap, public, public)`.
+3. Name of Property. Dictates naming of Getter, Setter and Backing field. This name is also displayed in Blueprint editor
+4. Getter visibility. May be `public`, `protected` or `private`.
+5. Setter visibility. May be `public`, `protected` or `private`.
+
+There are multiple flavours of this macro allowing you to manually define Getter and Setter methods:
 * `VM_PROP_AG_AS` generates both Setter and Getter bodies for you
 * `VM_PROP_AG_MS` generates only Getter body and Setter must be defined in cpp file
 * `VM_PROP_MG_AS` generates only Setter body and Getter must be defined in cpp file
@@ -110,7 +118,7 @@ protected:
         Bind(this, ViewModelType::TitleProperty(), [this](const FText& Title){ Text_Title->SetText(Title); });
 
         // Example of binding to a method
-        Bind(this, ViewModelType::TitleProperty(), &ThisClass::OnTitleChanged);
+        Bind(this, ViewModelType::IconProperty(), &ThisClass::OnIconChange);
     }
 
     void OnIconChange(const UTexture2D* Icon);
