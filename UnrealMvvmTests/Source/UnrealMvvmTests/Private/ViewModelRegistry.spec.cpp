@@ -46,6 +46,27 @@ void ViewModelRegistrySpec::Define()
 
             TestEqual("Num properties", Properties.Num(), 0);
         });
+
+        It("Should Not Contain Duplicate Properties", [this]
+        {
+            for (auto& Pair : FViewModelRegistry::GetAllProperties())
+            {
+                auto ArrayView = MakeArrayView(Pair.Value);
+
+                for (int32 Index = 0; Index < Pair.Value.Num() - 1; ++Index)
+                {
+                    auto* FoundPtr = Algo::FindByPredicate(ArrayView.RightChop(Index + 1), [&](const FViewModelPropertyReflection& Reflection)
+                    {
+                        return Reflection.GetProperty() == Pair.Value[Index].GetProperty();
+                    });
+
+                    TestNull(
+                        FString::Printf(TEXT("Found duplicate %s.%s"), *Pair.Key->GetName(), *Pair.Value[Index].GetProperty()->GetName().ToString()),
+                        FoundPtr
+                    );
+                }
+            }
+        });
     });
 
     Describe("FindProperty", [this]()

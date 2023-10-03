@@ -121,7 +121,17 @@ void FViewModelRegistry::ProcessPendingRegistrations()
                 NewlyAddedViewModels.Emplace(NewClass);
             }
 
-            NewArray->Add(Property.Reflection);
+            // We need to check that we don't have same property already registered
+            // It is possible if same ViewModel is referenced from different modules (.dll) leading to multiple instantiations of registrator template
+            const bool bPropertyAlreadyRegistered = NewArray->ContainsByPredicate([&](const FViewModelPropertyReflection& ExistingReflection)
+            {
+                return ExistingReflection.GetProperty() == Property.Reflection.GetProperty();
+            });
+
+            if (!bPropertyAlreadyRegistered)
+            {
+                NewArray->Add(Property.Reflection);
+            }
         }
 
         GetUnprocessedProperties().Empty();
