@@ -80,5 +80,23 @@ void FMvvmUtilsSpec::Define()
                 MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory, Setter);
             });
         });
+
+        Describe("From Map", [this]
+        {
+            It("Should Sync from TMap", [this]
+            {
+                TMap<int32, FString> Models{ {0, TEXT("1") }, {1, TEXT("2")}, {2, TEXT("3")} };
+                TArray<UUtilsTestViewModel*> ViewModels;
+                MvvmUtils::SyncViewModelCollection(ViewModels, Models, [](UUtilsTestViewModel* VM, const TPair<int32, FString>& Model)
+                {
+                    VM->SetModel(Model.Value);
+                });
+
+                TestEqual("ViewModels.Num()", ViewModels.Num(), Models.Num());
+                TestEqual("ViewModels[0]", ViewModels[0]->Model, Models[0]);
+                TestEqual("ViewModels[1]", ViewModels[1]->Model, Models[1]);
+                TestEqual("ViewModels[2]", ViewModels[2]->Model, Models[2]);
+            });
+        });
     });
 }

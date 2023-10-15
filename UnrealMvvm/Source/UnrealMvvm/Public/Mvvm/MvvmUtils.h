@@ -12,7 +12,7 @@ namespace MvvmUtils
      *   - Removes excess ViewModels
      *   - Assigns each Model to respective ViewModel
      * 
-     * Models can be represented as any array-like type: TArray, TArrayView, etc
+     * Models can be represented as any type supported by ranged for loop: TArray, TArrayView, TMap, etc
      * 
      * ViewModels are created via NewObject<ViewModelType>()
      * Models are assigned via call to `ViewModel->SetModel(Model);`
@@ -29,7 +29,7 @@ namespace MvvmUtils
      *   - Removes excess ViewModels
      *   - Assigns each Model to respective ViewModel
      * 
-     * Models can be represented as any array-like type: TArray, TArrayView, etc
+     * Models can be represented as any type supported by ranged for loop: TArray, TArrayView, TMap, etc
      *
      * ViewModels are created via provided Factory function. It has following signature: ViewModel* ()
      * Models are assigned via call to `ViewModel->SetModel(Model);`
@@ -46,7 +46,7 @@ namespace MvvmUtils
      *   - Removes excess ViewModels
      *   - Assigns each Model to respective ViewModel
      * 
-     * Models can be represented as any array-like type: TArray, TArrayView, etc
+     * Models can be represented as any type supported by ranged for loop: TArray, TArrayView, TMap, etc
      *
      * ViewModels are created via NewObject<ViewModelType>()
      * Models are assigned via call to provided Setter function. It has following signature: void (ViewModelType* ViewModel, const ModelType& Model)
@@ -63,7 +63,7 @@ namespace MvvmUtils
      *   - Removes excess ViewModels
      *   - Assigns each Model to respective ViewModel
      * 
-     * Models can be represented as any array-like type: TArray, TArrayView, etc
+     * Models can be represented as any type supported by ranged for loop: TArray, TArrayView, TMap, etc
      *
      * ViewModels are created via provided Factory function. It has following signature: ViewModel* ()
      * Models are assigned via call to provided Setter function. It has following signature: void (ViewModelType* ViewModel, const ModelType& Model)
@@ -80,12 +80,14 @@ namespace MvvmUtils
 
         if (ViewModels.Num() > Models.Num())
         {
-            ViewModels.RemoveAt(Models.Num(), ViewModels.Num() - Models.Num());
+            ViewModels.RemoveAt(Models.Num(), ViewModels.Num() - Models.Num(), false);
         }
 
-        for (int32 Index = 0; Index < ViewModels.Num(); ++Index)
+        int32 Index = 0;
+        for (auto& Model : Models)
         {
-            Setter(ViewModels[Index], Models[Index]);
+            Setter(ViewModels[Index], Model);
+            ++Index;
         }
     }
 }
