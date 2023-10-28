@@ -9,8 +9,14 @@
 class UNREALMVVM_API FViewModelPropertyBase
 {
 public:
-    constexpr FViewModelPropertyBase(const ANSICHAR* InName)
+    enum class EAccessorVisibility { V_public, V_protected, V_private };
+
+    constexpr FViewModelPropertyBase(const ANSICHAR* InName, int32 InFieldOffset, EAccessorVisibility GetterVisibility, EAccessorVisibility SetterVisibility, bool bInHasSetter)
         : Name(InName)
+        , FieldOffset(InFieldOffset)
+        , bGetterIsPublic(GetterVisibility == EAccessorVisibility::V_public)
+        , bSetterIsPublic(SetterVisibility == EAccessorVisibility::V_public)
+        , bHasSetter(bInHasSetter)
     {
     }
 
@@ -26,10 +32,39 @@ public:
         return UnrealMvvm_Impl::FViewModelPropertyNamesCache::GetPropertyCallbackName(this);
     }
 
+    /* Returns Offset of a backing field from beginning of owning object */
+    int32 GetFieldOffset() const
+    {
+        return FieldOffset;
+    }
+
+    /* Returns whether this property has Getter with public visibility */
+    bool HasPublicGetter() const
+    {
+        return bGetterIsPublic;
+    }
+
+    /* Returns whether this property has Setter with public visibility */
+    bool HasPublicSetter() const
+    {
+        return bSetterIsPublic;
+    }
+
+    /* Returns whether this property has Setter or is Getter-only */
+    bool HasSetter() const
+    {
+        return bHasSetter;
+    }
+
 private:
     friend class UnrealMvvm_Impl::FViewModelPropertyNamesCache;
 
     const ANSICHAR* Name;
+
+    int32 FieldOffset;
+    uint8 bGetterIsPublic : 1;
+    uint8 bSetterIsPublic : 1;
+    uint8 bHasSetter : 1;
 };
 
 /*
@@ -49,15 +84,10 @@ public:
     using FGetterPtr = FGetterReturnType (TOwner::*) () const;
     using FSetterPtr = void (TOwner::*) (FSetterArgumentType);
 
-    enum class EAccessorVisibility { V_public, V_protected, V_private };
-
     constexpr TViewModelProperty(FGetterPtr InGetter, FSetterPtr InSetter, int32 InFieldOffset, EAccessorVisibility GetterVisibility, EAccessorVisibility SetterVisibility, const ANSICHAR* InName)
-        : FViewModelPropertyBase(InName)
+        : FViewModelPropertyBase(InName, InFieldOffset, GetterVisibility, SetterVisibility, InSetter != nullptr)
         , Getter(InGetter)
         , Setter(InSetter)
-        , FieldOffset(InFieldOffset)
-        , bGetterIsPublic(GetterVisibility == EAccessorVisibility::V_public)
-        , bSetterIsPublic(SetterVisibility == EAccessorVisibility::V_public)
     {
     }
 
@@ -65,11 +95,6 @@ public:
     FGetterReturnType GetValue(FViewModelType* Owner) const
     {
         return (Owner->*Getter)();
-    }
-
-    bool HasPublicGetter() const
-    {
-        return bGetterIsPublic;
     }
 
     /* Sets value of this property to given ViewModel */
@@ -81,22 +106,9 @@ public:
         }
     }
 
-    bool HasPublicSetter() const
-    {
-        return bSetterIsPublic;
-    }
-
-    int32 GetFieldOffset() const
-    {
-        return FieldOffset;
-    }
-
 private:
     FGetterPtr Getter;
-    FSetterPtr Setter;
-    int32 FieldOffset;
-    uint8 bGetterIsPublic : 1;
-    uint8 bSetterIsPublic : 1;
+    FSetterPtr Setter; // this variable MUST BE the last one due to a bug in MSVC compiler
 };
 
 /* Helper class that registers a property into reflection system */

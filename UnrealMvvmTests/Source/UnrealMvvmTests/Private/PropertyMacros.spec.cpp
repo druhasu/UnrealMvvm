@@ -12,22 +12,23 @@ END_DEFINE_SPEC(PropertyMacrosSpec)
     VM->Set##PropertyName(5); \
     TestEqual("Stored Value", VM->Get##PropertyName(), 5)
 
-#define TEST_ACCESSORS_COMMON(PropertyName, ExpectedGetter, ExpectedSetter) \
+#define TEST_ACCESSORS_COMMON(PropertyName, ExpectedGetter, ExpectedSetter, ExpectedHasSetter) \
     TestEqual(#PropertyName " Expected Getter", UMacrosTestViewModel::PropertyName ## Property()->HasPublicGetter(), ExpectedGetter); \
-    TestEqual(#PropertyName " Expected Setter", UMacrosTestViewModel::PropertyName ## Property()->HasPublicSetter(), ExpectedSetter);
+    TestEqual(#PropertyName " Expected Setter", UMacrosTestViewModel::PropertyName ## Property()->HasPublicSetter(), ExpectedSetter); \
+    TestEqual(#PropertyName " Expected HasSetter", UMacrosTestViewModel::PropertyName ## Property()->HasSetter(), ExpectedHasSetter); \
 
 #define TEST_OVERLOAD_COMMON(Suffix, ExpectedGetter, ExpectedSetter) \
-    TEST_ACCESSORS_COMMON(PropAgAs ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropAgMs ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropMgAs ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropMgMs ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropAgAsNf ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropAgMsNf ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropMgAsNf ## Suffix, ExpectedGetter, ExpectedSetter); \
-    TEST_ACCESSORS_COMMON(PropMgMsNf ## Suffix, ExpectedGetter, ExpectedSetter);
+    TEST_ACCESSORS_COMMON(PropAgAs ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropAgMs ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropMgAs ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropMgMs ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropAgAsNf ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropAgMsNf ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropMgAsNf ## Suffix, ExpectedGetter, ExpectedSetter, true); \
+    TEST_ACCESSORS_COMMON(PropMgMsNf ## Suffix, ExpectedGetter, ExpectedSetter, true);
 
 #define TEST_OVERLOAD_GETTER_ONLY(Suffix, ExpectedGetter) \
-    TEST_ACCESSORS_COMMON(PropMgNf ## Suffix, ExpectedGetter, false)
+    TEST_ACCESSORS_COMMON(PropMgNf ## Suffix, ExpectedGetter, false, false)
 
 void PropertyMacrosSpec::Define()
 {

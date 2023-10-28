@@ -23,10 +23,15 @@
     VM_PROP_MG_NF(int32, PropMgNf ## Suffix, ##__VA_ARGS__) { return 42; }
 
 /*
+ * Empty struct to force multiple inheritance in UMacrosTestViewModel
+ */
+struct FMacrosTestMixin {};
+
+/*
 * This ViewModel uses all avalable macros for defining properties and serves as a compile test for them
 */
 UCLASS()
-class UMacrosTestViewModel : public UBaseViewModel
+class UMacrosTestViewModel : public UBaseViewModel, public FMacrosTestMixin
 {
     GENERATED_BODY()
 
