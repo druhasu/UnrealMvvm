@@ -70,5 +70,5 @@ FSlateIcon UK2Node_ViewModelPropertyChanged::GetIconAndTint(FLinearColor& OutCol
 
 FText UK2Node_ViewModelPropertyChanged::GetNodeTitleForCache(ENodeTitleType::Type TitleType) const
 {
-    return FText::Format(NSLOCTEXT("UnrealMvvm", "ViewModelPropertyChangedEvent_Title", "On {PropertyName} Changed"), FText::FromName(ViewModelPropertyName));
+    return FText::Format(NSLOCTEXT("UnrealMvvm", "ViewModelPropertyChangedEvent_Title", "On {0} Changed"), FText::FromName(ViewModelPropertyName));
 }

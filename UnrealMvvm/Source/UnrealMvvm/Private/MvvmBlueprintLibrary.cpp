@@ -125,7 +125,14 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValueInternal)
     else
     {
         // althoguh we can safely continue execution of this function, we abort it for consistency with execSetViewModelPropertyValueInternal below
-        FBlueprintExceptionInfo ExceptionInfo(EBlueprintExceptionType::AbortExecution, NSLOCTEXT("UnrealMvvm", "AccessInvalidProperty", "Cannot find ViewModel property"));
+        FText ErrorMessage = FText::FormatOrdered(
+            NSLOCTEXT("UnrealMvvm", "AccessInvalidProperty", "Cannot find ViewModel property '{0}' in ViewModel '{1}' of View '{2}'"),
+            FText::FromName(PropertyName),
+            FText::FromString(GetNameSafe(ViewModel)),
+            FText::FromString(GetNameSafe(View))
+        );
+
+        FBlueprintExceptionInfo ExceptionInfo(EBlueprintExceptionType::AbortExecution, ErrorMessage);
         FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
     }
 
@@ -153,7 +160,14 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValueInternal)
     {
         // we need to know exact size of this property's value to be able to allocate enough memory for it otherwise the script VM will crash.
         // so we abort the Blueprint execution, rather than whole process
-        FBlueprintExceptionInfo ExceptionInfo(EBlueprintExceptionType::AbortExecution, NSLOCTEXT("UnrealMvvm", "AccessInvalidProperty", "Cannot find ViewModel property"));
+        FText ErrorMessage = FText::FormatOrdered(
+            NSLOCTEXT("UnrealMvvm", "AccessInvalidProperty", "Cannot find ViewModel property '{0}' in ViewModel '{1}' of View '{2}'"),
+            FText::FromName(PropertyName),
+            FText::FromString(GetNameSafe(ViewModel)),
+            FText::FromString(GetNameSafe(View))
+        );
+
+        FBlueprintExceptionInfo ExceptionInfo(EBlueprintExceptionType::AbortExecution, ErrorMessage);
         FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
     }
 
