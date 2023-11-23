@@ -1,5 +1,6 @@
 #include "Mvvm/Impl/TokenStreamUtils.h"
 #include "Mvvm/Impl/ViewModelPropertyReflection.h"
+#include "Algo/TopologicalSort.h"
 
 void UnrealMvvm_Impl::FTokenStreamUtils::EnrichWithDerivedClasses(TArray<UClass*>& Classes)
 {
@@ -22,10 +23,9 @@ void UnrealMvvm_Impl::FTokenStreamUtils::EnrichWithDerivedClasses(TArray<UClass*
 
 void UnrealMvvm_Impl::FTokenStreamUtils::SortViewModelClasses(TArray<UClass*>& Classes)
 {
-    Algo::Sort(Classes, [](UClass* Left, UClass* Right)
-    {
-        return Right->IsChildOf(Left);
-    });
+    // TopologicalSort may return incorrect results in case we have class hierarachy A -> B -> C, but only A and C present in Classes
+    // but we always call EnrichWithDerivedClasses before sorting, so this situation never happens actually
+    Algo::TopologicalSort(Classes, [](UClass* C) { return TArray<UClass*, TFixedAllocator<1>>{ C->GetSuperClass() }; });
 }
 
 FField* UnrealMvvm_Impl::FTokenStreamUtils::AddPropertiesToClass(UClass* TargetClass, TArrayView<const FViewModelPropertyReflection> Properties)

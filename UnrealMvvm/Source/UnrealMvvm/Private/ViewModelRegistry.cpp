@@ -108,9 +108,10 @@ void FViewModelRegistry::ProcessPendingRegistrations()
     // Process properties and add them into lookup tables
     TArray<UClass*> NewlyAddedViewModels;
 
-    if (GetUnprocessedProperties().Num())
+    auto& UnprocessedProperties = GetUnprocessedProperties();
+    if (UnprocessedProperties.Num())
     {
-        for (auto& Property : GetUnprocessedProperties())
+        for (auto& Property : UnprocessedProperties)
         {
             UClass* NewClass = Property.GetClass();
 
@@ -134,30 +135,34 @@ void FViewModelRegistry::ProcessPendingRegistrations()
             }
         }
 
-        GetUnprocessedProperties().Empty();
+        UnprocessedProperties.Empty();
     }
 
-    // Add all derived classes of NewlyAddedViewModels to the list
-    // Some derived classes may have no properties, but their token streams must still be adjusted to account for tokens of base classes
-    // We need to add them manually because we won't know about them otherwise
-    FTokenStreamUtils::EnrichWithDerivedClasses(NewlyAddedViewModels);
-
-    // Sort ViewModels so base classes are located before derived ones
-    // This way we guarantee that base classes' token streams will be generated first
-    // If they are in different modules, Unreal will handle module load ordering
-    // In monolithic mode all viewmodels are processed at once, like in a single module
-    FTokenStreamUtils::SortViewModelClasses(NewlyAddedViewModels);
-
-    // Patch all new ViewModel classes, so their properties will be processed by GC
-    for (UClass* ViewModelClass : NewlyAddedViewModels)
+    if (NewlyAddedViewModels.Num() > 0)
     {
-        GenerateReferenceTokenStream(ViewModelClass);
+        // Add all derived classes of NewlyAddedViewModels to the list
+        // Some derived classes may have no properties, but their token streams must still be adjusted to account for tokens of base classes
+        // We need to add them manually because we won't know about them otherwise
+        FTokenStreamUtils::EnrichWithDerivedClasses(NewlyAddedViewModels);
+
+        // Sort ViewModels so base classes are located before derived ones
+        // This way we guarantee that base classes' token streams will be generated first
+        // If they are in different modules, Unreal will handle module load ordering
+        // In monolithic mode all viewmodels are processed at once, like in a single module
+        FTokenStreamUtils::SortViewModelClasses(NewlyAddedViewModels);
+
+        // Patch all new ViewModel classes, so their properties will be processed by GC
+        for (UClass* ViewModelClass : NewlyAddedViewModels)
+        {
+            GenerateReferenceTokenStream(ViewModelClass);
+        }
     }
 
     // Process classes and add them into lookup tables
-    if (GetUnprocessedViewModelClasses().Num())
+    auto& UnprocessedViewModelClasses = GetUnprocessedViewModelClasses();
+    if (UnprocessedViewModelClasses.Num())
     {
-        for (auto& Entry : GetUnprocessedViewModelClasses())
+        for (auto& Entry : UnprocessedViewModelClasses)
         {
             UClass* ViewClass = Entry.GetViewClass();
             UClass* ViewModelClass = Entry.GetViewModelClass();
@@ -174,7 +179,7 @@ void FViewModelRegistry::ProcessPendingRegistrations()
 #endif
         }
 
-        GetUnprocessedViewModelClasses().Empty();
+        UnprocessedViewModelClasses.Empty();
     }
 }
 

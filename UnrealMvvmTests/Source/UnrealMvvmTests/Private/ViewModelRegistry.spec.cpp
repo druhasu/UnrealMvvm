@@ -11,6 +11,7 @@
 #include "Components/PanelWidget.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CheckBox.h"
+#include "Components/StaticMeshComponent.h"
 
 using namespace UnrealMvvm_Impl;
 
@@ -112,13 +113,29 @@ void ViewModelRegistrySpec::Define()
 
         It("Should Sort Classes By Inheritance Hierarchy", [this]
         {
-            TArray<UClass*> Classes = { AActor::StaticClass(), UObject::StaticClass(), APlayerController::StaticClass(), AController::StaticClass() };
+            TArray<UClass*> Classes =
+            {
+                AActor::StaticClass(), APlayerController::StaticClass(), AController::StaticClass(),
+                UActorComponent::StaticClass(), UStaticMeshComponent::StaticClass(), UPrimitiveComponent::StaticClass(), UMeshComponent::StaticClass(), USceneComponent::StaticClass(),
+                UTexture2D::StaticClass(), UTexture::StaticClass(), UStreamableRenderAsset::StaticClass(),
+            };
             FTokenStreamUtils::SortViewModelClasses(Classes);
 
-            TestEqual("Classes[0]", Classes[0], UObject::StaticClass());
-            TestEqual("Classes[1]", Classes[1], AActor::StaticClass());
-            TestEqual("Classes[2]", Classes[2], AController::StaticClass());
-            TestEqual("Classes[3]", Classes[3], APlayerController::StaticClass());
+#define TestOrder(A, B) \
+            TestTrue(#A " before " #B, Classes.Find(A::StaticClass()) < Classes.Find(B::StaticClass()))
+
+            TestOrder(AActor, AController);
+            TestOrder(AController, APlayerController);
+
+            TestOrder(UActorComponent, USceneComponent);
+            TestOrder(USceneComponent, UPrimitiveComponent);
+            TestOrder(UPrimitiveComponent, UMeshComponent);
+            TestOrder(UMeshComponent, UStaticMeshComponent);
+
+            TestOrder(UStreamableRenderAsset, UTexture);
+            TestOrder(UTexture, UTexture2D);
+
+#undef TestOrder
         });
 
         It("Should Add Properties To Class Without Own Properties", [this]
