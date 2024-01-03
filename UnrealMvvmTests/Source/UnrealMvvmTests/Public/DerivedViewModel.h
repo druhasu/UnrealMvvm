@@ -6,7 +6,7 @@
 #include "DerivedViewModel.generated.h"
 
 UCLASS()
-class UBaseClassViewModel : public UBaseViewModel
+class UNREALMVVMTESTS_API UBaseClassViewModel : public UBaseViewModel
 {
     GENERATED_BODY()
 
@@ -14,7 +14,7 @@ class UBaseClassViewModel : public UBaseViewModel
 };
 
 UCLASS()
-class UDerivedClassViewModel : public UBaseClassViewModel
+class UNREALMVVMTESTS_API UDerivedClassViewModel : public UBaseClassViewModel
 {
     GENERATED_BODY()
 

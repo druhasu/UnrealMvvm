@@ -3,12 +3,14 @@
 #include "Misc/AutomationTest.h"
 #include "UnrealMvvmEditor/Private/Nodes/K2Node_ViewModelPropertyBase.h"
 #include "TestBaseViewModel.h"
+#include "DerivedViewModel.h"
 #include "BlueprintActionDatabase.h"
 #include "BlueprintNodeSpawner.h"
 
 BEGIN_DEFINE_SPEC(FNodesActionsSpec, "UnrealMvvm.Nodes Actions", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
-bool HasSpawner(const FName& SpawnerNodeClassName) const;
-bool HasSpawner(const FName& SpawnerNodeClassName, UClass* ViewModelClass, FName ViewModelProperty) const;
+const UBlueprintNodeSpawner* FindSpawner(const FName& SpawnerNodeClassName) const;
+const UBlueprintNodeSpawner* FindSpawner(const FName& SpawnerNodeClassName, UClass* ViewModelClass, FName ViewModelProperty) const;
+const UBlueprintNodeSpawner* FindSpawner(const FName& SpawnerNodeClassName, TFunction<bool(const UBlueprintNodeSpawner*)> Predicate) const;
 END_DEFINE_SPEC(FNodesActionsSpec)
 
 void FNodesActionsSpec::Define()
@@ -21,57 +23,89 @@ void FNodesActionsSpec::Define()
 
     It("Should provide GetPropertyValue node for public property", [this]
     {
-        const bool bFoundSpawner = HasSpawner("K2Node_GetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::IntValueProperty()->GetName());
-        TestTrue("Found K2Node_GetViewModelPropertyValue Spawner", bFoundSpawner);
+        auto* FoundSpawner = FindSpawner("K2Node_GetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::IntValueProperty()->GetName());
+        TestNotNull("Found K2Node_GetViewModelPropertyValue Spawner", FoundSpawner);
     });
 
     It("Should not provide GetPropertyValue node for private property", [this]
     {
-        const bool bFoundSpawner = HasSpawner("K2Node_GetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::NoPublicGetterProperty()->GetName());
-        TestFalse("Found K2Node_GetViewModelPropertyValue Spawner", bFoundSpawner);
+        auto* FoundSpawner = FindSpawner("K2Node_GetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::NoPublicGetterProperty()->GetName());
+        TestNull("Found K2Node_GetViewModelPropertyValue Spawner", FoundSpawner);
     });
 
     It("Should provide SetPropertyValue node for public property", [this]
     {
-        const bool bFoundSpawner = HasSpawner("K2Node_SetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::IntValueProperty()->GetName());
-        TestTrue("Found K2Node_SetViewModelPropertyValue Spawner", bFoundSpawner);
+        auto* FoundSpawner = FindSpawner("K2Node_SetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::IntValueProperty()->GetName());
+        TestNotNull("Found K2Node_SetViewModelPropertyValue Spawner", FoundSpawner);
     });
 
     It("Should not provide SetPropertyValue node for private property", [this]
     {
-        const bool bFoundSpawner = HasSpawner("K2Node_SetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::NoPublicSetterProperty()->GetName());
-        TestFalse("Found K2Node_SetViewModelPropertyValue Spawner", bFoundSpawner);
+        auto* FoundSpawner = FindSpawner("K2Node_SetViewModelPropertyValue", UTestBaseViewModel::StaticClass(), UTestBaseViewModel::NoPublicSetterProperty()->GetName());
+        TestNull("Found K2Node_SetViewModelPropertyValue Spawner", FoundSpawner);
     });
 
     It("Should provide ViewModelGetSet node", [this]
     {
-        const bool bFoundSpawner = HasSpawner("K2Node_ViewModelGetSet");
-        TestTrue("Found K2Node_ViewModelGetSet Spawner", bFoundSpawner);
+        auto* FoundSpawner = FindSpawner("K2Node_ViewModelGetSet");
+        TestNotNull("Found K2Node_ViewModelGetSet Spawner", FoundSpawner);
     });
 
     It("Should provide ViewModelChanged node", [this]
     {
-        const bool bFoundSpawner = HasSpawner("K2Node_ViewModelChanged");
-        TestTrue("Found K2Node_ViewModelChanged Spawner", bFoundSpawner);
+        auto* FoundSpawner = FindSpawner("K2Node_ViewModelChanged");
+        TestNotNull("Found K2Node_ViewModelChanged Spawner", FoundSpawner);
+    });
+
+    It("Should provide GetPropertyValue node for public property of Derived ViewModel", [this]
+    {
+        auto* FoundSpawner = FindSpawner("K2Node_GetViewModelPropertyValue", UDerivedClassViewModel::StaticClass(), UDerivedClassViewModel::DerivedClassValueProperty()->GetName());
+        TestNotNull("Found K2Node_GetViewModelPropertyValue Spawner", FoundSpawner);
+
+        UBlueprint* Blueprint = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_DerivedViewModel.BP_TestBaseWidgetView_DerivedViewModel")));
+        FBlueprintActionFilter Filter;
+        Filter.Context.Blueprints.Add(Blueprint);
+
+        const bool bFiltered = FoundSpawner->IsTemplateNodeFilteredOut(Filter);
+        TestFalse("Node is Filtered out", bFiltered);
+    });
+
+    It("Should provide GetPropertyValue node for public property of Base ViewModel", [this]
+    {
+        auto* FoundSpawner = FindSpawner("K2Node_GetViewModelPropertyValue", UBaseClassViewModel::StaticClass(), UBaseClassViewModel::BaseClassValueProperty()->GetName());
+        TestNotNull("Found K2Node_GetViewModelPropertyValue Spawner", FoundSpawner);
+
+        UBlueprint* Blueprint = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_DerivedViewModel.BP_TestBaseWidgetView_DerivedViewModel")));
+        FBlueprintActionFilter Filter;
+        Filter.Context.Blueprints.Add(Blueprint);
+
+        const bool bFiltered = FoundSpawner->IsTemplateNodeFilteredOut(Filter);
+        TestFalse("Node is Filtered out", bFiltered);
     });
 }
 
-bool FNodesActionsSpec::HasSpawner(const FName& SpawnerNodeClassName) const
+const UBlueprintNodeSpawner* FNodesActionsSpec::FindSpawner(const FName& SpawnerNodeClassName) const
 {
-    const FBlueprintActionDatabase::FActionRegistry& ActionRegistry = FBlueprintActionDatabase::Get().GetAllActions();
-    
-    for (auto& Pair : ActionRegistry)
+    return FindSpawner(SpawnerNodeClassName, [&](const UBlueprintNodeSpawner* Spawner)
     {
-        if (UObject* ActionObject = Pair.Key.ResolveObjectPtr(); ActionObject != nullptr && ActionObject->GetFName() == SpawnerNodeClassName)
-        {
-            return Pair.Value.ContainsByPredicate([&](const UBlueprintNodeSpawner* Spawner) { return Spawner->NodeClass->GetFName() == SpawnerNodeClassName; });
-        }
-    }
-
-    return false;
+        return Spawner->NodeClass->GetFName() == SpawnerNodeClassName;
+    });
 }
 
-bool FNodesActionsSpec::HasSpawner(const FName& SpawnerNodeClassName, UClass* ViewModelClass, FName ViewModelProperty) const
+const UBlueprintNodeSpawner* FNodesActionsSpec::FindSpawner(const FName& SpawnerNodeClassName, UClass* ViewModelClass, FName ViewModelProperty) const
+{
+    return FindSpawner(SpawnerNodeClassName, [&](const UBlueprintNodeSpawner* Spawner)
+    {
+        if (auto* Node = Cast<UK2Node_ViewModelPropertyBase>(Spawner->GetTemplateNode()))
+        {
+            return Node->ViewModelOwnerClass == ViewModelClass && Node->ViewModelPropertyName == ViewModelProperty;
+        }
+
+        return false;
+    });
+}
+
+const UBlueprintNodeSpawner* FNodesActionsSpec::FindSpawner(const FName& SpawnerNodeClassName, TFunction<bool(const UBlueprintNodeSpawner*)> Predicate) const
 {
     const FBlueprintActionDatabase::FActionRegistry& ActionRegistry = FBlueprintActionDatabase::Get().GetAllActions();
 
@@ -81,16 +115,13 @@ bool FNodesActionsSpec::HasSpawner(const FName& SpawnerNodeClassName, UClass* Vi
         {
             for (const UBlueprintNodeSpawner* Spawner : Pair.Value)
             {
-                if (auto* Node = Cast<UK2Node_ViewModelPropertyBase>(Spawner->GetTemplateNode()))
+                if (Predicate(Spawner))
                 {
-                    if (Node->ViewModelOwnerClass == ViewModelClass && Node->ViewModelPropertyName == ViewModelProperty)
-                    {
-                        return true;
-                    }
+                    return Spawner;
                 }
             }
         }
     }
 
-    return false;
+    return nullptr;
 }

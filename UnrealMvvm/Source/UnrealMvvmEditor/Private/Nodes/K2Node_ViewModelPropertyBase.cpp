@@ -82,10 +82,10 @@ bool UK2Node_ViewModelPropertyBase::IsActionFilteredOut(class FBlueprintActionFi
     // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
     for (UBlueprint* Blueprint : Filter.Context.Blueprints)
     {
-        UClass* ViewClass = Blueprint->GeneratedClass;
-        UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(ViewClass);
+        UClass* BlueprintViewClass = Blueprint->GeneratedClass;
+        UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(BlueprintViewClass);
 
-        if (ViewModelClass && ViewModelOwnerClass->IsChildOf(ViewModelClass))
+        if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
         {
             bFoundCompatible = true;
         }
