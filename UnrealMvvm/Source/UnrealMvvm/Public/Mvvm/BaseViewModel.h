@@ -2,10 +2,12 @@
 
 #pragma once
 
+#include "UObject/Object.h"
 #include "Mvvm/ViewModelProperty.h"
+#include "Mvvm/ViewModelPropertyTypeTraits.h"
+#include "Mvvm/Impl/CanCompareHelper.h"
 #include "Mvvm/Impl/PropertyTypeSelector.h"
 #include "Mvvm/Impl/ViewModelPropertyMacros.h"
-#include "CoreMinimal.h"
 #include "BaseViewModel.generated.h"
 
 /*
@@ -80,6 +82,47 @@ protected:
 
     /* Returns whether this ViewModel has any Views listening to its changes */
     bool HasConnectedViews() const { return Changed.IsBound(); }
+
+    /*
+     * Sets new value to provided variable.
+     * Optionaly performs comparison of current value and new value.
+     * Returns true if value was changed
+     */
+    template <typename TValue>
+    bool TrySetValue(TValue& Field, typename UnrealMvvm_Impl::TPropertyTypeSelector<TValue>::SetterType InValue)
+    {
+        // check if we need to compare values
+        if constexpr (TViewModelPropertyTypeTraits<TValue>::WithSetterComparison && UnrealMvvm_Impl::TCanCompareHelper<TValue>::Value)
+        {
+            // check if we need to compare structs using Identical
+            if constexpr (TStructOpsTypeTraits<TValue>::WithIdentical)
+            {
+                // use Identical method
+                if (!Field.Identical(&InValue, 0))
+                {
+                    Field = InValue;
+                    return true;
+                }
+                return false;
+            }
+            else
+            {
+                // use operator ==
+                if (!(Field == InValue))
+                {
+                    Field = InValue;
+                    return true;
+                }
+                return false;
+            }
+        }
+        else
+        {
+            // no comparison needed, just set the value
+            Field = InValue;
+            return true;
+        }
+    }
 
 private:
     FPropertyChangedDelegate Changed;

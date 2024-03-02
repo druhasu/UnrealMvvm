@@ -4,13 +4,14 @@
 
 #include "Templates/ChooseClass.h"
 #include "Templates/IsArithmetic.h"
+#include "Mvvm/ViewModelPropertyTypeTraits.h"
 
 namespace UnrealMvvm_Impl
 {
 
     // helper used to select by-value setter for arithmetic types
     template <typename T>
-    using TByValueOrByRef = TChooseClass< TIsArithmetic<T>::Value, T, const T& >;
+    using TByValueOrByRef = TChooseClass< TIsArithmetic<T>::Value || TIsEnum<T>::Value || TViewModelPropertyTypeTraits<T>::WithSetterArgumentByValue, T, const T& >;
 
     template <typename T>
     struct TPropertyTypeSelector

@@ -27,6 +27,8 @@ struct FPinTraitsStruct
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString Name;
+
+    friend uint32 GetTypeHash(const FPinTraitsStruct& S) { return GetTypeHash(S.Name); }
 };
 
 UENUM(BlueprintType)
@@ -43,6 +45,7 @@ enum class EPinTraitsSimpleEnum : uint8
 #define VM_PROP_PIN_TRAITS_TEST(ValueType, Name) \
     VM_PROP_AG_AS(ValueType, Name, public, public); \
     VM_PROP_AG_AS(TArray<ValueType>, Name##Array, public, public); \
+    VM_PROP_AG_AS(TSet<ValueType>, Name##Set, public, public); \
     VM_PROP_AG_AS((TMap<FName, ValueType>), Name##Map, public, public); \
     VM_PROP_AG_AS(TOptional<ValueType>, Name##Optional, public, public); \
     VM_PROP_AG_AS(TOptional<TArray<ValueType>>, Name##ArrayOptional, public, public);

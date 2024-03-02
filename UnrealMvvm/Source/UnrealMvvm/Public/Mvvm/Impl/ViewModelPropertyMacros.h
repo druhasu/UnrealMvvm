@@ -117,8 +117,10 @@ GetterVisibility: \
 // creates body for automatic Setter method
 #define UMVVM_IMPL_PROP_AUTO_SETTER(Name) \
     { \
-        Name##Field = InNewValue; \
-        RaiseChanged(Name##Property()); \
+        if (TrySetValue(Name##Field, InNewValue)) \
+        { \
+            RaiseChanged(Name##Property()); \
+        } \
     }
 
 

@@ -15,88 +15,14 @@ struct FTestCase
 
 BEGIN_DEFINE_SPEC(PinTraitsSpec, "UnrealMvvm.PinTraits", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 
-void TestSingleValue(const FTestCase& TestCase)
-{
-    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName));
-
-    TestNotNull("ReflectionInfo", Reflection);
-    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
-    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
-    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
-    TestFalse("IsOptional", Reflection->Flags.IsOptional);
-}
-
-void TestArray(const FTestCase& TestCase)
-{
-    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Array")));
-
-    TestNotNull("ReflectionInfo", Reflection);
-    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
-    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
-    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Array);
-    TestFalse("IsOptional", Reflection->Flags.IsOptional);
-}
-
-void TestMap(const FTestCase& TestCase)
-{
-    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Map")));
-
-    TestNotNull("ReflectionInfo", Reflection);
-    TestEqual("PinType", Reflection->PinValueCategoryType, TestCase.CategoryType);
-    TestEqual("SubCategoryObject", Reflection->GetPinValueSubCategoryObject(), TestCase.SubCategoryObject);
-    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Map);
-    TestFalse("IsOptional", Reflection->Flags.IsOptional);
-}
-
+void TestSingleValue(const FTestCase& TestCase);
+void TestArray(const FTestCase& TestCase);
+void TestSet(const FTestCase& TestCase);
+void TestMap(const FTestCase& TestCase);
 template <typename TType>
-void TestBaseStructure(UObject* Struct)
-{
-    // separate variable to fix weird XCode DebugGameEditor linkage error
-    static constexpr EPinCategoryType PinCategoryType = TPinTraits<TType>::PinCategoryType;
-    TestEqual("PinType", PinCategoryType, EPinCategoryType::Struct);
-    TestEqual("SubCategoryObject", TPinTraits<TType>::GetSubCategoryObject(), Struct);
-}
-
-void TestOptional(const FTestCase& TestCase)
-{
-    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Optional")));
-
-    TestNotNull("ReflectionInfo", Reflection);
-    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
-    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
-    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
-    TestTrue("IsOptional", Reflection->Flags.IsOptional);
-}
-
-TArray<FTestCase> GetTestCases() const
-{
-    return
-    {
-        { TEXT("MyBoolean"), EPinCategoryType::Boolean, nullptr },
-        { TEXT("MyByte"), EPinCategoryType::Byte, nullptr },
-        { TEXT("MyClass"), EPinCategoryType::Class, UClass::StaticClass() },
-        { TEXT("MySoftClass"), EPinCategoryType::SoftClass, UClass::StaticClass() },
-        { TEXT("MyInt"), EPinCategoryType::Int, nullptr },
-        { TEXT("MyInt64"), EPinCategoryType::Int64, nullptr },
-        { TEXT("MyFloat"), EPinCategoryType::Float, nullptr },
-#if ENGINE_MAJOR_VERSION >= 5
-        { TEXT("MyDouble"), EPinCategoryType::Double, nullptr },
-#endif
-        { TEXT("MyName"), EPinCategoryType::Name, nullptr },
-        { TEXT("MyObject"), EPinCategoryType::Object, UObject::StaticClass() },
-#if ENGINE_MAJOR_VERSION >= 5
-        { TEXT("MyObjectPtr"), EPinCategoryType::Object, UObject::StaticClass() },
-#endif
-        { TEXT("MyInterface"), EPinCategoryType::Interface, UPinTraitsInterface::StaticClass() },
-        { TEXT("MySoftObject"), EPinCategoryType::SoftObject, UTexture2D::StaticClass() },
-        { TEXT("MyString"), EPinCategoryType::String, nullptr },
-        { TEXT("MyText"), EPinCategoryType::Text, nullptr },
-        { TEXT("MyStruct"), EPinCategoryType::Struct, FPinTraitsStruct::StaticStruct() },
-        { TEXT("MyEnum"), EPinCategoryType::Enum, StaticEnum<EPinTraitsEnum>() },
-        { TEXT("MySimpleEnum"), EPinCategoryType::Enum, nullptr },
-    };
-}
-
+void TestBaseStructure(UObject* Struct);
+void TestOptional(const FTestCase& TestCase);
+TArray<FTestCase> GetTestCases() const;
 const TCHAR* ToString(EPinCategoryType Type);
 
 END_DEFINE_SPEC(PinTraitsSpec)
@@ -131,6 +57,18 @@ void PinTraitsSpec::Define()
             It(Desc, [this, TestCase]()
             {
                 TestArray(TestCase);
+            });
+        }
+    });
+
+    Describe("Set", [this]()
+    {
+        for (auto& TestCase : GetTestCases())
+        {
+            FString Desc = FString::Printf(TEXT("Should pass EPinCategoryType::%s for %sSet"), ToString(TestCase.CategoryType), *TestCase.BaseName);
+            It(Desc, [this, TestCase]()
+            {
+                TestSet(TestCase);
             });
         }
     });
@@ -190,6 +128,99 @@ void PinTraitsSpec::Define()
             });
         }
     });
+}
+
+void PinTraitsSpec::TestSingleValue(const FTestCase& TestCase)
+{
+    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName));
+
+    TestNotNull("ReflectionInfo", Reflection);
+    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
+    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
+    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
+}
+
+void PinTraitsSpec::TestArray(const FTestCase& TestCase)
+{
+    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Array")));
+
+    TestNotNull("ReflectionInfo", Reflection);
+    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
+    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
+    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Array);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
+}
+
+void PinTraitsSpec::TestSet(const FTestCase& TestCase)
+{
+    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Set")));
+
+    TestNotNull("ReflectionInfo", Reflection);
+    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
+    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
+    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Set);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
+}
+
+void PinTraitsSpec::TestMap(const FTestCase& TestCase)
+{
+    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Map")));
+
+    TestNotNull("ReflectionInfo", Reflection);
+    TestEqual("PinType", Reflection->PinValueCategoryType, TestCase.CategoryType);
+    TestEqual("SubCategoryObject", Reflection->GetPinValueSubCategoryObject(), TestCase.SubCategoryObject);
+    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::Map);
+    TestFalse("IsOptional", Reflection->Flags.IsOptional);
+}
+
+template <typename TType>
+void PinTraitsSpec::TestBaseStructure(UObject* Struct)
+{
+    // separate variable to fix weird XCode DebugGameEditor linkage error
+    static constexpr EPinCategoryType PinCategoryType = TPinTraits<TType>::PinCategoryType;
+    TestEqual("PinType", PinCategoryType, EPinCategoryType::Struct);
+    TestEqual("SubCategoryObject", TPinTraits<TType>::GetSubCategoryObject(), Struct);
+}
+
+void PinTraitsSpec::TestOptional(const FTestCase& TestCase)
+{
+    const FViewModelPropertyReflection* Reflection = FViewModelRegistry::FindProperty(UPinTraitsViewModel::StaticClass(), FName(TestCase.BaseName + TEXT("Optional")));
+
+    TestNotNull("ReflectionInfo", Reflection);
+    TestEqual("PinType", Reflection->PinCategoryType, TestCase.CategoryType);
+    TestEqual("SubCategoryObject", Reflection->GetPinSubCategoryObject(), TestCase.SubCategoryObject);
+    TestEqual("ContainerType", Reflection->ContainerType, EPinContainerType::None);
+    TestTrue("IsOptional", Reflection->Flags.IsOptional);
+}
+
+TArray<FTestCase> PinTraitsSpec::GetTestCases() const
+{
+    return
+    {
+        { TEXT("MyBoolean"), EPinCategoryType::Boolean, nullptr },
+        { TEXT("MyByte"), EPinCategoryType::Byte, nullptr },
+        { TEXT("MyClass"), EPinCategoryType::Class, UClass::StaticClass() },
+        { TEXT("MySoftClass"), EPinCategoryType::SoftClass, UClass::StaticClass() },
+        { TEXT("MyInt"), EPinCategoryType::Int, nullptr },
+        { TEXT("MyInt64"), EPinCategoryType::Int64, nullptr },
+        { TEXT("MyFloat"), EPinCategoryType::Float, nullptr },
+#if ENGINE_MAJOR_VERSION >= 5
+        { TEXT("MyDouble"), EPinCategoryType::Double, nullptr },
+#endif
+        { TEXT("MyName"), EPinCategoryType::Name, nullptr },
+        { TEXT("MyObject"), EPinCategoryType::Object, UObject::StaticClass() },
+#if ENGINE_MAJOR_VERSION >= 5
+        { TEXT("MyObjectPtr"), EPinCategoryType::Object, UObject::StaticClass() },
+#endif
+        { TEXT("MyInterface"), EPinCategoryType::Interface, UPinTraitsInterface::StaticClass() },
+        { TEXT("MySoftObject"), EPinCategoryType::SoftObject, UTexture2D::StaticClass() },
+        { TEXT("MyString"), EPinCategoryType::String, nullptr },
+        { TEXT("MyText"), EPinCategoryType::Text, nullptr },
+        { TEXT("MyStruct"), EPinCategoryType::Struct, FPinTraitsStruct::StaticStruct() },
+        { TEXT("MyEnum"), EPinCategoryType::Enum, StaticEnum<EPinTraitsEnum>() },
+        { TEXT("MySimpleEnum"), EPinCategoryType::Enum, nullptr },
+    };
 }
 
 const TCHAR* PinTraitsSpec::ToString(EPinCategoryType Type)

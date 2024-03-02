@@ -35,6 +35,13 @@ public:
     }
 };
 
+template <>
+struct TViewModelPropertyTypeTraits<FGCTestStruct> : public TViewModelPropertyTypeTraitsBase<FGCTestStruct>
+{
+    // skip comparison when setting because this struct does not have proper operator==
+    enum { WithSetterComparison = false };
+};
+
 UCLASS()
 class UGCTestViewModel : public UBaseViewModel
 {
