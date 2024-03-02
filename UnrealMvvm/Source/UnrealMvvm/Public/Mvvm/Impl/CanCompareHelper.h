@@ -22,7 +22,7 @@ namespace UnrealMvvm_Impl
     struct TCanCompareHelper
     {
         // check if type define comparison operator
-        static constexpr bool Value = TModels<CSimpleEqualityComparable, T>::Value;
+        static constexpr bool Value = TModels<CSimpleEqualityComparable, T>::Value || TStructOpsTypeTraits<T>::WithIdentical;
     };
 
 #define CAN_COMPARE_SPECIALIZE_CONTAINER(ContainerType) \

@@ -39,6 +39,23 @@ struct TViewModelPropertyTypeTraits<FTestComparableDisabledStruct> : public TVie
     enum { WithSetterComparison = false };
 };
 
+/* Struct that can only be compared using Identical method */
+struct FTestComparableWithIdenticalStruct
+{
+    int32 Value = 0;
+
+    bool Identical(const FTestComparableWithIdenticalStruct* Other, uint32 PortFlags) const
+    {
+        return Value == Other->Value;
+    }
+};
+
+template<>
+struct TStructOpsTypeTraits<FTestComparableWithIdenticalStruct> : public TStructOpsTypeTraitsBase2<FTestComparableWithIdenticalStruct>
+{
+    enum { WithIdentical = true };
+};
+
 UCLASS()
 class UTestCompareViewModel : public UBaseViewModel
 {
@@ -49,6 +66,7 @@ class UTestCompareViewModel : public UBaseViewModel
     VM_PROP_AG_AS(FTestComparableStruct, ComparableStructValue, public);
     VM_PROP_AG_AS(FTestNonComparableStruct, NonComparableStructValue, public);
     VM_PROP_AG_AS(FTestComparableDisabledStruct, ComparableDisabledStructValue, public);
+    VM_PROP_AG_AS(FTestComparableWithIdenticalStruct, ComparableWithIdenticalStructValue, public);
 
     VM_PROP_AG_AS(TArray<FTestComparableStruct>, ComparableStructArrayValue, public);
     VM_PROP_AG_AS(TArray<FTestNonComparableStruct>, NonComparableStructArrayValue, public);

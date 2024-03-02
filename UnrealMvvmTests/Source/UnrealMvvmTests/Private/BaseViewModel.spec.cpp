@@ -181,6 +181,23 @@ void FBaseViewModelSpec::Define()
             TestEqual("Changes", Counter[UTestCompareViewModel::ComparableDisabledStructValueProperty()], 2);
         });
 
+        It("Should compare when setting Comparable struct with Identical", [this]
+        {
+            UTestCompareViewModel* ViewModel = NewObject<UTestCompareViewModel>();
+            FPropertyChangeCounter Counter(ViewModel);
+            FTestComparableWithIdenticalStruct Value{ 1 };
+
+            static_assert(UnrealMvvm_Impl::TCanCompareHelper<FTestComparableWithIdenticalStruct>::Value, "Cannot compare FTestComparableWithIdenticalStruct");
+
+            TestEqual("Changes", Counter[UTestCompareViewModel::ComparableWithIdenticalStructValueProperty()], 0);
+
+            ViewModel->SetComparableWithIdenticalStructValue(Value);
+            TestEqual("Changes", Counter[UTestCompareViewModel::ComparableWithIdenticalStructValueProperty()], 1);
+
+            ViewModel->SetComparableWithIdenticalStructValue(Value);
+            TestEqual("Changes", Counter[UTestCompareViewModel::ComparableWithIdenticalStructValueProperty()], 1);
+        });
+
 
         It("Should compare when setting Comparable struct Array", [this]
         {
