@@ -6,6 +6,11 @@
 #include "Mvvm/Impl/BaseViewComponent.h"
 #include "Mvvm/BaseView.h"
 #include "Mvvm/BaseViewModel.h"
+#include "Misc/EngineVersionComparison.h"
+
+#if !UE_VERSION_OLDER_THAN(5,4,0)
+#include "Blueprint/BlueprintExceptionInfo.h"
+#endif
 
 UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelFromWidget(UUserWidget* View)
 {

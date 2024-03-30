@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Launch/Resources/Version.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "UObject/TextProperty.h"
 #include "UObject/GarbageCollection.h"
 #include "Mvvm/Impl/ValueTypeTraits.h"

@@ -6,6 +6,7 @@
 // Use #include "Mvvm/BaseView.h"
 
 #include "Mvvm/Impl/BindEntry.h"
+#include "Templates/IsMemberPointer.h"
 #include <type_traits>
 
 namespace UnrealMvvm_Impl
