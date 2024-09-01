@@ -5,7 +5,7 @@
 #include "Runtime/Launch/Resources/Version.h"
 #include "UObject/TextProperty.h"
 #include "UObject/GarbageCollection.h"
-#include "Mvvm/Impl/ValueTypeTraits.h"
+#include "Mvvm/Impl/Property/ValueTypeTraits.h"
 
 namespace UnrealMvvm_Impl
 {

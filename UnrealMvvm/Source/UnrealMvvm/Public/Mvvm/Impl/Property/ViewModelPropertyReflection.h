@@ -56,6 +56,9 @@ namespace UnrealMvvm_Impl
         // Returns UClass of owning ViewModel
         virtual UClass* GetViewModelClass() const = 0;
 
+        // Returns UClass of value contained inside the property. Returns nullptr if Value is not a pointer to a class 
+        virtual UClass* GetValueClass() const = 0;
+
         // Pointer to a FViewModelPropertyBase
         const FViewModelPropertyBase* Property;
     };

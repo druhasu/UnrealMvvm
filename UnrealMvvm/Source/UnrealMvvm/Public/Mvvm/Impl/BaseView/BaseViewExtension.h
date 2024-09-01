@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Extensions/UserWidgetExtension.h"
-#include "Mvvm/Impl/BindEntry.h"
-#include "Mvvm/Impl/BaseViewComponentImpl.h"
+#include "Mvvm/Impl/Binding/BindingWorker.h"
+#include "Mvvm/Impl/BaseView/BaseViewComponentImpl.h"
 #include "Blueprint/UserWidget.h"
 #include "BaseViewExtension.generated.h"
 
@@ -41,6 +41,5 @@ private:
     UPROPERTY()
     UBaseViewModel* ViewModel;
 
-    TArray< UnrealMvvm_Impl::FBindEntry > BindEntries;
-    FDelegateHandle SubscriptionHandle;
+    UnrealMvvm_Impl::FBindingWorker BindingWorker;
 };

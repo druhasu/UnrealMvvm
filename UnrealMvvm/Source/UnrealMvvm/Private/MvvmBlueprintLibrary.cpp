@@ -1,10 +1,11 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "Mvvm/MvvmBlueprintLibrary.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
-#include "Mvvm/Impl/BaseViewExtension.h"
-#include "Mvvm/Impl/BaseViewComponent.h"
-#include "Mvvm/BaseView.h"
+#include "Mvvm/Impl/BaseView/BaseViewExtension.h"
+#include "Mvvm/Impl/BaseView/BaseViewComponent.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
+//#include "Mvvm/BaseView.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Misc/EngineVersionComparison.h"
 
@@ -81,7 +82,7 @@ void UMvvmBlueprintLibrary::SetViewModelInternal(TView* View, UBaseViewModel* Vi
         return;
     }
 
-    UClass* ExpectedViewModelClass = FViewModelRegistry::GetViewModelClass(View->GetClass());
+    UClass* ExpectedViewModelClass = FViewRegistry::GetViewModelClass(View->GetClass());
     if (!ExpectedViewModelClass)
     {
         // This Object is not a View, nothing to do here
@@ -98,7 +99,7 @@ void UMvvmBlueprintLibrary::SetViewModelInternal(TView* View, UBaseViewModel* Vi
     }
 
     // TBaseView needs additional things done when setting ViewModel. So it will have custom setter registered
-    FViewModelRegistry::FViewModelSetterPtr CustomSetter = FViewModelRegistry::GetViewModelSetter(View->GetClass());
+    FViewRegistry::FViewModelSetterPtr CustomSetter = FViewRegistry::GetViewModelSetter(View->GetClass());
     if (CustomSetter)
     {
         CustomSetter(*View, ViewModel);

@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Mvvm/Impl/PinTraits.h"
-#include "Mvvm/Impl/ViewModelPropertyReflection.h"
-#include "Templates/EnableIf.h"
-#include "Templates/IsEnumClass.h"
+#include "Mvvm/Impl/Property/PinTraits.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
+//#include "Templates/EnableIf.h"
+//#include "Templates/IsEnumClass.h"
 
 class UClass;
 class UUserWidget;
@@ -21,7 +21,6 @@ namespace UnrealMvvm_Impl
     {
     public:
         using FClassGetterPtr = UClass * (*)();
-        using FViewModelSetterPtr = void (*)(UObject&, UBaseViewModel*);
 
         template <typename T>
         static const FViewModelPropertyReflection* FindProperty(const FName& InPropertyName)
@@ -31,29 +30,13 @@ namespace UnrealMvvm_Impl
 
         static const FViewModelPropertyReflection* FindProperty(UClass* InViewModelClass, const FName& InPropertyName);
 
-        static UClass* GetViewModelClass(UClass* ViewClass);
-
-        static FViewModelSetterPtr GetViewModelSetter(UClass* ViewClass);
-
         static const TMap<UClass*, TArray<FViewModelPropertyReflection>>& GetAllProperties() { return ViewModelProperties; }
-
-        static uint8 RegisterViewClass(FClassGetterPtr ViewClassGetter, FClassGetterPtr ViewModelClassGetter, FViewModelSetterPtr ViewModelSetter);
-        static void RegisterViewClass(UClass* ViewClass, UClass* ViewModelClass);
-
-#if WITH_EDITOR
-        static void UnregisterViewClass(UClass* ViewClass);
-#endif
 
         template<typename TOwner, typename TValue>
         static uint8 RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr);
 
         static void ProcessPendingRegistrations();
         static void DeleteKeptProperties();
-
-#if WITH_EDITOR
-        DECLARE_MULTICAST_DELEGATE_TwoParams(FViewModelClassChanged, UClass* /*ViewClass*/, UClass* /*ViewModelClass*/);
-        static FViewModelClassChanged ViewClassChanged;
-#endif
 
     private:
         friend class FViewModelPropertyIterator;
@@ -64,30 +47,14 @@ namespace UnrealMvvm_Impl
             FViewModelPropertyReflection Reflection;
         };
 
-        struct FUnprocessedViewModelClassEntry
-        {
-            FClassGetterPtr GetViewClass;
-            FClassGetterPtr GetViewModelClass;
-            FViewModelSetterPtr ViewModelSetter;
-        };
-
         static const FViewModelPropertyReflection* FindPropertyInternal(UClass* InViewModelClass, const FName& InPropertyName);
         static void GenerateReferenceTokenStream(class UClass* ViewModelClass);
 
         // List of properties that were not yet added to lookup table
         static TArray<FUnprocessedPropertyEntry>& GetUnprocessedProperties();
 
-        // List of view model classes that were not yet added to lookup table
-        static TArray<FUnprocessedViewModelClassEntry>& GetUnprocessedViewModelClasses();
-
         // Map of <ViewModelClass, Properties>
         static TMap<UClass*, TArray<FViewModelPropertyReflection>> ViewModelProperties;
-
-        // Map of <ViewClass, ViewModelClass>
-        static TMap<TWeakObjectPtr<UClass>, UClass*> ViewModelClasses;
-
-        // Map of <ViewClass, Setter Function>
-        static TMap<UClass*, FViewModelSetterPtr> ViewModelSetters;
 
         // List of properties that we keep for GC (TMap and TSet properties)
         static TArray<FField*> PropertiesToKeep;
@@ -95,7 +62,7 @@ namespace UnrealMvvm_Impl
 
 }
 
-#include "Mvvm/Impl/ViewModelPropertyOperations.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyOperations.h"
 
 template<typename TOwner, typename TValue>
 inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr)
@@ -107,14 +74,16 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     Entry.GetClass = &StaticClass<TOwner>;
 
     const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
+    const bool IsObject = TIsPointer<TValue>::Value && TModels<CStaticClassProvider, TRemoveObjectPointer<TRemovePointer<TValue>::Type>::Type>::Value;
 
     using FBaseOps    = Details::TBaseOperation<TOwner, TValue>;
     using FGetOps     = Details::TGetValueOperation<FBaseOps, TOwner, TValue, IsOptional>;
     using FSetOps     = Details::TSetValueOperation<FGetOps, TOwner, TValue, IsOptional>;
     using FAddPropOps = Details::TAddClassPropertyOperation<FSetOps, TOwner, TValue>;
     using FGetVMOps   = Details::TGetViewModelClassOperation<FAddPropOps, TOwner, TValue>;
+    using FGetClassOps = Details::TGetValueClassOperation<FGetVMOps, TOwner, TValue, IsObject>;
 
-    using FEffectiveOpsType = TViewModelPropertyOperations<FGetVMOps>;
+    using FEffectiveOpsType = TViewModelPropertyOperations<FGetClassOps>;
 
     static_assert(sizeof(FViewModelPropertyOperations) == sizeof(FEffectiveOpsType), "Generated Operations type cannot fit into OpsBuffer");
 

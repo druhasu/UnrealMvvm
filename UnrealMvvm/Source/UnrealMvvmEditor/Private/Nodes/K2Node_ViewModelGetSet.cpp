@@ -3,7 +3,7 @@
 #include "K2Node_ViewModelGetSet.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/Actor.h"
 #include "BlueprintActionDatabaseRegistrar.h"
@@ -21,7 +21,7 @@ const FText UK2Node_ViewModelGetSet::NodeCategory = FText::FromString("View Mode
 
 void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-    UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(GetViewClass());
+    UClass* ViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(GetViewClass());
     if (!ViewModelClass)
     {
         // do not expand if ViewModel class is unknown
@@ -128,8 +128,8 @@ void UK2Node_ViewModelGetSet::AllocateDefaultPins()
     CreatePin(bIsSetter ? EGPD_Input : EGPD_Output, UEdGraphSchema_K2::PC_Wildcard, nullptr, ViewModelPinName);
 
     // there is no convenient Init method in K2Node, so we have to resubscribe every time pins are created
-    FViewModelRegistry::ViewClassChanged.RemoveAll(this);
-    FViewModelRegistry::ViewClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
+    FViewRegistry::ViewModelClassChanged.RemoveAll(this);
+    FViewRegistry::ViewModelClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
 }
 
 FText UK2Node_ViewModelGetSet::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -167,7 +167,7 @@ void UK2Node_ViewModelGetSet::UpdateViewModelPinType()
 
     if (Pin->HasAnyConnections())
     {
-        UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(GetViewClass());
+        UClass* ViewModelClass = FViewRegistry::GetViewModelClass(GetViewClass());
 
         UEdGraphPin* ViewModelPin = FindPin(ViewModelPinName);
         ViewModelPin->PinType.PinCategory = UEdGraphSchema_K2::PC_Object;

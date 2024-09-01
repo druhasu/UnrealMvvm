@@ -2,7 +2,7 @@
 
 #include "K2Node_GetViewModelPropertyValue.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"

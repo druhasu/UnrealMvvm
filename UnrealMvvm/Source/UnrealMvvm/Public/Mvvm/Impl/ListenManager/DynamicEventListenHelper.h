@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Mvvm/Impl/BaseEventListenHelper.h"
-#include "Mvvm/Impl/PointerToMember.h"
+#include "Mvvm/Impl/ListenManager/BaseEventListenHelper.h"
+#include "Mvvm/Impl/Utils/PointerToMember.h"
 
 namespace UnrealMvvm_Impl
 {

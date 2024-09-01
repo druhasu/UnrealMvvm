@@ -3,11 +3,11 @@
 #include "SViewModelPropertiesPanel.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/ViewModelProperty.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
 #include "BaseViewBlueprintExtension.h"
 #include "Nodes/ViewModelPropertyNodeHelper.h"
 #include "Nodes/K2Node_ViewModelPropertyChanged.h"
-#include "BaseViewBlueprintExtension.h"
 
 #include "Styling/StyleColors.h"
 #include "DetailLayoutBuilder.h"
@@ -32,7 +32,7 @@ void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<F
     CacheViewModelClass(false); // false - so we are not marking Blueprint as modified right when it is opened
     RegenerateProperties();
 
-    UnrealMvvm_Impl::FViewModelRegistry::ViewClassChanged.AddSP(this, &ThisClass::OnViewClassChanged);
+    UnrealMvvm_Impl::FViewRegistry::ViewModelClassChanged.AddSP(this, &ThisClass::OnViewClassChanged);
 
     TSharedRef<SScrollBar> ScrollBar = SNew(SScrollBar);
 
@@ -250,7 +250,7 @@ void SViewModelPropertiesPanel::RegenerateProperties()
 
 void SViewModelPropertiesPanel::CacheViewModelClass(bool bMayRemoveExtension)
 {
-    ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(Blueprint->ParentClass);
+    ViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->ParentClass);
     bParentHasViewModel = ViewModelClass != nullptr;
 
     if (!ViewModelClass)
@@ -354,7 +354,7 @@ bool SViewModelPropertiesPanel::IsAddOrViewButtonEnabled(FName PropertyName) con
 
     if (ReflectionInfo)
     {
-        UFunction* Function = Blueprint->ParentClass->FindFunctionByName(ReflectionInfo->GetProperty()->GetCallbackName());
+        UFunction* Function = Blueprint->ParentClass->FindFunctionByName(ReflectionInfo->GetProperty()->GetLegacyCallbackName());
         return Function == nullptr;
     }
 

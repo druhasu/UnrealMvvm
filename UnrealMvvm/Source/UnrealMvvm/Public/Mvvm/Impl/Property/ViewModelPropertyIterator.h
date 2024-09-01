@@ -2,12 +2,13 @@
 
 #pragma once
 
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
+#include "Mvvm/BaseViewModel.h"
 #include "Templates/SubclassOf.h"
 
 namespace UnrealMvvm_Impl
 {
-    class UNREALMVVM_API FViewModelPropertyIterator
+    class FViewModelPropertyIterator
     {
     public:
         FViewModelPropertyIterator(TSubclassOf<UBaseViewModel> InViewModelClass, bool bMaintainOrder)

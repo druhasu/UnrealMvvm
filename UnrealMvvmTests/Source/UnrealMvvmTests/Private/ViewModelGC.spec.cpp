@@ -4,7 +4,7 @@
 
 #include "GCTestViewModel.h"
 #include "UObject/StrongObjectPtr.h"
-#include "Mvvm/Impl/PropertyFactory.h"
+#include "Mvvm/Impl/Property/PropertyFactory.h"
 
 BEGIN_DEFINE_SPEC(FViewModelGCSpec, "UnrealMvvm.BaseViewModel.Garbage Collect", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 

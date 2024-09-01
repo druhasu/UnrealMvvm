@@ -1,15 +1,17 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "Modules/ModuleManager.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 
 class FUnrealMvvmModuleImpl : public IModuleInterface
 {
 public:
     void StartupModule() override
     {
-        FModuleManager::Get().OnModulesChanged().AddRaw(this, &FUnrealMvvmModuleImpl::RegisterViewModelClasses);
+        FModuleManager::Get().OnModulesChanged().AddRaw(this, &FUnrealMvvmModuleImpl::OnModulesChanged);
         UnrealMvvm_Impl::FViewModelRegistry::ProcessPendingRegistrations();
+        UnrealMvvm_Impl::FViewRegistry::ProcessPendingRegistrations();
     }
 
     void ShutdownModule() override
@@ -19,11 +21,12 @@ public:
     }
 
 private:
-    void RegisterViewModelClasses(FName InModule, EModuleChangeReason InReason)
+    void OnModulesChanged(FName InModule, EModuleChangeReason InReason)
     {
         if (InReason == EModuleChangeReason::ModuleLoaded)
         {
             UnrealMvvm_Impl::FViewModelRegistry::ProcessPendingRegistrations();
+            UnrealMvvm_Impl::FViewRegistry::ProcessPendingRegistrations();
         }
     }
 };

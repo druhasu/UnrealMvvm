@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Blueprint/BlueprintExtension.h"
+#include "Mvvm/Impl/Binding/ViewModelDynamicBinding.h"
 #include "BaseViewBlueprintExtension.generated.h"
 
 /*
@@ -23,12 +24,18 @@ public:
     UClass* GetViewModelClass() const { return ViewModelClass; }
     void SetViewModelClass(UClass* InViewModelClass);
 
+    const TArray<FBlueprintBindingEntry>& GetBlueprintBindings() const { return BlueprintBindings; }
+
 protected:
     void HandleGenerateFunctionGraphs(FKismetCompilerContext* CompilerContext) override;
 
 private:
     void TryRegisterViewModelClass();
+    void TryAddLegacyBindings();
 
     UPROPERTY()
     UClass* ViewModelClass;
+
+    UPROPERTY()
+    TArray<FBlueprintBindingEntry> BlueprintBindings;
 };

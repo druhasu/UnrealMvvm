@@ -1,13 +1,13 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
-#include "Mvvm/Impl/BaseViewComponent.h"
+#include "Mvvm/Impl/BaseView/BaseViewComponent.h"
 
 void UBaseViewComponent::BeginPlay()
 {
     Super::BeginPlay();
 
     // View is constructed, start listening and update current state
-    StartListening();
+    BindingWorker.StartListening();
 }
 
 void UBaseViewComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -15,7 +15,7 @@ void UBaseViewComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 
     // View is no longer in play, stop listening to ViewModel
-    StopListening();
+    BindingWorker.StopListening();
 }
 
 UBaseViewComponent* UBaseViewComponent::Request(AActor* Actor)
@@ -31,6 +31,7 @@ UBaseViewComponent* UBaseViewComponent::Request(AActor* Actor)
     {
         Result = NewObject<UBaseViewComponent>(Actor);
         Result->RegisterComponent();
+        PrepareBindindsInternal(Actor, Result->BindingWorker);
     }
 
     return Result;

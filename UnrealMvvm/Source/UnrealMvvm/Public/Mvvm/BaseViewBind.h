@@ -3,9 +3,10 @@
 #pragma once
 
 #include "Mvvm/ViewModelProperty.h"
-#include "Mvvm/Impl/BindImpl.h"
-#include "Mvvm/Impl/BaseViewExtension.h"
-#include "Mvvm/Impl/BaseViewComponent.h"
+#include "Mvvm/Impl/Binding/BindImpl.h"
+#include "Mvvm/Impl/BaseView/BaseViewExtension.h"
+#include "Mvvm/Impl/BaseView/BaseViewComponent.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 
 template<typename TOwner, typename TViewModel>
 class TBaseView;
@@ -27,12 +28,6 @@ namespace UnrealMvvm_Impl
         {
             TComponent* Extension = GetExtension(BaseView);
 
-            if (Extension->BindEntries.Num() == 0)
-            {
-                BaseView->BindProperties();
-                Extension->PrepareBindings(TViewModel::StaticClass());
-            }
-
             TViewModel* OldViewModel = (TViewModel*)Extension->ViewModel;
 
             Extension->SetViewModelInternal(InViewModel);
@@ -49,9 +44,9 @@ namespace UnrealMvvm_Impl
             return (TComponent*)BaseView->CachedComponent;
         }
 
-        static auto& GetBindEntries(const FView* BaseView)
+        static auto& GetBindingWorker(const FView* BaseView)
         {
-            return GetExtension(BaseView)->BindEntries;
+            return GetExtension(BaseView)->BindingWorker;
         }
     };
 
@@ -122,12 +117,27 @@ private:
         TOwner& Owner = static_cast<TOwner&>(ViewObject);
         TBaseView<TOwner, TViewModel>& TypedView = static_cast<TBaseView<TOwner, TViewModel>&>(Owner);
 
-        Owner.SetViewModel((TViewModel*)ViewModel);
+        TypedView.SetViewModel((TViewModel*)ViewModel);
     }
 
-    auto& GetBindEntries()
+    static void CollectNativeBindings(UObject& ViewObject)
     {
-        return UnrealMvvm_Impl::TBaseViewImpl<TOwner, TViewModel>::GetBindEntries(this);
+        TOwner& Owner = static_cast<TOwner&>(ViewObject);
+        TBaseView<TOwner, TViewModel>& TypedView = static_cast<TBaseView<TOwner, TViewModel>&>(Owner);
+
+        TypedView.BindProperties();
+    }
+
+    template <typename THandler, typename... TArgs>
+    void EmplaceHandler(TArrayView<const FViewModelPropertyBase* const> PropertyPath, TArgs&&... Args)
+    {
+        using namespace UnrealMvvm_Impl;
+
+        if (!FViewRegistry::RecordPropertyPath(PropertyPath))
+        {
+            FBindingWorker& Worker = TBaseViewImpl<TOwner, TViewModel>::GetBindingWorker(this);
+            Worker.AddBindingHandler<THandler, TArgs...>(PropertyPath, Forward<TArgs>(Args)...);
+        }
     }
 
     UObject* CachedComponent = nullptr;
@@ -135,4 +145,4 @@ private:
 };
 
 template<typename TOwner, typename TViewModel>
-uint8 TBaseView<TOwner, TViewModel>::Registered = UnrealMvvm_Impl::FViewModelRegistry::RegisterViewClass(&TOwner::StaticClass, &TViewModel::StaticClass, &TBaseView<TOwner, TViewModel>::SetViewModelStatic);
+uint8 TBaseView<TOwner, TViewModel>::Registered = UnrealMvvm_Impl::FViewRegistry::RegisterViewClass(&TOwner::StaticClass, &TViewModel::StaticClass, &TBaseView<TOwner, TViewModel>::SetViewModelStatic, &TBaseView<TOwner, TViewModel>::CollectNativeBindings);

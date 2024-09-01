@@ -1,17 +1,17 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
-#include "Mvvm/Impl/BaseViewExtension.h"
+#include "Mvvm/Impl/BaseView/BaseViewExtension.h"
 
 void UBaseViewExtension::Construct()
 {
     // View is constructed (i.e. visible), start listening and update current state
-    StartListening();
+    BindingWorker.StartListening();
 }
 
 void UBaseViewExtension::Destruct()
 {
     // View is no longer attached to anything, stop listening to ViewModel
-    StopListening();
+    BindingWorker.StopListening();
 }
 
 UBaseViewExtension* UBaseViewExtension::Request(UUserWidget* Widget)
@@ -26,6 +26,7 @@ UBaseViewExtension* UBaseViewExtension::Request(UUserWidget* Widget)
     if (!Result)
     {
         Result = Widget->AddExtension<UBaseViewExtension>();
+        PrepareBindindsInternal(Widget, Result->BindingWorker);
     }
 
     return Result;

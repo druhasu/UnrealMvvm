@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Mvvm/Impl/ValueTypeTraits.h"
-#include "Mvvm/Impl/PropertyFactory.h"
+#include "Mvvm/Impl/Property/ValueTypeTraits.h"
+#include "Mvvm/Impl/Property/PropertyFactory.h"
 
 template<typename TOwner, typename TValue>
 class TViewModelProperty;
@@ -127,6 +127,28 @@ namespace UnrealMvvm_Impl
             UClass* GetViewModelClass() const override
             {
                 return TOwner::StaticClass();
+            }
+        };
+
+        /* Implementation of GetValueClass method */
+        template <typename TBaseOp, typename TOwner, typename TValue, bool IsObject>
+        struct TGetValueClassOperation;
+
+        template <typename TBaseOp, typename TOwner, typename TValue>
+        struct TGetValueClassOperation<typename TBaseOp, typename TOwner, typename TValue, false> : public TBaseOp
+        {
+            UClass* GetValueClass() const override
+            {
+                return nullptr;
+            }
+        };
+
+        template <typename TBaseOp, typename TOwner, typename TValue>
+        struct TGetValueClassOperation<typename TBaseOp, typename TOwner, typename TValue, true> : public TBaseOp
+        {
+            UClass* GetValueClass() const override
+            {
+                return TRemoveObjectPointer<TRemovePointer<TValue>::Type>::Type::StaticClass();
             }
         };
     }

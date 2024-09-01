@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Mvvm/Impl/ViewModelPropertyReflection.h"
-#include "Mvvm/Impl/TryGetStaticEnum.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
+#include "Mvvm/Impl/Utils/TryGetStaticEnum.h"
 #include "Templates/IntegralConstant.h"
-#include "Mvvm/Impl/ValueTypeTraits.h"
+#include "Mvvm/Impl/Property/ValueTypeTraits.h"
 #include "Math/MathFwd.h"
 #include "Runtime/Launch/Resources/Version.h"
 #include "Misc/EngineVersionComparison.h"

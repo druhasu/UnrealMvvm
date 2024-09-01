@@ -3,7 +3,7 @@
 #pragma once
 
 #include "K2Node.h"
-#include "Mvvm/Impl/ViewModelPropertyReflection.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "K2Node_ViewModelPropertyBase.generated.h"
 

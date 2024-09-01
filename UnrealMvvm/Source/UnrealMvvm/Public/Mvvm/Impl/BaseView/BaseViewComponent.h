@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "Mvvm/Impl/BindEntry.h"
-#include "Mvvm/Impl/BaseViewComponentImpl.h"
+#include "Mvvm/Impl/Binding/BindingWorker.h"
+#include "Mvvm/Impl/BaseView/BaseViewComponentImpl.h"
 #include "BaseViewComponent.generated.h"
 
 UCLASS(meta = (BlueprintSpawnableComponent))
@@ -38,6 +38,5 @@ private:
     UPROPERTY()
     UBaseViewModel* ViewModel;
 
-    TArray< UnrealMvvm_Impl::FBindEntry > BindEntries;
-    FDelegateHandle SubscriptionHandle;
+    UnrealMvvm_Impl::FBindingWorker BindingWorker;
 };

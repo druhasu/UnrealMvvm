@@ -2,7 +2,7 @@
 
 #include "Modules/ModuleManager.h"
 #include "Mvvm/BaseView.h"
-#include "Mvvm/Impl/WidgetExtensionsAccessor.h"
+#include "Mvvm/Impl/BaseView/WidgetExtensionsAccessor.h"
 #include "Slate/ViewModelPropertiesSummoner.h"
 #include "Slate/UnrealMvvmEditorStyle.h"
 #include "BaseViewBlueprintExtension.h"
@@ -160,7 +160,7 @@ private:
     {
         using namespace UnrealMvvm_Impl;
 
-        if (FViewModelRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
+        if (FViewRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
         {
             // if our parent class have ViewModel defined, then we don't need our own BlueprintExtension
             UBaseViewBlueprintExtension::Remove(SavedBlueprint);

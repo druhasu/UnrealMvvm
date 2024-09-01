@@ -2,7 +2,9 @@
 
 #include "K2Node_InitViewModelDynamicBinding.h"
 #include "BaseViewBlueprintExtension.h"
-#include "Mvvm/Impl/ViewModelDynamicBinding.h"
+#include "Mvvm/Impl/Binding/ViewModelDynamicBinding.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
+#include "Mvvm/ViewModelProperty.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "KismetCompilerMisc.h"
 
@@ -29,6 +31,7 @@ void UK2Node_InitViewModelDynamicBinding::RegisterDynamicBinding(UDynamicBluepri
     check(Extension);
 
     Binding->ViewModelClass = Extension->GetViewModelClass();
+    Binding->BlueprintBindings = Extension->GetBlueprintBindings();
 }
 
 void UK2Node_InitViewModelDynamicBinding::AllocateDefaultPins()

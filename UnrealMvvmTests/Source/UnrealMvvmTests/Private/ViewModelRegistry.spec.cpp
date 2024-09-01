@@ -5,8 +5,8 @@
 #include "DerivedViewModel.h"
 #include "PinTraitsViewModel.h"
 #include "TokenStreamTestViewModel.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
-#include "Mvvm/Impl/TokenStreamUtils.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/Property/TokenStreamUtils.h"
 
 #include "Components/PanelWidget.h"
 #include "Components/CanvasPanel.h"

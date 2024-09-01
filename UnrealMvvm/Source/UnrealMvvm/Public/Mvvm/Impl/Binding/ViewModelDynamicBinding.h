@@ -5,6 +5,19 @@
 #include "Engine/DynamicBlueprintBinding.h"
 #include "ViewModelDynamicBinding.generated.h"
 
+USTRUCT()
+struct FBlueprintBindingEntry
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    TArray<FName> PropertyPath;
+
+    UPROPERTY()
+    FName FunctionName;
+};
+
 UCLASS()
 class UNREALMVVM_API UViewModelDynamicBinding : public UDynamicBlueprintBinding
 {
@@ -15,4 +28,7 @@ public:
 
     UPROPERTY()
     UClass* ViewModelClass;
+
+    UPROPERTY()
+    TArray<FBlueprintBindingEntry> BlueprintBindings;
 };

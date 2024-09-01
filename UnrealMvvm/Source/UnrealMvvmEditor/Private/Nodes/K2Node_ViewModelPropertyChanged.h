@@ -3,7 +3,7 @@
 #pragma once
 
 #include "K2Node_ViewModelPropertyBase.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 #include "K2Node_ViewModelPropertyChanged.generated.h"
 
 UCLASS()
@@ -21,6 +21,9 @@ public:
     FLinearColor GetNodeTitleColor() const override;
     FSlateIcon GetIconAndTint(FLinearColor& OutColor) const override;
     //~ End UEdGraphNode Interface
+
+    UPROPERTY()
+    FName CallbackName;
 
 protected:
     FText GetNodeTitleForCache(ENodeTitleType::Type TitleType) const override;

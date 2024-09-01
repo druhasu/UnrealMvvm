@@ -3,7 +3,7 @@
 #pragma once
 
 #include "UObject/NameTypes.h"
-#include "Mvvm/Impl/ViewModelPropertyReflection.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
 
 struct FEdGraphPinType;
 class UClass;

@@ -1,7 +1,8 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "K2Node_ViewModelPropertyBase.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/ViewModelProperty.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
@@ -83,7 +84,7 @@ bool UK2Node_ViewModelPropertyBase::IsActionFilteredOut(class FBlueprintActionFi
     for (UBlueprint* Blueprint : Filter.Context.Blueprints)
     {
         UClass* BlueprintViewClass = Blueprint->GeneratedClass;
-        UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(BlueprintViewClass);
+        UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(BlueprintViewClass);
 
         if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
         {

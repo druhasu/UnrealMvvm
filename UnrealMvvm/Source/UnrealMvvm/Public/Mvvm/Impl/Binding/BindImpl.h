@@ -5,7 +5,7 @@
 // DO NOT include this header directly!
 // Use #include "Mvvm/BaseView.h"
 
-#include "Mvvm/Impl/BindEntry.h"
+#include "Mvvm/Impl/Binding/BindingWorker.h"
 #include "Templates/IsMemberPointer.h"
 #include <type_traits>
 
@@ -59,20 +59,7 @@ void __BindImpl(TOwner* ThisPtr, TProperty* Property, TCallback&& Callback)
     static_assert(TIsDerivedFrom<TProperty, FViewModelPropertyBase>::Value, "Property must be derived from FViewModelPropertyBase");
     static_assert(TIsDerivedFrom<ViewModelType, typename TProperty::FViewModelType>::Value, "Property must be declared in TOwner's ViewModel type");
 
-    auto& BindEntries = ThisPtr->GetBindEntries();
-
-    // warn caller if he tries to bind several callbacks to a single property
-    // we call only first callback when property changes, and this may lead to some confusion.
-    // better say it here, when binding stuff
-    const bool bNotBound = ensureAlwaysMsgf(
-        !BindEntries.FindByPredicate([Property](const auto& Entry) { return Entry.Property == Property; }),
-        TEXT("You are trying to bind property that is already bound. Only first callback will be called"));
-
-    if (bNotBound)
-    {
-        FBindEntry& BindEntry = BindEntries.Emplace_GetRef(Property);
-        BindEntry.Handler.Emplace<TBindingPropertyChangeHandler<ViewModelType, typename TProperty::FValueType, TCallback>>(Forward<TCallback>(Callback));
-    }
+    ThisPtr->EmplaceHandler<TBindingPropertyChangeHandler<ViewModelType, typename TProperty::FValueType, TCallback>>({ Property }, Forward<TCallback>(Callback));
 }
 
 // Binds property to a lambda
@@ -96,7 +83,7 @@ template<typename TOwner, typename TProperty, typename TTextBlock>
 typename TEnableIf<std::is_same_v<typename TProperty::FValueType, FText> && UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
 Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
 {
-    check(Text);
+    check(Text || ThisPtr->IsTemplate());
     __BindImpl(ThisPtr, Property, [Text](typename TProperty::FValueType V) { Text->SetText(V); });
 }
 
@@ -105,7 +92,7 @@ template<typename TOwner, typename TProperty, typename TTextBlock>
 typename TEnableIf<std::is_same_v<typename TProperty::FValueType, FString> && UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
 Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text)
 {
-    check(Text);
+    check(Text || ThisPtr->IsTemplate());
     __BindImpl(ThisPtr, Property, [Text](typename TProperty::FValueType V) { Text->SetText(FText::FromString(V)); });
 }
 
@@ -114,7 +101,7 @@ template<typename TOwner, typename TProperty, typename TTextBlock>
 typename TEnableIf<UnrealMvvm_Impl::THasNumberToText<typename TProperty::FValueType>::Value&& UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
 Bind(TOwner* ThisPtr, TProperty* Property, TTextBlock* Text, const FNumberFormattingOptions* const Options = nullptr, const FCulturePtr& TargetCulture = nullptr)
 {
-    check(Text);
+    check(Text || ThisPtr->IsTemplate());
     if (Options)
     {
         __BindImpl(ThisPtr, Property, [Text, Options = *Options, TargetCulture](typename TProperty::FValueType V) { Text->SetText(FText::AsNumber(V, &Options, TargetCulture)); });
