@@ -74,7 +74,7 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     Entry.GetClass = &StaticClass<TOwner>;
 
     const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
-    const bool IsObject = TIsPointer<TValue>::Value && TModels<CStaticClassProvider, TRemoveObjectPointer<TRemovePointer<TValue>::Type>::Type>::Value;
+    const bool IsObject = TIsPointer<TValue>::Value && TModels<CStaticClassProvider, typename TRemoveObjectPointer<typename TRemovePointer<TValue>::Type>::Type>::Value;
 
     using FBaseOps    = Details::TBaseOperation<TOwner, TValue>;
     using FGetOps     = Details::TGetValueOperation<FBaseOps, TOwner, TValue, IsOptional>;

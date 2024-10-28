@@ -21,6 +21,7 @@ public:
     //~ Begin UEdGraphNode Interface
     void PostReconstructNode() override;
     void AllocateDefaultPins() override;
+    FString GetPinMetaData(FName InPinName, FName InKey) override;
     FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
     FLinearColor GetNodeTitleColor() const override;
     FSlateIcon GetIconAndTint(FLinearColor& OutColor) const override;

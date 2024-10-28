@@ -49,6 +49,12 @@ void ClearByKey(TMap<TWeakObjectPtr<UClass>, TValue>& Map)
 
 void FViewRegistry::ProcessPendingRegistrations()
 {
+    if (GIsInitialLoad)
+    {
+        // wait until UObject subsystem is loaded
+        return;
+    }
+
     // Process classes and add them into lookup tables
     auto& UnprocessedViewClasses = GetUnprocessedViewClasses();
     if (UnprocessedViewClasses.Num())

@@ -12,6 +12,7 @@
 #include "KismetCompiler.h" // for FKismetCompilerContext
 #include "K2Node_CallFunction.h"
 #include "K2Node_DynamicCast.h"
+#include "K2Node_Self.h"
 
 const FName UK2Node_ViewModelGetSet::ViewPinName{ "View" };
 const FName UK2Node_ViewModelGetSet::ViewModelPinName{ "ViewModel" };
@@ -33,16 +34,26 @@ void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext
     CallFunctionNode->FunctionReference.SetExternalMember(GetFunctionName(), UMvvmBlueprintLibrary::StaticClass());
     CallFunctionNode->AllocateDefaultPins();
 
-    // connect View pin of this node to GetViewModel/SetViewModel function call
     UEdGraphPin* SrcViewPin = FindPin(ViewPinName);
     UEdGraphPin* DstViewPin = CallFunctionNode->FindPin(ViewPinName);
-    CompilerContext.MovePinLinksToIntermediate(*SrcViewPin, *DstViewPin);
+    if (SrcViewPin->HasAnyConnections())
+    {
+        // connect View pin of this node to GetViewModel/SetViewModel function call
+        CompilerContext.MovePinLinksToIntermediate(*SrcViewPin, *DstViewPin);
+    }
+    else
+    {
+        // create "Get Self" node and connect it to GetViewModel/SetViewModel function call
+        UK2Node_Self* SelfNode = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(this, SourceGraph);
+        SelfNode->AllocateDefaultPins();
+        CompilerContext.GetSchema()->TryCreateConnection(SelfNode->FindPin(UEdGraphSchema_K2::PN_Self), DstViewPin);
+    }
 
     if (bIsSetter)
     {
         // connect ViewModel pin of this node to SetViewModel input pin
-        UEdGraphPin * ScrViewModelPin = FindPin(ViewModelPinName);
-        UEdGraphPin * DstViewModelPin = CallFunctionNode->FindPin(ViewModelPinName);
+        UEdGraphPin* ScrViewModelPin = FindPin(ViewModelPinName);
+        UEdGraphPin* DstViewModelPin = CallFunctionNode->FindPin(ViewModelPinName);
         CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
     }
     else
@@ -59,8 +70,8 @@ void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext
         CompilerContext.GetSchema()->TryCreateConnection(CallFunctionResult, CastSource);
 
         // connect Cast result to output of this node
-        UEdGraphPin * ScrViewModelPin = FindPin(ViewModelPinName);
-        UEdGraphPin * DstViewModelPin = CastNode->GetCastResultPin();
+        UEdGraphPin* ScrViewModelPin = FindPin(ViewModelPinName);
+        UEdGraphPin* DstViewModelPin = CastNode->GetCastResultPin();
         CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
     }
 
@@ -130,6 +141,19 @@ void UK2Node_ViewModelGetSet::AllocateDefaultPins()
     // there is no convenient Init method in K2Node, so we have to resubscribe every time pins are created
     FViewRegistry::ViewModelClassChanged.RemoveAll(this);
     FViewRegistry::ViewModelClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
+
+    UpdateViewModelPinType();
+}
+
+FString UK2Node_ViewModelGetSet::GetPinMetaData(FName InPinName, FName InKey)
+{
+    // force our View pin to be drawn as "self" pin
+    if (InPinName == ViewPinName && InKey == FBlueprintMetadata::MD_DefaultToSelf)
+    {
+        return ViewPinName.ToString();
+    }
+
+    return Super::GetPinMetaData(InPinName, InKey);
 }
 
 FText UK2Node_ViewModelGetSet::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -165,9 +189,11 @@ void UK2Node_ViewModelGetSet::UpdateViewModelPinType()
 
     UEdGraphPin* Pin = FindPin(ViewPinName);
 
-    if (Pin->HasAnyConnections())
+    UClass* ViewClass = GetViewClass();
+
+    if (ViewClass != nullptr)
     {
-        UClass* ViewModelClass = FViewRegistry::GetViewModelClass(GetViewClass());
+        UClass* ViewModelClass = FViewRegistry::GetViewModelClass(ViewClass);
 
         UEdGraphPin* ViewModelPin = FindPin(ViewModelPinName);
         ViewModelPin->PinType.PinCategory = UEdGraphSchema_K2::PC_Object;
@@ -184,8 +210,15 @@ void UK2Node_ViewModelGetSet::UpdateViewModelPinType()
 UClass* UK2Node_ViewModelGetSet::GetViewClass() const
 {
     UEdGraphPin* ViewPin = FindPin(ViewPinName);
+    UBlueprint* Blueprint = GetBlueprint();
+
     if (!ViewPin->HasAnyConnections())
     {
+        if (Blueprint != nullptr)
+        {
+            return Blueprint->GeneratedClass;
+        }
+
         return nullptr;
     }
 
@@ -196,7 +229,7 @@ UClass* UK2Node_ViewModelGetSet::GetViewClass() const
     }
     else if (Pin->PinType.PinSubCategory == UEdGraphSchema_K2::PSC_Self)
     {
-        return GetBlueprint()->GeneratedClass;
+        return Blueprint->GeneratedClass;
     }
 
     return nullptr;
