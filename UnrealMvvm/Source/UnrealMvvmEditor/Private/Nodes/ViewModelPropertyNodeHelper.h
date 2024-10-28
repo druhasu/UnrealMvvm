@@ -30,9 +30,28 @@ public:
     /* Spawns intermediate node equivalent to Self -> GetViewModelPropertyValue(View, ViewModelPropertyName) and connects its output to a given ValuePin */
     static void SpawnGetSetPropertyValueNodes(const FName& FunctionName, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
 
+    /* Connects input ViewModel to GetViewModelPropertyValue(ViewModel, ViewModelPropertyName) and connects its output to a given ValuePin */
+    static void SpawnExplicitGetSetPropertyValueNodes(const FName& FunctionName, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName);
+
+    /* Adds an input ViewModel pin to the getter/setter node. */
+    static void AddInputViewModelPin(UEdGraphNode& Node, UClass* ViewModelClass);
+
+    /* Returns true if an action for the given ViewModelOwnerClass is valid for current context represented by Filter and should be shown in actions menu. */
+    static bool IsActionValidInContext(const FBlueprintActionFilter& Filter, const UClass* ViewModelOwnerClass);
+
+    static void ValidateInputViewModelPin(const UEdGraphNode* Node, FCompilerResultsLog& MessageLog);
+
     static FName GetFunctionNameForGetPropertyValue(UClass* ViewClass);
     static FName GetFunctionNameForSetPropertyValue(UClass* ViewClass);
+    static FName GetFunctionNameForGetPropertyValue();
+    static FName GetFunctionNameForSetPropertyValue();
 
     /* Pin Name for HasValue */
     static const FName HasValuePinName;
+
+    /* Pin Name for input ViewModel */
+    static const FName InputViewModelPinName;
+
+private:
+    static void ConnectOutputPins(class UK2Node_CallFunction* GetSetFunctionNode, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const UEdGraphSchema_K2* Schema, UEdGraphPin* ValuePin, const FName& ViewModelPropertyName);
 };
