@@ -11,6 +11,7 @@
 #include "GraphEditorSettings.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Misc/EngineVersionComparison.h"
 
 void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
@@ -24,7 +25,11 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
 
         if (FViewModelPropertyNodeHelper::FillPinType(PinType, ViewModelPropertyName, ViewModelOwnerClass))
         {
+#if UE_VERSION_OLDER_THAN(5,5,0)
             UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(this, ExecPin, SourceGraph);
+#else
+            UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateNode<UK2Node_CustomEvent>(this, SourceGraph);
+#endif
 
             CustomEvent->CustomFunctionName = UnrealMvvm_Impl::FViewModelPropertyNamesCache::MakeCallbackName(ViewModelPropertyName);
             CustomEvent->AllocateDefaultPins();

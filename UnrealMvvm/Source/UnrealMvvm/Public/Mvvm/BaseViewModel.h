@@ -10,6 +10,10 @@
 #include "Mvvm/Impl/ViewModelPropertyMacros.h"
 #include "BaseViewModel.generated.h"
 
+#ifndef UE_REQUIRES
+#define UE_REQUIRES , TEMPLATE_REQUIRES
+#endif
+
 /*
  * Base class for ViewModels
  */ 
@@ -65,7 +69,7 @@ protected:
     }
 
     /* Call this method to notify any connected View that given properties were changed */
-    template <typename... TProperty, TEMPLATE_REQUIRES(sizeof...(TProperty) >= 2)>
+    template <typename... TProperty UE_REQUIRES(sizeof...(TProperty) >= 2)>
     void RaiseChanged(const TProperty*... Props)
     {
         (RaiseChanged(Props), ...);

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Runtime/Launch/Resources/Version.h"
+#include "Misc/EngineVersionComparison.h"
 #include "UObject/TextProperty.h"
 #include "UObject/GarbageCollection.h"
 #include "Mvvm/Impl/ValueTypeTraits.h"
@@ -78,6 +79,7 @@ namespace UnrealMvvm_Impl
             } \
         }
 
+#if UE_VERSION_OLDER_THAN(5,5,0)
         // We have to use this hack, because Epic "forgot" to export constructor of FTextProperty that we were using. So we create our own property that may contain FText
         // It doesn't behave like proper FTextProperty, but we use it only to calculate sizes of TMap entries, so it doesn't matter
         class FFakeTextProperty : public FTextProperty_Super
@@ -87,6 +89,10 @@ namespace UnrealMvvm_Impl
                 : FTextProperty_Super(InOwner, (const UECodeGen_Private::FPropertyParamsBaseWithOffset&)Prop)
             {}
         };
+        DECLARE_SIMPLE_PROPERTY(FText, FFakeTextProperty, Text); // should be FTextProperty, but its constructor is not exported in 5.3
+#else
+        DECLARE_SIMPLE_PROPERTY(FText, FTextProperty, Text);
+#endif
 
         DECLARE_SIMPLE_PROPERTY(uint8, FByteProperty, Byte);
         DECLARE_SIMPLE_PROPERTY(double, FDoubleProperty, Double);
@@ -97,7 +103,6 @@ namespace UnrealMvvm_Impl
         DECLARE_SIMPLE_PROPERTY(int32, FIntProperty, Int);
         DECLARE_SIMPLE_PROPERTY(FName, FNameProperty, Name);
         DECLARE_SIMPLE_PROPERTY(FString, FStrProperty, Str);
-        DECLARE_SIMPLE_PROPERTY(FText, FFakeTextProperty, Text); // should be FTextProperty, but its constructor is not exported in 5.3
         DECLARE_SIMPLE_PROPERTY(uint16, FUInt16Property, UInt16);
         DECLARE_SIMPLE_PROPERTY(uint32, FUInt32Property, UInt32);
         DECLARE_SIMPLE_PROPERTY(uint64, FUInt64Property, UInt64);

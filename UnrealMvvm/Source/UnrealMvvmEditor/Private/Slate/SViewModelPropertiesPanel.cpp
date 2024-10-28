@@ -20,6 +20,7 @@
 #include "DetailColumnSizeData.h"
 
 #include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Misc/EngineVersionComparison.h"
 
 void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<FBlueprintEditor> Editor)
 {
@@ -56,7 +57,9 @@ void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<F
             [
                 // ViewModel properties list
                 SAssignNew(PropertyList, SPropertyListView)
+#if UE_VERSION_OLDER_THAN(5,5,0)
                 .ItemHeight(26)
+#endif
                 .ListItemsSource(&Properties)
                 .SelectionMode(ESelectionMode::None)
                 .OnGenerateRow(this, &ThisClass::MakeViewModelPropertyRow)
