@@ -55,6 +55,12 @@ private:
     friend class UK2Node_ViewModelGetSet;
 
     UFUNCTION(BlueprintPure, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
+    static void GetViewModelPropertyValue(UBaseViewModel* ViewModel, FName PropertyName, int32& Value, bool& HasValue)
+    {
+        checkNoEntry();
+    }
+    
+    UFUNCTION(BlueprintPure, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
     static void GetViewModelPropertyValueFromWidget(UUserWidget* View, FName PropertyName, int32& Value, bool& HasValue)
     {
         checkNoEntry();
@@ -78,6 +84,12 @@ private:
         checkNoEntry();
     }
 
+    UFUNCTION(BlueprintCallable, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
+    static void SetViewModelPropertyValue(UBaseViewModel* ViewModel, FName PropertyName, int32 Value, bool HasValue)
+    {
+        checkNoEntry();
+    }
+
     UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
     static UBaseViewModel* GetViewModelFromWidget(UUserWidget* View);
 
@@ -90,10 +102,12 @@ private:
     UFUNCTION(BlueprintCallable, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
     static void SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel);
 
+    DECLARE_FUNCTION(execGetViewModelPropertyValue);
     DECLARE_FUNCTION(execGetViewModelPropertyValueFromWidget);
     DECLARE_FUNCTION(execSetViewModelPropertyValueToWidget);
     DECLARE_FUNCTION(execGetViewModelPropertyValueFromActor);
     DECLARE_FUNCTION(execSetViewModelPropertyValueToActor);
+    DECLARE_FUNCTION(execSetViewModelPropertyValue);
 
     template <typename TView, typename TViewComponent>
     static UBaseViewModel* GetViewModelInternal(TView* View);
@@ -105,6 +119,9 @@ private:
     DECLARE_FUNCTION(execGetViewModelPropertyValueInternal);
 
     template<typename TView>
+    DECLARE_FUNCTION(execSetViewModelPropertyValueInternal);
+
+    DECLARE_FUNCTION(execGetViewModelPropertyValueInternal);
     DECLARE_FUNCTION(execSetViewModelPropertyValueInternal);
 
     template <typename TView>
