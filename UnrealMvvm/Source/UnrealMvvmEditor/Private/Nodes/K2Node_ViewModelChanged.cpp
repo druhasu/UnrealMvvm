@@ -10,6 +10,7 @@
 #include "K2Node_CustomEvent.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintEventNodeSpawner.h"
+#include "Misc/EngineVersionComparison.h"
 
 const FName UK2Node_ViewModelChanged::OldViewModelPinName{ "OldViewModel" };
 const FName UK2Node_ViewModelChanged::NewViewModelPinName{ "NewViewModel" };
@@ -40,7 +41,11 @@ void UK2Node_ViewModelChanged::ExpandNode(FKismetCompilerContext& CompilerContex
         return Result;
     };
 
+#if UE_VERSION_OLDER_THAN(5,5,0)
     UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(this, ExecPin, SourceGraph);
+#else
+    UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateNode<UK2Node_CustomEvent>(this, SourceGraph);
+#endif
     CustomEvent->UserDefinedPins.Emplace(MakePinInfo(OldViewModelPinName));
     CustomEvent->UserDefinedPins.Emplace(MakePinInfo(NewViewModelPinName));
     CustomEvent->CustomFunctionName = FBaseViewComponentImpl::ViewModelChangedFunctionName;

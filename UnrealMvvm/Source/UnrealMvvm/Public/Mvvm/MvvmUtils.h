@@ -3,6 +3,11 @@
 #pragma once
 
 #include "Containers/Array.h"
+#include "Misc/EngineVersionComparison.h"
+
+#ifndef UE_REQUIRES
+#define UE_REQUIRES , TEMPLATE_REQUIRES
+#endif
 
 namespace MvvmUtils
 {
@@ -34,7 +39,7 @@ namespace MvvmUtils
      * ViewModels are created via provided Factory function. It has following signature: ViewModel* ()
      * Models are assigned via call to `ViewModel->SetModel(Model);`
      */
-    template <typename TViewModel, typename TAllocator, typename TModels, typename TFactory, TEMPLATE_REQUIRES(TIsInvocable<TFactory>::Value)>
+    template <typename TViewModel, typename TAllocator, typename TModels, typename TFactory UE_REQUIRES(TIsInvocable<TFactory>::Value)>
     void SyncViewModelCollection(TArray<TViewModel*, TAllocator>& ViewModels, const TModels& Models, TFactory&& Factory)
     {
         SyncViewModelCollection(ViewModels, Models, Factory, [](auto* ViewModel, auto& Model) { ViewModel->SetModel(Model); });
@@ -51,7 +56,7 @@ namespace MvvmUtils
      * ViewModels are created via NewObject<ViewModelType>()
      * Models are assigned via call to provided Setter function. It has following signature: void (ViewModelType* ViewModel, const ModelType& Model)
      */
-    template <typename TViewModel, typename TAllocator, typename TModels, typename TSetter, TEMPLATE_REQUIRES(!TIsInvocable<TSetter>::Value)>
+    template <typename TViewModel, typename TAllocator, typename TModels, typename TSetter UE_REQUIRES(!TIsInvocable<TSetter>::Value)>
     void SyncViewModelCollection(TArray<TViewModel*, TAllocator>& ViewModels, const TModels& Models, TSetter&& Setter)
     {
         SyncViewModelCollection(ViewModels, Models, [] { return NewObject<TViewModel>(); }, Setter);
@@ -80,7 +85,11 @@ namespace MvvmUtils
 
         if (ViewModels.Num() > Models.Num())
         {
+#if UE_VERSION_OLDER_THAN(5,5,0)
             ViewModels.RemoveAt(Models.Num(), ViewModels.Num() - Models.Num(), false);
+#else
+            ViewModels.RemoveAt(Models.Num(), ViewModels.Num() - Models.Num(), EAllowShrinking::No);
+#endif
         }
 
         int32 Index = 0;
