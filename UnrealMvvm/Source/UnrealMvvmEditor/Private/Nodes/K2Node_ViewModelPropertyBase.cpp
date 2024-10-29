@@ -78,25 +78,38 @@ void UK2Node_ViewModelPropertyBase::ValidateNodeDuringCompilation(FCompilerResul
 
 bool UK2Node_ViewModelPropertyBase::IsActionFilteredOut(class FBlueprintActionFilter const& Filter)
 {
-    bool bFoundCompatible = false;
+    // allowed contexts:
+    //  - properties of ViewModel of current Blueprint
+    //  - properties of ViewModel contained in current Pin
+    //  - properties that have same value type as current Pin
+    //
+    // otherwise it is filtered
 
-    // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
-    for (UBlueprint* Blueprint : Filter.Context.Blueprints)
+
+    if (Filter.Context.Pins.IsEmpty())
     {
-        UClass* BlueprintViewClass = Blueprint->GeneratedClass;
-        UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(BlueprintViewClass);
+        bool bFoundCompatible = false;
 
-        if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
+        // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
+        for (UBlueprint* Blueprint : Filter.Context.Blueprints)
         {
-            bFoundCompatible = true;
+            UClass* BlueprintViewClass = Blueprint->GeneratedClass;
+            UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(BlueprintViewClass);
+
+            if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
+            {
+                bFoundCompatible = true;
+            }
+            else
+            {
+                return true;
+            }
         }
-        else
-        {
-            return true;
-        }
+
+        return !bFoundCompatible;
     }
 
-    return !bFoundCompatible;
+    return false;
 }
 
 FText UK2Node_ViewModelPropertyBase::GetMenuCategory() const

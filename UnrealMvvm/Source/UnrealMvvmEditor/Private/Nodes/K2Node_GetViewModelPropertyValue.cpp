@@ -2,13 +2,9 @@
 
 #include "K2Node_GetViewModelPropertyValue.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
-#include "BlueprintNodeSpawner.h"
-#include "EditorCategoryUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
-#include "Kismet2/BlueprintEditorUtils.h"
 
 void UK2Node_GetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
@@ -16,7 +12,7 @@ void UK2Node_GetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& Compi
 
     if (FindPin(ViewModelPropertyName)->LinkedTo.Num() > 0)
     {
-        FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this)->GeneratedClass);
+        FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue();
         FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
     }
 }
@@ -44,6 +40,8 @@ void UK2Node_GetViewModelPropertyValue::AllocateDefaultPins()
             CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
         }
     }
+
+    FViewModelPropertyNodeHelper::AddInputViewModelPin(*this, ViewModelOwnerClass, bShowViewModelPin);
 }
 
 void UK2Node_GetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const
@@ -72,7 +70,7 @@ FText UK2Node_GetViewModelPropertyValue::GetNodeTitleForCache(ENodeTitleType::Ty
         : FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Title", "Get {0}"), FText::FromName(ViewModelPropertyName));
 }
 
-FText UK2Node_GetViewModelPropertyValue::GetTooltipTextForCache() const 
+FText UK2Node_GetViewModelPropertyValue::GetTooltipTextForCache() const
 {
     return FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Tooltip", "Returns the value of property {0}"), FText::FromName(ViewModelPropertyName));
 }

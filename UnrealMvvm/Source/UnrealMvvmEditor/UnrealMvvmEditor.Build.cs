@@ -32,6 +32,7 @@ public class UnrealMvvmEditor : ModuleRules
 				"KismetCompiler",
 				"UnrealEd",
 				"UnrealMvvm",
+				"ToolMenus",
 				// ... add private dependencies that you statically link with here ...
 			});
 	}

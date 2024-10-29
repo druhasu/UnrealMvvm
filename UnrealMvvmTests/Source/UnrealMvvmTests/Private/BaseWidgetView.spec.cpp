@@ -564,6 +564,34 @@ void FBaseWidgetViewSpec::Define()
 
             TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
         });
+
+        It("Should Get Value From ViewModel via K2Node Explicit", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_ExplicitGetSet.BP_TestBaseWidgetView_ExplicitGetSet_C"));
+
+            UTestBaseWidgetViewBlueprint* View = CreateWidget<UTestBaseWidgetViewBlueprint>(Helper.World, WidgetClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            ViewModel->SetIntValue(123);
+
+            TestEqual("Value from ViewModel", View->GetValueFromViewModel(), 123);
+        });
+
+        It("Should Set Value To ViewModel via K2Node Explicit", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_ExplicitGetSet.BP_TestBaseWidgetView_ExplicitGetSet_C"));
+
+            UTestBaseWidgetViewBlueprint* View = CreateWidget<UTestBaseWidgetViewBlueprint>(Helper.World, WidgetClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            View->SetValueToViewModel(123);
+
+            TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
+        });
     });
 }
 

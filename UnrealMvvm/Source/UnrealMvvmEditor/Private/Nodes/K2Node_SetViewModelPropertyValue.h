@@ -2,16 +2,16 @@
 
 #pragma once
 
-#include "K2Node_ViewModelPropertyBase.h"
+#include "K2Node_ViewModelPropertyValueGetSet.h"
 #include "K2Node_SetViewModelPropertyValue.generated.h"
 
 /*
  * Custom node that sets value to a ViewModel property.
- * Intended to be used inside WidgetBlueprint.
+ * Intended to be used inside WidgetBlueprint or Actor blueprint.
  * This node registers custom Menu actions for all properties of a ViewModel
  */
 UCLASS()
-class UK2Node_SetViewModelPropertyValue : public UK2Node_ViewModelPropertyBase
+class UK2Node_SetViewModelPropertyValue : public UK2Node_ViewModelPropertyValueGetSet
 {
     GENERATED_BODY()
 

@@ -385,6 +385,34 @@ void FBaseActorViewSpec::Define()
 
             TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
         });
+
+        It("Should Get Value From ViewModel via K2Node Explicit", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseActorView_ExplicitGetSet.BP_TestBaseActorView_ExplicitGetSet_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            ViewModel->SetIntValue(123);
+
+            TestEqual("Value from ViewModel", View->GetValueFromViewModel(), 123);
+        });
+
+        It("Should Set Value To ViewModel via K2Node Explicit", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseActorView_ExplicitGetSet.BP_TestBaseActorView_ExplicitGetSet_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            View->SetValueToViewModel(123);
+
+            TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
+        });
     });
 }
 
@@ -406,12 +434,6 @@ TActor* FBaseActorViewSpec::CreateActor(UWorld* World, UClass* ActorClass) const
     }
 
     TActor* Result = World->SpawnActor<TActor>(ActorClass);
-
-    // emulate what UWorld usually does, after spawnig actor
-    // we have to do it manually, because our test Worlds are not fully initialized
-    /*Result->PreInitializeComponents();
-    Result->InitializeComponents();
-    Result->PostInitializeComponents();*/
 
     return Result;
 }

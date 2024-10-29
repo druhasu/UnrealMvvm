@@ -1,19 +1,19 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "ViewModelPropertyNodeHelper.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
-#include "Mvvm/BaseViewModel.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "KismetCompiler.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "EdGraph/EdGraphNode.h"
-#include "BlueprintNodeSpawner.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_Self.h"
 
 const FName FViewModelPropertyNodeHelper::HasValuePinName("HasValue");
-const FName FViewModelPropertyNodeHelper::InputViewModelPinName("ViewModel");
+const FName FViewModelPropertyNodeHelper::ViewModelPinName("ViewModel");
+const FName FViewModelPropertyNodeHelper::ViewPinName("View");
 
 bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMvvm_Impl::FViewModelPropertyReflection& Property)
 {
@@ -162,50 +162,46 @@ void FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(const FName& Fu
     GetSetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FunctionName, UMvvmBlueprintLibrary::StaticClass());
     GetSetViewModelPropertyValueCall->AllocateDefaultPins();
 
-    UK2Node_Self* Self = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(SourceNode, SourceGraph);
-    Self->AllocateDefaultPins();
-
-    UEdGraphPin* SelfOutPin = Self->FindPin(UEdGraphSchema_K2::PN_Self);
-    UEdGraphPin* ViewInPin = GetSetViewModelPropertyValueCall->FindPin(TEXT("View"));
-    Schema->TryCreateConnection(SelfOutPin, ViewInPin);
-
-    ConnectOutputPins(GetSetViewModelPropertyValueCall, CompilerContext, SourceNode, SourceGraph, Schema, ValuePin, ViewModelPropertyName);
-}
-
-void FViewModelPropertyNodeHelper::SpawnExplicitGetSetPropertyValueNodes(const FName& FunctionName, FKismetCompilerContext& CompilerContext, UEdGraphNode* SourceNode, UEdGraph* SourceGraph, const FName& ViewModelPropertyName)
-{
-    UEdGraphPin* ValuePin = SourceNode->FindPin(ViewModelPropertyName);
-    if (ValuePin == nullptr)
+    UEdGraphPin* GetSetViewModelPropertyValueInPin = GetSetViewModelPropertyValueCall->FindPin(ViewModelPinName);
+    UEdGraphPin* InputViewModelPin = SourceNode->FindPin(ViewModelPinName);
+    if (InputViewModelPin != nullptr && InputViewModelPin->HasAnyConnections())
     {
-        // if SourceNode is referencing a removed property, the pin will not exist
-        // no need to expand anything in this case
-        return;
+        // use connections from ViewModel pin
+        for (UEdGraphPin* LinkedOutPin : InputViewModelPin->LinkedTo)
+        {
+            check(LinkedOutPin->Direction == EGPD_Output);
+            Schema->TryCreateConnection(LinkedOutPin, GetSetViewModelPropertyValueInPin);
+        }
     }
-
-    const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
-    UEdGraphPin* InputViewModelPin = SourceNode->FindPin(InputViewModelPinName);
-    if (!InputViewModelPin || InputViewModelPin->LinkedTo.IsEmpty())
+    else
     {
-        return;
-    }
+        // get ViewModel from current View: GetSelf -> GetViewModelFromWidget/GetViewModelFromActor
+        UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(SourceNode);
+        FName GetViewModelFunctionName = Blueprint->GeneratedClass->IsChildOf<UUserWidget>() ?
+            GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromWidget) :
+            GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromActor);
 
-    UK2Node_CallFunction* GetSetViewModelPropertyValueCall =
-        CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(SourceNode, SourceGraph);
+        // GetViewModelFromWidget() / GetViewModelFromActor()
+        UK2Node_CallFunction* GetViewModelCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(SourceNode, SourceGraph);
+        GetViewModelCall->FunctionReference.SetExternalMember(GetViewModelFunctionName, UMvvmBlueprintLibrary::StaticClass());
+        GetViewModelCall->AllocateDefaultPins();
 
-    GetSetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FunctionName, UMvvmBlueprintLibrary::StaticClass());
-    GetSetViewModelPropertyValueCall->AllocateDefaultPins();
+        // GetSelf()
+        UK2Node_Self* Self = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(SourceNode, SourceGraph);
+        Self->AllocateDefaultPins();
 
-    UEdGraphPin* GetSetViewModelInPin = GetSetViewModelPropertyValueCall->FindPin(TEXT("ViewModel"));
-    for (UEdGraphPin* LinkedOutPin : InputViewModelPin->LinkedTo)
-    {
-        check(LinkedOutPin->Direction == EGPD_Output);
-        Schema->TryCreateConnection(LinkedOutPin, GetSetViewModelInPin);
+        UEdGraphPin* SelfOutPin = Self->FindPin(UEdGraphSchema_K2::PN_Self);
+        UEdGraphPin* ViewInPin = GetViewModelCall->FindPin(ViewPinName);
+        Schema->TryCreateConnection(SelfOutPin, ViewInPin);
+
+        UEdGraphPin* ViewModelOutPin = GetViewModelCall->GetReturnValuePin();
+        Schema->TryCreateConnection(ViewModelOutPin, GetSetViewModelPropertyValueInPin);
     }
 
     ConnectOutputPins(GetSetViewModelPropertyValueCall, CompilerContext, SourceNode, SourceGraph, Schema, ValuePin, ViewModelPropertyName);
 }
 
-void FViewModelPropertyNodeHelper::AddInputViewModelPin(UEdGraphNode& Node, UClass* ViewModelClass)
+void FViewModelPropertyNodeHelper::AddInputViewModelPin(UEdGraphNode& Node, UClass* ViewModelClass, bool bShowPin)
 {
     // create input pin for ViewModel parameter
     FEdGraphPinType InputPinType;
@@ -213,89 +209,28 @@ void FViewModelPropertyNodeHelper::AddInputViewModelPin(UEdGraphNode& Node, UCla
     InputPinType.PinSubCategoryObject = ViewModelClass;
     InputPinType.bIsConst = true;
 
-    Node.CreatePin(EGPD_Input, InputPinType, InputViewModelPinName);
+    UEdGraphPin* NewPin = Node.CreatePin(EGPD_Input, InputPinType, ViewModelPinName);
+    NewPin->SafeSetHidden(!bShowPin);
 }
 
-bool FViewModelPropertyNodeHelper::IsActionValidInContext(const FBlueprintActionFilter& Filter, const UClass* ViewModelOwnerClass)
+bool FViewModelPropertyNodeHelper::IsBlueprintViewModelCompatible(const UEdGraphNode* Node, UClass* ViewModelClass)
 {
-    bool bFoundCompatible = false;
-
-    // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
-    for (UBlueprint* Blueprint : Filter.Context.Blueprints)
+    UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNode(Node);
+    if (Blueprint == nullptr)
     {
-        UClass* ViewClass = Blueprint->GeneratedClass;
-        UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(ViewClass);
-
-        if (ViewModelClass && ViewModelOwnerClass->IsChildOf(ViewModelClass))
-        {
-            bFoundCompatible = true;
-        }
-        else
-        {
-            if (Filter.Context.Pins.IsEmpty())
-            {
-                // Check all nested ViewModel fields of our ViewModel
-                for (UnrealMvvm_Impl::FViewModelPropertyIterator It(ViewModelClass, false); It; ++It)
-                {
-                    const UnrealMvvm_Impl::FViewModelPropertyReflection& Property = *It;
-                    if (Property.PinCategoryType == UnrealMvvm_Impl::EPinCategoryType::Object ||
-                        Property.PinCategoryType == UnrealMvvm_Impl::EPinCategoryType::Interface ||
-                        Property.PinCategoryType == UnrealMvvm_Impl::EPinCategoryType::SoftObject)
-                    {
-                        if (UClass* NestedPropertyClass = Cast<UClass>(Property.GetPinSubCategoryObject()); NestedPropertyClass && ViewModelOwnerClass->IsChildOf(NestedPropertyClass))
-                        {
-                            bFoundCompatible = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Search currently selected pins for a corresponding ViewModel class
-                for (const UEdGraphPin* Pin : Filter.Context.Pins)
-                {
-                    const FEdGraphPinType& PinType = Pin->PinType;
-                    if (PinType.PinCategory == UEdGraphSchema_K2::PC_Object &&
-                        PinType.PinSubCategoryObject.IsValid() &&
-                        PinType.PinSubCategoryObject == ViewModelOwnerClass)
-                    {
-                        bFoundCompatible = true;
-                        break;
-                    }
-                }
-            }
-        }
+        // not compatible, because not inside a blueprint
+        return false;
     }
 
-    return bFoundCompatible;
-}
-
-void FViewModelPropertyNodeHelper::ValidateInputViewModelPin(const UEdGraphNode* Node, FCompilerResultsLog& MessageLog)
-{
-    UEdGraphPin* InputPin = Node->FindPin(InputViewModelPinName);
-    check(InputPin);
-    if (!InputPin->HasAnyConnections())
+    UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->GeneratedClass);
+    if (BlueprintViewModelClass == nullptr)
     {
-        FText Message = NSLOCTEXT("UnrealMvvm", "Error.InputViewModelIsRequired", "Missing input ViewModel for node @@");
-        MessageLog.Error(*Message.ToString(), Node);
+        // not compatible, because there is no ViewModel for current Blueprint class
+        return false;
     }
-}
 
-FName FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue(UClass* ViewClass)
-{
-    static const FName GetFromWidgetName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValueFromWidget));
-    static const FName GetFromActorName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValueFromActor));
-
-    return ViewClass->IsChildOf<UUserWidget>() ? GetFromWidgetName : GetFromActorName;
-}
-
-FName FViewModelPropertyNodeHelper::GetFunctionNameForSetPropertyValue(UClass* ViewClass)
-{
-    static const FName SetToWidgetName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValueToWidget));
-    static const FName SetToActorName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValueToActor));
-
-    return ViewClass->IsChildOf<UUserWidget>() ? SetToWidgetName : SetToActorName;
+    // compatible, if Blueprint has ViewModel of derived class
+    return BlueprintViewModelClass->IsChildOf(ViewModelClass);
 }
 
 FName FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue()

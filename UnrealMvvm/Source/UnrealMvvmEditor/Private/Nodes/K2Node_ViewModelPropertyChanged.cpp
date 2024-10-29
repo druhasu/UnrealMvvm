@@ -34,7 +34,7 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
             CustomEvent->CustomFunctionName = UnrealMvvm_Impl::FViewModelPropertyNamesCache::MakeCallbackName(ViewModelPropertyName);
             CustomEvent->AllocateDefaultPins();
 
-            FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this)->GeneratedClass);
+            FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue();
             FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
 
             const UEdGraphSchema_K2* Schema = CompilerContext.GetSchema();
