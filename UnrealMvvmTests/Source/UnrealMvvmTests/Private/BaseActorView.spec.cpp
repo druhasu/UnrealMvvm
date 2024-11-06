@@ -4,12 +4,14 @@
 
 #include "TestBaseActorView.h"
 #include "TestBaseViewModel.h"
+#include "BindingWorkerTestViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
 
 #include "TempWorldHelper.h"
 
 BEGIN_DEFINE_SPEC(FBaseActorViewSpec, "UnrealMvvm.BaseActorView", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 
+ATestBaseActorViewPureNoBind* CreateNativeBasedView(UWorld* World, bool bWithBindings = true) const;
 ATestBaseActorViewBlueprint* CreateBlueprintBasedView(UWorld* World, bool bWithBindings = true) const;
 
 template<typename TActor>
@@ -19,7 +21,7 @@ END_DEFINE_SPEC(FBaseActorViewSpec)
 
 void FBaseActorViewSpec::Define()
 {
-    Describe("TBaseView<> derived", [this]
+    Describe("TBaseView<> derived Native", [this]
     {
         It("Should Construct Actor", [this]
         {
@@ -171,6 +173,165 @@ void FBaseActorViewSpec::Define()
             FTempWorldHelper Helper;
 
             ATestBaseActorViewPureNoBind* View = CreateActor<ATestBaseActorViewPureNoBind>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            View->SetViewModel(ViewModel);
+            View->DispatchBeginPlay();
+        });
+    });
+
+    Describe("TBaseView<> derived in Blueprint", [this]
+    {
+        It("Should Construct Actor", [this]
+        {
+            // this test just checks our assumptions about how Actor Views are constructed and destroyed
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            TestNotNull("View", View);
+
+            TestTrue("View is Initialized", View->IsActorInitialized());
+            TestFalse("View HasBegunPlay", View->HasActorBegunPlay());
+
+            View->DispatchBeginPlay();
+            TestTrue("View HasBegunPlay", View->HasActorBegunPlay());
+
+            View->RouteEndPlay(EEndPlayReason::EndPlayInEditor);
+            TestFalse("View HasBegunPlay", View->HasActorBegunPlay());
+        });
+
+        It("Should Receive Changes When Constructed And Then Set ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            TestEqual("MyValue is default", View->MyValue, 0);
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+            TestEqual("MyValue", View->MyValue, 1);
+
+            ViewModel->SetIntValue(2);
+            TestEqual("MyValue", View->MyValue, 2);
+        });
+
+        It("Should Receive Changes When Set ViewModel And Then Constructed", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            TestEqual("MyValue is default", View->MyValue, 0);
+
+            View->SetViewModel(ViewModel);
+            View->DispatchBeginPlay();
+            TestEqual("MyValue is default", View->MyValue, 1);
+
+            ViewModel->SetIntValue(2);
+            TestEqual("MyValue is updated", View->MyValue, 2);
+        });
+
+        It("Should Not Receive Changes When Only Constructed", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            View->DispatchBeginPlay();
+
+            TestEqual("MyValue is default", View->MyValue, 0);
+
+            ViewModel->SetIntValue(1);
+            TestEqual("MyValue is default", View->MyValue, 0);
+        });
+
+        It("Should Not Receive Changes When Only Set ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            View->SetViewModel(ViewModel);
+
+            TestEqual("MyValue is default", View->MyValue, 0);
+
+            ViewModel->SetIntValue(1);
+            TestEqual("MyValue is default", View->MyValue, 0);
+        });
+
+        It("Should Not Receive Changes After Destructed", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+
+            ViewModel->SetIntValue(1);
+
+            View->RouteEndPlay(EEndPlayReason::EndPlayInEditor);
+            ViewModel->SetIntValue(2);
+            TestEqual("MyValue", View->MyValue, 1);
+        });
+
+        It("Should Not Receive Changes After Unset ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+
+            ViewModel->SetIntValue(1);
+
+            View->SetViewModel(nullptr);
+            ViewModel->SetIntValue(2);
+            TestEqual("MyValue", View->MyValue, 1);
+        });
+
+        It("Should Return Untyped ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            View->SetViewModel(ViewModel);
+
+            TestEqual("Untyped ViewModel", UMvvmBlueprintLibrary::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
+        });
+
+        It("Should Call OnViewModelChanged", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            View->SetViewModel(ViewModel);
+            TestNull("OldViewModel", View->OldViewModel);
+            TestEqual("NewViewModel", View->NewViewModel, ViewModel);
+
+            View->SetViewModel(nullptr);
+            TestEqual("OldViewModel", View->OldViewModel, ViewModel);
+            TestNull("NewViewModel", View->NewViewModel);
+        });
+
+        It("Should Support Views Without Bindings", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPureNoBind* View = CreateNativeBasedView(Helper.World, false);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->SetViewModel(ViewModel);
@@ -385,14 +546,92 @@ void FBaseActorViewSpec::Define()
 
             TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
         });
+
+        It("Should Get Value From ViewModel via K2Node Explicit", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_ExplicitGetSet.BP_TestActorView_ExplicitGetSet_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            ViewModel->SetIntValue(123);
+
+            TestEqual("Value from ViewModel", View->GetValueFromViewModel(), 123);
+        });
+
+        It("Should Set Value To ViewModel via K2Node Explicit", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_ExplicitGetSet.BP_TestActorView_ExplicitGetSet_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            View->SetValueToViewModel(123);
+
+            TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
+        });
+
+        It("Should receive changes when property in path changes", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_BindingWorker.BP_TestActorView_BindingWorker_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
+            UBindingWorkerViewModel_FirstChild* FirstChildViewModel = NewObject<UBindingWorkerViewModel_FirstChild>();
+            UBindingWorkerViewModel_SecondChild* SecondChildViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
+
+            RootViewModel->SetChild(FirstChildViewModel);
+            FirstChildViewModel->SetChild(SecondChildViewModel);
+
+            UMvvmBlueprintLibrary::SetViewModel(View, RootViewModel);
+            View->DispatchBeginPlay();
+
+            UBindingWorkerViewModel_SecondChild* SecondChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
+            SecondChildAlternativeViewModel->SetIntValue(123);
+            FirstChildViewModel->SetChild(SecondChildAlternativeViewModel);
+
+            TestEqual("Value from ViewModel", View->MyValue, 123);
+        });
+
+        It("Should receive changes in derived blueprint", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_BlueprintBased_Derived.BP_TestActorView_BlueprintBased_Derived_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            View->DispatchBeginPlay();
+
+            ViewModel->SetIntValue(1);
+            ViewModel->SetFloatValue(2.f);
+
+            TestEqual("MyValue in View", View->MyValue, 1);
+            TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
+        });
     });
+}
+
+ATestBaseActorViewPureNoBind* FBaseActorViewSpec::CreateNativeBasedView(UWorld* World, bool bWithBindings) const
+{
+    UClass* ActorClass = bWithBindings ?
+        StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_NativeBased.BP_TestActorView_NativeBased_C")) :
+        StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_NativeBased_NoBind.BP_TestActorView_NativeBased_NoBind_C"));
+
+    return CreateActor<ATestBaseActorViewPureNoBind>(World, ActorClass);
 }
 
 ATestBaseActorViewBlueprint* FBaseActorViewSpec::CreateBlueprintBasedView(UWorld* World, bool bWithBindings) const
 {
     UClass* ActorClass = bWithBindings ?
-        StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseActorView.BP_TestBaseActorView_C")) :
-        StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseActorView_NoBind.BP_TestBaseActorView_NoBind_C"));
+        StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_BlueprintBased.BP_TestActorView_BlueprintBased_C")) :
+        StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_BlueprintBased_NoBind.BP_TestActorView_BlueprintBased_NoBind_C"));
 
     return CreateActor<ATestBaseActorViewBlueprint>(World, ActorClass);
 }
@@ -406,12 +645,6 @@ TActor* FBaseActorViewSpec::CreateActor(UWorld* World, UClass* ActorClass) const
     }
 
     TActor* Result = World->SpawnActor<TActor>(ActorClass);
-
-    // emulate what UWorld usually does, after spawnig actor
-    // we have to do it manually, because our test Worlds are not fully initialized
-    /*Result->PreInitializeComponents();
-    Result->InitializeComponents();
-    Result->PostInitializeComponents();*/
 
     return Result;
 }

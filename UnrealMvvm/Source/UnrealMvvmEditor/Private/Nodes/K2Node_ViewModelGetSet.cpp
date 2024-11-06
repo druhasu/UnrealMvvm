@@ -3,25 +3,25 @@
 #include "K2Node_ViewModelGetSet.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/Actor.h"
+#include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "GraphEditorSettings.h"
 #include "KismetCompiler.h" // for FKismetCompilerContext
 #include "K2Node_CallFunction.h"
 #include "K2Node_DynamicCast.h"
+#include "K2Node_Self.h"
 
-const FName UK2Node_ViewModelGetSet::ViewPinName{ "View" };
-const FName UK2Node_ViewModelGetSet::ViewModelPinName{ "ViewModel" };
 const FText UK2Node_ViewModelGetSet::GetViewModelNameText = FText::FromString("Get ViewModel");
 const FText UK2Node_ViewModelGetSet::SetViewModelNameText = FText::FromString("Set ViewModel");
 const FText UK2Node_ViewModelGetSet::NodeCategory = FText::FromString("View Model");
 
 void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
-    UClass* ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(GetViewClass());
+    UClass* ViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(GetViewClass());
     if (!ViewModelClass)
     {
         // do not expand if ViewModel class is unknown
@@ -33,16 +33,26 @@ void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext
     CallFunctionNode->FunctionReference.SetExternalMember(GetFunctionName(), UMvvmBlueprintLibrary::StaticClass());
     CallFunctionNode->AllocateDefaultPins();
 
-    // connect View pin of this node to GetViewModel/SetViewModel function call
-    UEdGraphPin* SrcViewPin = FindPin(ViewPinName);
-    UEdGraphPin* DstViewPin = CallFunctionNode->FindPin(ViewPinName);
-    CompilerContext.MovePinLinksToIntermediate(*SrcViewPin, *DstViewPin);
+    UEdGraphPin* SrcViewPin = FindPin(FViewModelPropertyNodeHelper::ViewPinName);
+    UEdGraphPin* DstViewPin = CallFunctionNode->FindPin(FViewModelPropertyNodeHelper::ViewPinName);
+    if (SrcViewPin->HasAnyConnections())
+    {
+        // connect View pin of this node to GetViewModel/SetViewModel function call
+        CompilerContext.MovePinLinksToIntermediate(*SrcViewPin, *DstViewPin);
+    }
+    else
+    {
+        // create "Get Self" node and connect it to GetViewModel/SetViewModel function call
+        UK2Node_Self* SelfNode = CompilerContext.SpawnIntermediateNode<UK2Node_Self>(this, SourceGraph);
+        SelfNode->AllocateDefaultPins();
+        CompilerContext.GetSchema()->TryCreateConnection(SelfNode->FindPin(UEdGraphSchema_K2::PN_Self), DstViewPin);
+    }
 
     if (bIsSetter)
     {
         // connect ViewModel pin of this node to SetViewModel input pin
-        UEdGraphPin * ScrViewModelPin = FindPin(ViewModelPinName);
-        UEdGraphPin * DstViewModelPin = CallFunctionNode->FindPin(ViewModelPinName);
+        UEdGraphPin* ScrViewModelPin = FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
+        UEdGraphPin* DstViewModelPin = CallFunctionNode->FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
         CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
     }
     else
@@ -59,8 +69,8 @@ void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext
         CompilerContext.GetSchema()->TryCreateConnection(CallFunctionResult, CastSource);
 
         // connect Cast result to output of this node
-        UEdGraphPin * ScrViewModelPin = FindPin(ViewModelPinName);
-        UEdGraphPin * DstViewModelPin = CastNode->GetCastResultPin();
+        UEdGraphPin* ScrViewModelPin = FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
+        UEdGraphPin* DstViewModelPin = CastNode->GetCastResultPin();
         CompilerContext.MovePinLinksToIntermediate(*ScrViewModelPin, *DstViewModelPin);
     }
 
@@ -76,7 +86,7 @@ void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext
 
 void UK2Node_ViewModelGetSet::NotifyPinConnectionListChanged(UEdGraphPin* Pin)
 {
-    if (Pin->PinName == ViewPinName)
+    if (Pin->PinName == FViewModelPropertyNodeHelper::ViewPinName)
     {
         UpdateViewModelPinType();
     }
@@ -122,14 +132,27 @@ void UK2Node_ViewModelGetSet::AllocateDefaultPins()
     }
 
     // Create View input pin
-    CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), ViewPinName);
+    CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UObject::StaticClass(), FViewModelPropertyNodeHelper::ViewPinName);
 
     // Create ViewModel input or output pin
-    CreatePin(bIsSetter ? EGPD_Input : EGPD_Output, UEdGraphSchema_K2::PC_Wildcard, nullptr, ViewModelPinName);
+    CreatePin(bIsSetter ? EGPD_Input : EGPD_Output, UEdGraphSchema_K2::PC_Wildcard, nullptr, FViewModelPropertyNodeHelper::ViewModelPinName);
 
     // there is no convenient Init method in K2Node, so we have to resubscribe every time pins are created
-    FViewModelRegistry::ViewClassChanged.RemoveAll(this);
-    FViewModelRegistry::ViewClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
+    FViewRegistry::ViewModelClassChanged.RemoveAll(this);
+    FViewRegistry::ViewModelClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
+
+    UpdateViewModelPinType();
+}
+
+FString UK2Node_ViewModelGetSet::GetPinMetaData(FName InPinName, FName InKey)
+{
+    // force our View pin to be drawn as "self" pin
+    if (InPinName == FViewModelPropertyNodeHelper::ViewPinName && InKey == FBlueprintMetadata::MD_DefaultToSelf)
+    {
+        return FViewModelPropertyNodeHelper::ViewPinName.ToString();
+    }
+
+    return Super::GetPinMetaData(InPinName, InKey);
 }
 
 FText UK2Node_ViewModelGetSet::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -163,19 +186,21 @@ void UK2Node_ViewModelGetSet::UpdateViewModelPinType()
 {
     using namespace UnrealMvvm_Impl;
 
-    UEdGraphPin* Pin = FindPin(ViewPinName);
+    UEdGraphPin* Pin = FindPin(FViewModelPropertyNodeHelper::ViewPinName);
 
-    if (Pin->HasAnyConnections())
+    UClass* ViewClass = GetViewClass();
+
+    if (ViewClass != nullptr)
     {
-        UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(GetViewClass());
+        UClass* ViewModelClass = FViewRegistry::GetViewModelClass(ViewClass);
 
-        UEdGraphPin* ViewModelPin = FindPin(ViewModelPinName);
+        UEdGraphPin* ViewModelPin = FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
         ViewModelPin->PinType.PinCategory = UEdGraphSchema_K2::PC_Object;
         ViewModelPin->PinType.PinSubCategoryObject = ViewModelClass ? ViewModelClass : UBaseViewModel::StaticClass();
     }
     else
     {
-        UEdGraphPin* ViewModelPin = FindPin(ViewModelPinName);
+        UEdGraphPin* ViewModelPin = FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
         ViewModelPin->PinType.PinCategory = UEdGraphSchema_K2::PC_Wildcard;
         ViewModelPin->PinType.PinSubCategoryObject = nullptr;
     }
@@ -183,9 +208,16 @@ void UK2Node_ViewModelGetSet::UpdateViewModelPinType()
 
 UClass* UK2Node_ViewModelGetSet::GetViewClass() const
 {
-    UEdGraphPin* ViewPin = FindPin(ViewPinName);
+    UEdGraphPin* ViewPin = FindPin(FViewModelPropertyNodeHelper::ViewPinName);
+    UBlueprint* Blueprint = GetBlueprint();
+
     if (!ViewPin->HasAnyConnections())
     {
+        if (Blueprint != nullptr)
+        {
+            return Blueprint->GeneratedClass;
+        }
+
         return nullptr;
     }
 
@@ -196,7 +228,7 @@ UClass* UK2Node_ViewModelGetSet::GetViewClass() const
     }
     else if (Pin->PinType.PinSubCategory == UEdGraphSchema_K2::PSC_Self)
     {
-        return GetBlueprint()->GeneratedClass;
+        return Blueprint->GeneratedClass;
     }
 
     return nullptr;

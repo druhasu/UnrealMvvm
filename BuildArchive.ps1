@@ -12,14 +12,14 @@ if(Test-Path $ArchiveName)
     throw ("Archive with version '" + $PluginVersion + "' already exist")
 }
 
-$TrackedFiles = git ls-tree -r master --name-only
+$TrackedFiles = git ls-tree -r HEAD --name-only
 $FilteredFiles = $TrackedFiles | Where-Object { $_.StartsWith($PluginName + "/") }
 
 # save main plugin files to archive
 $ZipArchive = [System.IO.Compression.ZipFile]::Open($ArchiveName, 1)
 foreach ($File in $FilteredFiles)
 {
-    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($ZipArchive, $File, $File.Substring(9)) | Out-Null
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($ZipArchive, $File, $File.Substring($PluginName.Length + 1)) | Out-Null
 }
 
 # add Readme and License files

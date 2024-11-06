@@ -2,8 +2,8 @@
 
 #include "K2Node_ViewModelChanged.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/BaseViewComponentImpl.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/BaseView/BaseViewComponentImpl.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "GraphEditorSettings.h"
 #include "EdGraphSchema_K2.h"
 #include "KismetCompiler.h"
@@ -29,7 +29,7 @@ void UK2Node_ViewModelChanged::ExpandNode(FKismetCompilerContext& CompilerContex
         return;
     }
 
-    UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(GetViewClass());
+    UClass* ViewModelClass = FViewRegistry::GetViewModelClass(GetViewClass());
     auto MakePinInfo = [&](const FName& NewName)
     {
         TSharedPtr<FUserPinInfo> Result = MakeShared<FUserPinInfo>();
@@ -76,7 +76,7 @@ bool UK2Node_ViewModelChanged::IsActionFilteredOut(class FBlueprintActionFilter 
     for (UBlueprint* Blueprint : Filter.Context.Blueprints)
     {
         UClass* ViewClass = Blueprint->GeneratedClass;
-        UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(ViewClass);
+        UClass* ViewModelClass = FViewRegistry::GetViewModelClass(ViewClass);
 
         if (!ViewModelClass)
         {
@@ -103,8 +103,8 @@ void UK2Node_ViewModelChanged::AllocateDefaultPins()
     UpdatePinTypes();
 
     // there is no convenient Init method in K2Node, so we have to resubscribe every time pins are created
-    FViewModelRegistry::ViewClassChanged.RemoveAll(this);
-    FViewModelRegistry::ViewClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
+    FViewRegistry::ViewModelClassChanged.RemoveAll(this);
+    FViewRegistry::ViewModelClassChanged.AddUObject(this, &ThisClass::OnViewClassChanged);
 }
 
 FText UK2Node_ViewModelChanged::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -133,7 +133,7 @@ void UK2Node_ViewModelChanged::UpdatePinTypes()
 {
     using namespace UnrealMvvm_Impl;
 
-    UClass* ViewModelClass = FViewModelRegistry::GetViewModelClass(GetViewClass());
+    UClass* ViewModelClass = FViewRegistry::GetViewModelClass(GetViewClass());
     FindPin(OldViewModelPinName)->PinType.PinSubCategoryObject = ViewModelClass;
     FindPin(NewViewModelPinName)->PinType.PinSubCategoryObject = ViewModelClass;
 }

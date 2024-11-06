@@ -6,37 +6,6 @@
 #include "TestBaseViewModel.h"
 #include "TestBaseWidgetView.generated.h"
 
-/* Test View based on BaseView class */
-UCLASS()
-class UTestBaseWidgetView : public UBaseView, public TBaseView<UTestBaseWidgetView, UTestBaseViewModel>
-{
-    GENERATED_BODY()
-
-public:
-    int32 MyValue = 0;
-    ViewModelType* OldViewModel = nullptr;
-    ViewModelType* NewViewModel = nullptr;
-
-protected:
-    void BindProperties() override
-    {
-        Bind(this, ViewModelType::IntValueProperty(), [this](const int32& InValue) { MyValue = InValue; });
-    }
-
-    void OnViewModelChanged(ViewModelType* InOldViewModel, ViewModelType* InNewViewModel) override
-    {
-        OldViewModel = InOldViewModel;
-        NewViewModel = InNewViewModel;
-    }
-};
-
-/* Same as UTestBaseWidgetView, but without registered bindings */
-UCLASS()
-class UTestBaseWidgetViewNoBind : public UBaseView, public TBaseView<UTestBaseWidgetViewNoBind, UTestBaseViewModel>
-{
-    GENERATED_BODY()
-};
-
 /* Test View based on UserWidget class */
 UCLASS()
 class UTestBaseWidgetViewPure : public UUserWidget, public TBaseView<UTestBaseWidgetViewPure, UTestBaseViewModel>
@@ -66,6 +35,16 @@ UCLASS()
 class UTestBaseWidgetViewPureNoBind : public UUserWidget, public TBaseView<UTestBaseWidgetViewPureNoBind, UTestBaseViewModel>
 {
     GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintReadWrite)
+    int32 MyValue = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    UTestBaseViewModel* OldViewModel = nullptr;
+
+    UPROPERTY(BlueprintReadWrite)
+    UTestBaseViewModel* NewViewModel = nullptr;
 };
 
 /* Test View base class for Blueprint-only view */
@@ -86,6 +65,9 @@ public:
 
     UPROPERTY(BlueprintReadWrite)
     int32 MyValue = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    float MyFloatValue = 0;
 
     UPROPERTY(BlueprintReadWrite)
     UTestBaseViewModel* OldViewModel = nullptr;

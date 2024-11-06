@@ -7,15 +7,7 @@
 
 class UUserWidget;
 class UBaseViewModel;
-class UBaseView;
-class UBaseViewExtension;
 class AActor;
-class UBaseViewComponent;
-
-namespace UnrealMvvm_Impl
-{
-    struct FViewModelPropertyReflection;
-}
 
 UCLASS()
 class UNREALMVVM_API UMvvmBlueprintLibrary : public UBlueprintFunctionLibrary
@@ -55,25 +47,13 @@ private:
     friend class UK2Node_ViewModelGetSet;
 
     UFUNCTION(BlueprintPure, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
-    static void GetViewModelPropertyValueFromWidget(UUserWidget* View, FName PropertyName, int32& Value, bool& HasValue)
+    static void GetViewModelPropertyValue(UBaseViewModel* ViewModel, FName PropertyName, int32& Value, bool& HasValue)
     {
         checkNoEntry();
     }
 
     UFUNCTION(BlueprintCallable, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
-    static void SetViewModelPropertyValueToWidget(UUserWidget* View, FName PropertyName, int32 Value, bool HasValue)
-    {
-        checkNoEntry();
-    }
-
-    UFUNCTION(BlueprintPure, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
-    static void GetViewModelPropertyValueFromActor(AActor* View, FName PropertyName, int32& Value, bool& HasValue)
-    {
-        checkNoEntry();
-    }
-
-    UFUNCTION(BlueprintCallable, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
-    static void SetViewModelPropertyValueToActor(AActor* View, FName PropertyName, int32 Value, bool HasValue)
+    static void SetViewModelPropertyValue(UBaseViewModel* ViewModel, FName PropertyName, int32 Value, bool HasValue)
     {
         checkNoEntry();
     }
@@ -90,23 +70,12 @@ private:
     UFUNCTION(BlueprintCallable, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
     static void SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel);
 
-    DECLARE_FUNCTION(execGetViewModelPropertyValueFromWidget);
-    DECLARE_FUNCTION(execSetViewModelPropertyValueToWidget);
-    DECLARE_FUNCTION(execGetViewModelPropertyValueFromActor);
-    DECLARE_FUNCTION(execSetViewModelPropertyValueToActor);
+    DECLARE_FUNCTION(execGetViewModelPropertyValue);
+    DECLARE_FUNCTION(execSetViewModelPropertyValue);
 
     template <typename TView, typename TViewComponent>
     static UBaseViewModel* GetViewModelInternal(TView* View);
 
     template <typename TView, typename TViewComponent>
     static void SetViewModelInternal(TView* View, UBaseViewModel* ViewModel);
-
-    template<typename TView>
-    DECLARE_FUNCTION(execGetViewModelPropertyValueInternal);
-
-    template<typename TView>
-    DECLARE_FUNCTION(execSetViewModelPropertyValueInternal);
-
-    template <typename TView>
-    static TTuple<UBaseViewModel*, const UnrealMvvm_Impl::FViewModelPropertyReflection*> GetViewModelAndProperty(TView* View, FName PropertyName);
 };

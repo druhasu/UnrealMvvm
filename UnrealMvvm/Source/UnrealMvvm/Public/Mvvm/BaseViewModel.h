@@ -5,9 +5,9 @@
 #include "UObject/Object.h"
 #include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/ViewModelPropertyTypeTraits.h"
-#include "Mvvm/Impl/CanCompareHelper.h"
-#include "Mvvm/Impl/PropertyTypeSelector.h"
-#include "Mvvm/Impl/ViewModelPropertyMacros.h"
+#include "Mvvm/Impl/Property/CanCompareHelper.h"
+#include "Mvvm/Impl/Property/PropertyTypeSelector.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyMacros.h"
 #include "BaseViewModel.generated.h"
 
 #ifndef UE_REQUIRES

@@ -2,7 +2,7 @@
 
 #include "Modules/ModuleManager.h"
 #include "Mvvm/BaseView.h"
-#include "Mvvm/Impl/WidgetExtensionsAccessor.h"
+#include "Mvvm/Impl/BaseView/WidgetExtensionsAccessor.h"
 #include "Slate/ViewModelPropertiesSummoner.h"
 #include "Slate/UnrealMvvmEditorStyle.h"
 #include "BaseViewBlueprintExtension.h"
@@ -33,6 +33,15 @@ public:
         });
 
         FCoreUObjectDelegates::OnObjectPreSave.AddRaw(this, &ThisClass::OnObjectPreSave);
+
+        if (GEditor != nullptr)
+        {
+            OnPostEngineInit();
+        }
+        else
+        {
+            FCoreDelegates::OnPostEngineInit.AddRaw(this, &ThisClass::OnPostEngineInit);
+        }
     }
 
     void ShutdownModule() override
@@ -51,6 +60,11 @@ public:
         }
 
         FCoreUObjectDelegates::OnObjectPreSave.RemoveAll(this);
+
+        if (GEditor)
+        {
+            GEditor->OnBlueprintPreCompile().RemoveAll(this);
+        }
     }
 
 private:
@@ -77,7 +91,8 @@ private:
 
     void RegisterWidgetBlueprintEditorTab(const FWidgetBlueprintApplicationMode& ApplicationMode, FWorkflowAllowedTabSet& TabFactories)
     {
-        if (ApplicationMode.GetModeName() == FWidgetBlueprintApplicationModes::DesignerMode)
+        if (ApplicationMode.GetModeName() == FWidgetBlueprintApplicationModes::DesignerMode ||
+            ApplicationMode.GetModeName() == FWidgetBlueprintApplicationModes::GraphMode)
         {
             TabFactories.RegisterFactory(MakeShared<FViewModelPropertiesSummoner>(ApplicationMode.GetBlueprintEditor()));
 
@@ -160,10 +175,44 @@ private:
     {
         using namespace UnrealMvvm_Impl;
 
-        if (FViewModelRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
+        if (!SavedBlueprint->ParentClass->IsNative() && FViewRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
         {
             // if our parent class have ViewModel defined, then we don't need our own BlueprintExtension
+            // but only if our parent is also a Blueprint class
             UBaseViewBlueprintExtension::Remove(SavedBlueprint);
+        }
+    }
+
+    void OnPostEngineInit()
+    {
+        if (GEditor != nullptr)
+        {
+            GEditor->OnBlueprintPreCompile().AddRaw(this, &ThisClass::OnBlueprintPreCompile);
+        }
+        FCoreDelegates::OnPostEngineInit.RemoveAll(this);
+    }
+
+    void OnBlueprintPreCompile(UBlueprint* Blueprint)
+    {
+        using namespace UnrealMvvm_Impl;
+
+        // check that this Blueprint represents a View
+        if (Blueprint != nullptr)
+        {
+            UClass* ViewModelClass = FViewRegistry::GetViewModelClass(Blueprint->GeneratedClass);
+
+            if (ViewModelClass != nullptr)
+            {
+                // make sure it has our UBaseViewBlueprintExtension
+                // during compilation, the extension will do the rest of the work
+                UBaseViewBlueprintExtension* Extension = UBaseViewBlueprintExtension::Request(Blueprint);
+
+                // make sure the extension has valid ViewModel class
+                if (Extension->GetViewModelClass() == nullptr)
+                {
+                    Extension->SetViewModelClass(ViewModelClass);
+                }
+            }
         }
     }
 };

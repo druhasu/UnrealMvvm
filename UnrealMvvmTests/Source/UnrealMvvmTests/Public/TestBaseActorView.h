@@ -35,6 +35,16 @@ UCLASS()
 class ATestBaseActorViewPureNoBind : public AActor, public TBaseView<ATestBaseActorViewPureNoBind, UTestBaseViewModel>
 {
     GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintReadWrite)
+    int32 MyValue = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    UTestBaseViewModel* OldViewModel = nullptr;
+
+    UPROPERTY(BlueprintReadWrite)
+    UTestBaseViewModel* NewViewModel = nullptr;
 };
 
 /* Test View base class for Blueprint-only view */
@@ -55,6 +65,9 @@ public:
 
     UPROPERTY(BlueprintReadWrite)
     int32 MyValue = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    float MyFloatValue = 0;
 
     UPROPERTY(BlueprintReadWrite)
     UTestBaseViewModel* OldViewModel = nullptr;

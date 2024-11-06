@@ -5,8 +5,8 @@
 #include "DerivedViewModel.h"
 #include "PinTraitsViewModel.h"
 #include "TokenStreamTestViewModel.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
-#include "Mvvm/Impl/TokenStreamUtils.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/Property/TokenStreamUtils.h"
 
 #include "Components/PanelWidget.h"
 #include "Components/CanvasPanel.h"
@@ -467,6 +467,10 @@ UClass* ViewModelRegistrySpec::MakeTempClass(UClass* Class)
 
     UClass* Result = CastChecked<UClass>(StaticDuplicateObjectEx(Params));
     Result->StaticLink(true);
+
+    // make sure it won't be picked up by any TObjectIterator
+    Result->MarkAsGarbage();
+    Result->GetDefaultObject()->MarkAsGarbage();
 
     return Result;
 }

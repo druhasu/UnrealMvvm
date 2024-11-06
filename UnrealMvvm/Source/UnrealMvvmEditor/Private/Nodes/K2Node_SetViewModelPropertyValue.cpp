@@ -2,20 +2,15 @@
 
 #include "K2Node_SetViewModelPropertyValue.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
-#include "BlueprintNodeSpawner.h"
-#include "EditorCategoryUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
-#include "Kismet2/BlueprintEditorUtils.h"
 
 void UK2Node_SetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
     Super::ExpandNode(CompilerContext, SourceGraph);
 
-    FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForSetPropertyValue(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this)->GeneratedClass);
-    FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
+    FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FViewModelPropertyNodeHelper::SetPropertyValueFunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
 }
 
 void UK2Node_SetViewModelPropertyValue::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
@@ -45,6 +40,8 @@ void UK2Node_SetViewModelPropertyValue::AllocateDefaultPins()
             HasValuePin->DefaultValue = TEXT("true");
         }
     }
+
+    Super::AllocateDefaultPins();
 }
 
 void UK2Node_SetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const

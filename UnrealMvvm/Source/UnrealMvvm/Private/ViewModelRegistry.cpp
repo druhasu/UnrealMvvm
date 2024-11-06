@@ -1,40 +1,14 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
-#include "Mvvm/Impl/TokenStreamUtils.h"
-#include "Algo/Compare.h"
+#include "Mvvm/Impl/Property/TokenStreamUtils.h"
 
 namespace UnrealMvvm_Impl
 {
 
-#if WITH_EDITOR
-FViewModelRegistry::FViewModelClassChanged FViewModelRegistry::ViewClassChanged;
-#endif
 TMap<UClass*, TArray<FViewModelPropertyReflection>> FViewModelRegistry::ViewModelProperties{};
-TMap<TWeakObjectPtr<UClass>, UClass*> FViewModelRegistry::ViewModelClasses{};
-TMap<UClass*, FViewModelRegistry::FViewModelSetterPtr> FViewModelRegistry::ViewModelSetters{};
 TArray<FField*> FViewModelRegistry::PropertiesToKeep{};
-
-template <typename TKey, typename TValue>
-TValue* FindByClass(TMap<TKey, TValue*>& Map, UClass* ViewClass)
-{
-    UClass* Needle = ViewClass;
-
-    while (Needle)
-    {
-        TValue** FoundPtr = Map.Find(Needle);
-        if (FoundPtr)
-        {
-            return *FoundPtr;
-        }
-
-        Needle = Needle->GetSuperClass();
-    }
-
-    return nullptr;
-}
 
 const FViewModelPropertyReflection* FViewModelRegistry::FindProperty(UClass* InViewModelClass, const FName& InPropertyName)
 {
@@ -45,57 +19,6 @@ const FViewModelPropertyReflection* FViewModelRegistry::FindProperty(UClass* InV
 
     return nullptr;
 }
-
-UClass* FViewModelRegistry::GetViewModelClass(UClass* ViewClass)
-{
-    // remove all entries where keys are no longer valid
-    // we store BP classes there, so they may become unloaded or garbage collected
-    for (auto It = ViewModelClasses.CreateIterator(); It; ++It)
-    {
-        if (!It.Key().IsValid())
-        {
-            It.RemoveCurrent();
-        }
-    }
-
-    return FindByClass(ViewModelClasses, ViewClass);
-}
-
-FViewModelRegistry::FViewModelSetterPtr FViewModelRegistry::GetViewModelSetter(UClass* ViewClass)
-{
-    return FindByClass(ViewModelSetters, ViewClass);
-}
-
-uint8 FViewModelRegistry::RegisterViewClass(FViewModelRegistry::FClassGetterPtr ViewClassGetter, FViewModelRegistry::FClassGetterPtr ViewModelClassGetter, FViewModelRegistry::FViewModelSetterPtr ViewModelSetter)
-{
-    FUnprocessedViewModelClassEntry& Entry = GetUnprocessedViewModelClasses().AddDefaulted_GetRef();
-    Entry.GetViewClass = ViewClassGetter;
-    Entry.GetViewModelClass = ViewModelClassGetter;
-    Entry.ViewModelSetter = ViewModelSetter;
-
-    return 1;
-}
-
-void FViewModelRegistry::RegisterViewClass(UClass* ViewClass, UClass* ViewModelClass)
-{
-    check(ViewClass);
-    check(ViewModelClass);
-
-    ViewModelClasses.Emplace(ViewClass, ViewModelClass);
-#if WITH_EDITOR
-    ViewClassChanged.Broadcast(ViewClass, ViewModelClass);
-#endif
-}
-
-#if WITH_EDITOR
-void FViewModelRegistry::UnregisterViewClass(UClass* ViewClass)
-{
-    check(ViewClass);
-
-    ViewModelClasses.Remove(ViewClass);
-    ViewClassChanged.Broadcast(ViewClass, nullptr);
-}
-#endif
 
 void FViewModelRegistry::ProcessPendingRegistrations()
 {
@@ -156,30 +79,6 @@ void FViewModelRegistry::ProcessPendingRegistrations()
         {
             GenerateReferenceTokenStream(ViewModelClass);
         }
-    }
-
-    // Process classes and add them into lookup tables
-    auto& UnprocessedViewModelClasses = GetUnprocessedViewModelClasses();
-    if (UnprocessedViewModelClasses.Num())
-    {
-        for (auto& Entry : UnprocessedViewModelClasses)
-        {
-            UClass* ViewClass = Entry.GetViewClass();
-            UClass* ViewModelClass = Entry.GetViewModelClass();
-
-            ViewModelClasses.Add(ViewClass, ViewModelClass);
-
-            if (Entry.ViewModelSetter)
-            {
-                ViewModelSetters.Add(ViewClass, Entry.ViewModelSetter);
-            }
-
-#if WITH_EDITOR
-            ViewClassChanged.Broadcast(ViewClass, ViewModelClass);
-#endif
-        }
-
-        UnprocessedViewModelClasses.Empty();
     }
 }
 
@@ -244,12 +143,6 @@ void FViewModelRegistry::GenerateReferenceTokenStream(UClass* ViewModelClass)
 TArray<FViewModelRegistry::FUnprocessedPropertyEntry>& FViewModelRegistry::GetUnprocessedProperties()
 {
     static TArray<FUnprocessedPropertyEntry> Result;
-    return Result;
-}
-
-TArray<FViewModelRegistry::FUnprocessedViewModelClassEntry>& FViewModelRegistry::GetUnprocessedViewModelClasses()
-{
-    static TArray<FUnprocessedViewModelClassEntry> Result;
     return Result;
 }
 

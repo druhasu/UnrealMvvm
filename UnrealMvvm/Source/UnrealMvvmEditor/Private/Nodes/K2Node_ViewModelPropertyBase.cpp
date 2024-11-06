@@ -1,40 +1,14 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "K2Node_ViewModelPropertyBase.h"
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/ViewModelProperty.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "EditorCategoryUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
-
-bool UK2Node_ViewModelPropertyBase::Modify(bool bAlwaysMarkDirty)
-{
-    CachedTexts.MarkDirty();
-
-    return Super::Modify(bAlwaysMarkDirty);
-}
-
-FText UK2Node_ViewModelPropertyBase::GetNodeTitle(ENodeTitleType::Type TitleType) const
-{
-    if (!CachedTexts.IsTitleCached(TitleType, this))
-    {
-        CachedTexts.SetCachedTitle(TitleType, GetNodeTitleForCache(TitleType), this);
-    }
-
-    return CachedTexts.GetCachedTitle(TitleType);
-}
-
-FText UK2Node_ViewModelPropertyBase::GetTooltipText() const
-{
-    if (!CachedTexts.IsTooltipCached(this))
-    {
-        CachedTexts.SetCachedTooltip(GetTooltipTextForCache(), this);
-    }
-
-    return CachedTexts.GetCachedTooltip();
-}
 
 FSlateIcon UK2Node_ViewModelPropertyBase::GetIconAndTint(FLinearColor& OutColor) const
 {
@@ -77,25 +51,33 @@ void UK2Node_ViewModelPropertyBase::ValidateNodeDuringCompilation(FCompilerResul
 
 bool UK2Node_ViewModelPropertyBase::IsActionFilteredOut(class FBlueprintActionFilter const& Filter)
 {
-    bool bFoundCompatible = false;
-
-    // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
-    for (UBlueprint* Blueprint : Filter.Context.Blueprints)
+    // we want to apply filter only without pin context
+    // if there are pins, then built-in filters will do the rest
+    if (Filter.Context.Pins.IsEmpty())
     {
-        UClass* BlueprintViewClass = Blueprint->GeneratedClass;
-        UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(BlueprintViewClass);
+        bool bFoundCompatible = false;
 
-        if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
+        // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
+        for (UBlueprint* Blueprint : Filter.Context.Blueprints)
         {
-            bFoundCompatible = true;
+            UClass* BlueprintViewClass = Blueprint->GeneratedClass;
+            UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(BlueprintViewClass);
+
+            if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
+            {
+                bFoundCompatible = true;
+            }
+            else
+            {
+                // in case of multiple blueprints this node must be "available" in all of them
+                return true;
+            }
         }
-        else
-        {
-            return true;
-        }
+
+        return !bFoundCompatible;
     }
 
-    return !bFoundCompatible;
+    return false;
 }
 
 FText UK2Node_ViewModelPropertyBase::GetMenuCategory() const

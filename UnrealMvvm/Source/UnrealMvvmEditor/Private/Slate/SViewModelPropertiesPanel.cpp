@@ -3,14 +3,12 @@
 #include "SViewModelPropertiesPanel.h"
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/ViewModelProperty.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
 #include "BaseViewBlueprintExtension.h"
 #include "Nodes/ViewModelPropertyNodeHelper.h"
 #include "Nodes/K2Node_ViewModelPropertyChanged.h"
-#include "BaseViewBlueprintExtension.h"
 
-#include "Styling/StyleColors.h"
-#include "DetailLayoutBuilder.h"
 #include "EdGraphSchema_K2_Actions.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -18,22 +16,21 @@
 #include "BlueprintEditor.h"
 #include "SourceCodeNavigation.h"
 #include "DetailColumnSizeData.h"
-
-#include "Widgets/Layout/SWidgetSwitcher.h"
-#include "Misc/EngineVersionComparison.h"
+#include "SViewModelBindingEntry.h"
+#include "Widgets/Images/SLayeredImage.h"
+#include "Styling/StyleColors.h"
 
 void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<FBlueprintEditor> Editor)
 {
     WeakBlueprintEditor = Editor;
     Blueprint = Editor->GetBlueprintObj();
 
-    ColumnSizeData = MakeShared<FDetailColumnSizeData>();
-    ColumnSizeData->SetValueColumnWidth(0.5f);
+    Blueprint->OnChanged().AddSP(this, &ThisClass::OnBlueprintChanged);
 
     CacheViewModelClass(false); // false - so we are not marking Blueprint as modified right when it is opened
-    RegenerateProperties();
+    RegenerateBindings();
 
-    UnrealMvvm_Impl::FViewModelRegistry::ViewClassChanged.AddSP(this, &ThisClass::OnViewClassChanged);
+    UnrealMvvm_Impl::FViewRegistry::ViewModelClassChanged.AddSP(this, &ThisClass::OnViewClassChanged);
 
     TSharedRef<SScrollBar> ScrollBar = SNew(SScrollBar);
 
@@ -48,21 +45,24 @@ void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<F
         ]
 
         + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            MakeAddBindingButton()
+        ]
+
+        + SVerticalBox::Slot()
         [
             SNew(SOverlay)
 
+            // Property Bindings list
             + SOverlay::Slot()
             .HAlign(HAlign_Fill)
             .VAlign(VAlign_Fill)
             [
-                // ViewModel properties list
-                SAssignNew(PropertyList, SPropertyListView)
-#if UE_VERSION_OLDER_THAN(5,5,0)
-                .ItemHeight(26)
-#endif
-                .ListItemsSource(&Properties)
+                SAssignNew(BindingList, SBindingListView)
+                .ListItemsSource(&BindingNodes)
                 .SelectionMode(ESelectionMode::None)
-                .OnGenerateRow(this, &ThisClass::MakeViewModelPropertyRow)
+                .OnGenerateRow(this, &ThisClass::MakeBindingRow)
                 .ExternalScrollbar(ScrollBar)
             ]
 
@@ -73,7 +73,7 @@ void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<F
                 SNew(SBorder)
                 .Padding(0)
                 .BorderImage(FAppStyle::Get().GetBrush("DetailsView.GridLine"))
-                .Visibility(PropertyList.ToSharedRef(), &STableViewBase::GetScrollbarVisibility)
+                .Visibility(BindingList.ToSharedRef(), &STableViewBase::GetScrollbarVisibility)
                 [
                     SNew(SBox)
                     .WidthOverride(16)
@@ -90,7 +90,7 @@ TSharedRef<SWidget> SViewModelPropertiesPanel::MakeViewModelSelector()
 {
     return SNew(SBox)
     .VAlign(VAlign_Center)
-    .Padding(22, 4, 20, 4)
+    .Padding(8, 4, 20, 4)
     .HeightOverride(34)
     [
         SNew(SHorizontalBox)
@@ -134,126 +134,175 @@ TSharedRef<SWidget> SViewModelPropertiesPanel::MakeViewModelSelector()
     ];
 }
 
-TSharedRef<ITableRow> SViewModelPropertiesPanel::MakeViewModelPropertyRow(TSharedRef<FListItem> Item, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<SWidget> SViewModelPropertiesPanel::MakeAddBindingButton()
 {
-    FName PropertyName = Item->Reflection->GetProperty()->GetName();
-
-    return SNew(STableRow<TSharedRef<const UnrealMvvm_Impl::FViewModelPropertyReflection*>>, OwnerTable)
-    .Style(FAppStyle::Get(), "DetailsView.TreeView.TableRow")
-    [
-        SNew(SViewModelPropertyRow, OwnerTable, ColumnSizeData)
-        .NameContent()
-        [
-            MakePropertyNameContent(FText::FromName(PropertyName))
-        ]
-        .ValueContent()
-        [
-            MakePropertyValueContent(Item->Reflection, PropertyName)
-        ]
-    ];
-}
-
-TSharedRef<SWidget> SViewModelPropertiesPanel::MakePropertyNameContent(const FText& NameText)
-{
-    return SNew(SHorizontalBox)
-
-    + SHorizontalBox::Slot()
-    .AutoWidth()
+    return SNew(SBox)
+    .HAlign(HAlign_Left)
     .VAlign(VAlign_Center)
-    .Padding(0, 0, 5, 0)
+    .Padding(8, 0, 20, 4)
     [
-        SNew(SImage)
-        .Image(FAppStyle::GetBrush("GraphEditor.Event_16x"))
-    ]
+        SNew(SComboButton)
+        .OnGetMenuContent(this, &ThisClass::MakeAddBindingPopup)
+        .ButtonStyle(&FAppStyle::Get().GetWidgetStyle<FButtonStyle>("Button"))
+        .HasDownArrow(false)
+        .ContentPadding(FMargin(4, 2))
+        .ButtonContent()
+        [
+            SNew(SHorizontalBox)
 
-    + SHorizontalBox::Slot()
-    .VAlign(VAlign_Center)
-    [
-        SNew(STextBlock)
-        .Font(IDetailLayoutBuilder::GetDetailFont())
-        .Text(NameText)
-        .ToolTipText(NameText)
-    ];
-}
-
-TSharedRef<SWidget> SViewModelPropertiesPanel::MakePropertyValueContent(const UnrealMvvm_Impl::FViewModelPropertyReflection* Item, FName PropertyName)
-{
-    TSharedPtr<SWidget> Widget;
-
-    if (FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*Item))
-    {
-        if(Item->Flags.HasPublicGetter)
-        {
-            Widget = SNew(SButton)
-            .HAlign(HAlign_Center)
-            .ContentPadding(FMargin(20.0, 2.0))
-            .ToolTipText(this, &ThisClass::GetAddOrViewButtonTooltip, PropertyName)
-            .IsEnabled(this, &ThisClass::IsAddOrViewButtonEnabled, PropertyName)
-            .OnClicked(this, &ThisClass::HandleAddOrViewEventForProperty, PropertyName)
+            + SHorizontalBox::Slot()
+            .VAlign(VAlign_Center)
+            .AutoWidth()
+            .Padding(0, 0, 4, 0)
             [
-                SNew(SBox)
-                .MinDesiredHeight(14)
-                .VAlign(VAlign_Center)
-                [
-                    SNew(SWidgetSwitcher)
-                    .WidgetIndex(this, &ThisClass::HandleAddOrViewIndexForButton, PropertyName)
-                    + SWidgetSwitcher::Slot()
-                    [
-                        SNew(SImage)
-                        .ColorAndOpacity(FSlateColor::UseForeground())
-                        .Image(FAppStyle::Get().GetBrush("Icons.SelectInViewport"))
-                    ]
-                    + SWidgetSwitcher::Slot()
-                    [
-                        SNew(SImage)
-                        .ColorAndOpacity(FSlateColor::UseForeground())
-                        .Image(FAppStyle::Get().GetBrush("Icons.Plus"))
-                    ]
-                ]
-            ];
+                SNew(SImage)
+                .ColorAndOpacity(FStyleColors::AccentGreen)
+                .Image(FAppStyle::Get().GetBrush("Icons.Plus"))
+            ]
+
+            + SHorizontalBox::Slot()
+            .VAlign(VAlign_Center)
+            .AutoWidth()
+            [
+                SNew(STextBlock)
+                .Text(NSLOCTEXT("UnrealMvvm", "AddViewModelBinding", "Add Binding"))
+            ]
+        ]
+    ];
+}
+
+TSharedRef<SWidget> SViewModelPropertiesPanel::MakeAddBindingPopup()
+{
+    FMenuBuilder Builder(true, nullptr, nullptr, false, &FCoreStyle::Get(), true, NAME_None, false);
+
+    MakeAddBindingMenu(Builder, ViewModelClass, {});
+
+    return Builder.MakeWidget();
+}
+
+void SViewModelPropertiesPanel::MakeAddBindingMenu(FMenuBuilder& Builder, UClass* InViewModelClass, TArray<FName> InPropertyPath)
+{
+    using namespace UnrealMvvm_Impl;
+
+    if (!InPropertyPath.IsEmpty())
+    {
+        // add entry for adding current property
+        Builder.AddMenuEntry(
+            INVTEXT("Bind"),
+            {},
+            FSlateIcon(),
+            FUIAction(
+                FExecuteAction::CreateSP(this, &ThisClass::HandleAddBinding, InPropertyPath)
+            )
+        );
+    }
+
+    Builder.BeginSection(NAME_None, InViewModelClass->GetDisplayNameText());
+
+    auto CanBindToProperty = [](const FViewModelPropertyReflection* Reflection)
+    {
+        return FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(*Reflection) && Reflection->Flags.HasPublicGetter;
+    };
+
+    for (FViewModelPropertyIterator It(InViewModelClass, true); It; ++It)
+    {
+        TArray<FName> NewPropertyPath = InPropertyPath;
+        NewPropertyPath.Add(It->GetProperty()->GetName());
+
+        UClass* ValueClass = Cast<UClass>(It->GetPinSubCategoryObject());
+        if (It->ContainerType == EPinContainerType::None && ValueClass != nullptr && ValueClass->IsChildOf<UBaseViewModel>())
+        {
+            // create sub menu
+            Builder.AddSubMenu(
+                MakeContextMenuEntryWidget(*It),
+                FNewMenuDelegate::CreateSP(this, &ThisClass::MakeAddBindingMenu, ValueClass, NewPropertyPath)
+            );
         }
         else
         {
-            Widget = SNew(STextBlock)
-            .Font(IDetailLayoutBuilder::GetDetailFont())
-            .Text(NSLOCTEXT("UnrealMvvm", "PropertyHasNoPublicGetter", "Has no public Getter"));
+            // create regular entry
+            Builder.AddMenuEntry(
+                FUIAction(
+                    FExecuteAction::CreateSP(this, &ThisClass::HandleAddBinding, NewPropertyPath),
+                    FCanExecuteAction::CreateLambda(CanBindToProperty, &*It)
+                ),
+                MakeContextMenuEntryWidget(*It)
+            );
         }
     }
-    else
-    {
-        Widget = SNew(STextBlock)
-        .Font(IDetailLayoutBuilder::GetDetailFont())
-        .Text(NSLOCTEXT("UnrealMvvm", "PropertyNotAvailableInBP", "Not Available in Blueprints"));
-    }
 
-    return SNew(SBox)
-    .MinDesiredHeight(22)
-    .VAlign(VAlign_Center)
-    .HAlign(HAlign_Left)
+    Builder.EndSection();
+}
+
+TSharedRef<SWidget> SViewModelPropertiesPanel::MakeContextMenuEntryWidget(const UnrealMvvm_Impl::FViewModelPropertyReflection& Reflection)
+{
+    using namespace UnrealMvvm_Impl;
+
+    FEdGraphPinType PinType;
+    FViewModelPropertyNodeHelper::FillPinType(PinType, &Reflection);
+
+    const UEdGraphSchema_K2* Schema = GetDefault<UEdGraphSchema_K2>();
+
+    auto GetEntryTooltip = [Reflection]()
+    {
+        if (!FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(Reflection))
+        {
+            return NSLOCTEXT("UnrealMvvm", "PropertyNotAvailableInBP", "Not Available in Blueprints");
+        }
+
+        if (!Reflection.Flags.HasPublicGetter)
+        {
+            return NSLOCTEXT("UnrealMvvm", "PropertyHasNoPublicGetter", "Has no public Getter");
+        }
+
+        return FText::FromName(Reflection.GetProperty()->GetName());
+    };
+
+    TSharedRef<SHorizontalBox> HorizontalBox =
+        SNew(SHorizontalBox)
+        .ToolTipText_Lambda(GetEntryTooltip)
+
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .Padding(0, 0, 4, 0)
+        [
+            SNew(SLayeredImage, FBlueprintEditorUtils::GetSecondaryIconFromPin(PinType), Schema->GetSecondaryPinTypeColor(PinType))
+            .Image(FBlueprintEditorUtils::GetIconFromPin(PinType, /* bIsLarge = */ false))
+            .ColorAndOpacity(Schema->GetPinTypeColor(PinType))
+            .ToolTipText(Schema->TypeToText(PinType))
+        ]
+
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        [
+            SNew(STextBlock)
+            .Text(FText::FromName(Reflection.GetProperty()->GetName()))
+            .OverflowPolicy(ETextOverflowPolicy::Ellipsis)
+        ]
+    ;
+
+    return HorizontalBox;
+}
+
+TSharedRef<ITableRow> SViewModelPropertiesPanel::MakeBindingRow(UK2Node_ViewModelPropertyChanged* Node, const TSharedRef<STableViewBase>& OwnerTable)
+{
+    return SNew(STableRow<UK2Node_ViewModelPropertyChanged*>, OwnerTable)
+    .Style(FAppStyle::Get(), "DetailsView.TreeView.TableRow")
     [
-        Widget.ToSharedRef()
+        SNew(SViewModelBindingEntry, OwnerTable, Node)
+        .OnRemoveClicked(this, &ThisClass::HandleRemoveBinding, Node)
     ];
 }
 
-void SViewModelPropertiesPanel::RegenerateProperties()
+void SViewModelPropertiesPanel::RegenerateBindings()
 {
-    Properties.Reset();
-
-    if (ViewModelClass)
-    {
-        UnrealMvvm_Impl::FViewModelPropertyIterator Iter(const_cast<UClass*>(ViewModelClass), true);
-
-        // Add items for each property in ViewModel
-        for (; Iter; ++Iter)
-        {
-            Properties.Emplace(MakeShared<FListItem>(FListItem{ &*Iter }));
-        }
-    }
+    BindingNodes.Reset();
+    FBlueprintEditorUtils::GetAllNodesOfClass<UK2Node_ViewModelPropertyChanged>(Blueprint.Get(), BindingNodes);
 }
 
 void SViewModelPropertiesPanel::CacheViewModelClass(bool bMayRemoveExtension)
 {
-    ViewModelClass = UnrealMvvm_Impl::FViewModelRegistry::GetViewModelClass(Blueprint->ParentClass);
+    ViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->ParentClass);
     bParentHasViewModel = ViewModelClass != nullptr;
 
     if (!ViewModelClass)
@@ -263,7 +312,7 @@ void SViewModelPropertiesPanel::CacheViewModelClass(bool bMayRemoveExtension)
             ViewModelClass = Extension->GetViewModelClass();
         }
     }
-    else if(bMayRemoveExtension)
+    else if (bMayRemoveExtension && !Blueprint->ParentClass->IsNative())
     {
         // our parent class defines ViewModel, no need to keep our own extension
         UBaseViewBlueprintExtension::Remove(Blueprint.Get());
@@ -277,9 +326,15 @@ void SViewModelPropertiesPanel::OnViewClassChanged(UClass* ViewClass, UClass* In
     if (Blueprint->ParentClass->IsChildOf(ViewClass))
     {
         CacheViewModelClass(true);
-        RegenerateProperties();
-        PropertyList->RebuildList();
+        RegenerateBindings();
+        BindingList->RebuildList();
     }
+}
+
+void SViewModelPropertiesPanel::OnBlueprintChanged(UBlueprint*)
+{
+    RegenerateBindings();
+    BindingList->RebuildList();
 }
 
 FText SViewModelPropertiesPanel::GetClassSelectorTooltip() const
@@ -301,20 +356,20 @@ const UClass* SViewModelPropertiesPanel::GetViewModelClass() const
 
 void SViewModelPropertiesPanel::OnViewModelClassSelected(const UClass* NewClass)
 {
-    ViewModelClass = NewClass;
+    ViewModelClass = const_cast<UClass*>(NewClass);
 
     if (ViewModelClass)
     {
         UBaseViewBlueprintExtension* Extension = UBaseViewBlueprintExtension::Request(Blueprint.Get());
-        Extension->SetViewModelClass(const_cast<UClass*>(ViewModelClass));
+        Extension->SetViewModelClass(ViewModelClass);
     }
     else
     {
         UBaseViewBlueprintExtension::Remove(Blueprint.Get());
     }
 
-    RegenerateProperties();
-    PropertyList->RebuildList();
+    RegenerateBindings();
+    BindingList->RebuildList();
 
     FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint.Get());
 }
@@ -337,55 +392,27 @@ bool SViewModelPropertiesPanel::IsGoToSourceEnabled() const
     return ViewModelClass != nullptr;
 }
 
-FText SViewModelPropertiesPanel::GetAddOrViewButtonTooltip(FName PropertyName) const
-{
-    if (!IsAddOrViewButtonEnabled(PropertyName))
-    {
-        return NSLOCTEXT("UnrealMvvm", "DisabledEventTooltip", "Property changed handler already exist in parent class.\nMultiple handlers are not supported yet");
-    }
-
-    UK2Node_ViewModelPropertyChanged* EventNode = FindEventNode(PropertyName);
-
-    return EventNode ?
-        NSLOCTEXT("UnrealMvvm", "ViewEventTooltip", "View property changed handler") :
-        NSLOCTEXT("UnrealMvvm", "AddEventTooltip", "Add property changed handler");
-}
-
-bool SViewModelPropertiesPanel::IsAddOrViewButtonEnabled(FName PropertyName) const
-{
-    auto ReflectionInfo = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(const_cast<UClass*>(ViewModelClass), PropertyName);
-
-    if (ReflectionInfo)
-    {
-        UFunction* Function = Blueprint->ParentClass->FindFunctionByName(ReflectionInfo->GetProperty()->GetCallbackName());
-        return Function == nullptr;
-    }
-
-    return true;
-}
-
-FReply SViewModelPropertiesPanel::HandleAddOrViewEventForProperty(FName PropertyName)
+void SViewModelPropertiesPanel::HandleAddBinding(TArray<FName> InPropertyPath)
 {
     UEdGraph* TargetGraph = Blueprint->GetLastEditedUberGraph();
 
     if (TargetGraph != nullptr)
     {
-        UK2Node_ViewModelPropertyChanged* EventNode = FindEventNode(PropertyName);
+        // Figure out a decent place to stick the node
+        const FVector2D NewNodePos = TargetGraph->GetGoodPlaceForNewNode();
+
+        UK2Node_ViewModelPropertyChanged* EventNode = FindEventNode(InPropertyPath);
 
         if (EventNode == nullptr)
         {
-            // Figure out a decent place to stick the node
-            const FVector2D NewNodePos = TargetGraph->GetGoodPlaceForNewNode();
-
             // Create a new event node
             EventNode = FEdGraphSchemaAction_K2NewNode::SpawnNode<UK2Node_ViewModelPropertyChanged>(
                 TargetGraph,
                 NewNodePos,
                 EK2NewNodeFlags::SelectNewNode,
-                [this, PropertyName](UK2Node_ViewModelPropertyChanged* NewInstance)
+                [this, PropertyPath = MoveTemp(InPropertyPath)](UK2Node_ViewModelPropertyChanged* NewInstance)
                 {
-                    NewInstance->ViewModelOwnerClass = const_cast<UClass*>(ViewModelClass);
-                    NewInstance->ViewModelPropertyName = PropertyName;
+                    NewInstance->PropertyPath = PropertyPath;
                 }
             );
         }
@@ -396,26 +423,23 @@ FReply SViewModelPropertiesPanel::HandleAddOrViewEventForProperty(FName Property
             FKismetEditorUtilities::BringKismetToFocusAttentionOnObject(EventNode);
         }
     }
-
-    return FReply::Handled();
 }
 
-int32 SViewModelPropertiesPanel::HandleAddOrViewIndexForButton(FName PropertyName) const
+void SViewModelPropertiesPanel::HandleRemoveBinding(UK2Node_ViewModelPropertyChanged* Node)
 {
-    UK2Node_ViewModelPropertyChanged* EventNode = FindEventNode(PropertyName);
+    const FScopedTransaction Transaction(INVTEXT("Remove binding"));
 
-    return EventNode ? 0 : 1;
+    FBlueprintEditorUtils::RemoveNode(Blueprint.Get(), Node);
 }
 
-UK2Node_ViewModelPropertyChanged* SViewModelPropertiesPanel::FindEventNode(FName PropertyName) const
+UK2Node_ViewModelPropertyChanged* SViewModelPropertiesPanel::FindEventNode(const TArray<FName>& InPropertyPath) const
 {
     TArray<UK2Node_ViewModelPropertyChanged*> EventNodes;
     FBlueprintEditorUtils::GetAllNodesOfClass(Blueprint.Get(), EventNodes);
 
     for (UK2Node_ViewModelPropertyChanged* BoundEvent : EventNodes)
     {
-        if (BoundEvent->ViewModelPropertyName == PropertyName &&
-            BoundEvent->ViewModelOwnerClass == ViewModelClass)
+        if (BoundEvent->PropertyPath == InPropertyPath)
         {
             return BoundEvent;
         }

@@ -7,7 +7,7 @@
 template<typename T> class TMulticastDelegateBase; // 4.26 and above
 template<typename T> class FMulticastDelegateBase; // 4.25 and below
 
-#include "Mvvm/Impl/PointerToMember.h"
+#include "Mvvm/Impl/Utils/PointerToMember.h"
 #include "Templates/EnableIf.h"
 #include "Delegates/Delegate.h"
 #include <functional>
@@ -18,7 +18,7 @@ namespace UnrealMvvm_Impl
     template<typename T1, typename T2> class TSimpleEventListenHelper;
 }
 
-class UNREALMVVM_API FListenManager
+class FListenManager
 {
 public:
     /* Helper struct checking that given type is Dynamic Multicast Delegate */
@@ -170,8 +170,8 @@ private:
     TArray<FSubscription> Subscriptions;
 };
 
-#include "Mvvm/Impl/DynamicEventListenHelper.h"
-#include "Mvvm/Impl/SimpleEventListenHelper.h"
+#include "Mvvm/Impl/ListenManager/DynamicEventListenHelper.h"
+#include "Mvvm/Impl/ListenManager/SimpleEventListenHelper.h"
 
 template<typename TWidget, typename TEventPtr>
 typename TEnableIf< FListenManager::TIsDynamicMulticastDelegate<TEventPtr>::Value, UnrealMvvm_Impl::TDynamicEventListenHelper<TWidget, TEventPtr> >::Type

@@ -2,7 +2,8 @@
 
 #include "K2Node_InitViewModelDynamicBinding.h"
 #include "BaseViewBlueprintExtension.h"
-#include "Mvvm/Impl/ViewModelDynamicBinding.h"
+#include "Mvvm/Impl/Binding/ViewModelDynamicBinding.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "KismetCompilerMisc.h"
 
@@ -20,15 +21,22 @@ UClass* UK2Node_InitViewModelDynamicBinding::GetDynamicBindingClass() const
 
 void UK2Node_InitViewModelDynamicBinding::RegisterDynamicBinding(UDynamicBlueprintBinding* BindingObject) const
 {
-    // Copy ViewModelClass from blueprint into DynamicBinding object
-    // We need to do this because UBlueprint is not cooked and we need to know about this class in runtime
-    auto* Binding = CastChecked<UViewModelDynamicBinding>(BindingObject);
-    auto* Extension = UBaseViewBlueprintExtension::Get(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this));
+    UViewModelDynamicBinding* Binding = CastChecked<UViewModelDynamicBinding>(BindingObject);
+    UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(this);
+    UBaseViewBlueprintExtension* Extension = UBaseViewBlueprintExtension::Get(Blueprint);
 
     // Should never be null, because this node may only be created by that Extension
     check(Extension);
 
+    // Copy ViewModelClass from blueprint into DynamicBinding object
+    // We need to do this because UBlueprint is not cooked and we need to know about this class in runtime
     Binding->ViewModelClass = Extension->GetViewModelClass();
+
+    // Collect all ViewModel property bindings into DynamicBinding object
+    Binding->BlueprintBindings = Extension->CollectBlueprintBindings();
+
+    // register View class to generate proper ViewModel property bindings
+    UnrealMvvm_Impl::FViewRegistry::RegisterViewClass(Blueprint->GeneratedClass, Binding->ViewModelClass);
 }
 
 void UK2Node_InitViewModelDynamicBinding::AllocateDefaultPins()

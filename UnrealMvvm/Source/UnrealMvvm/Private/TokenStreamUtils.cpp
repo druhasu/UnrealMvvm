@@ -1,5 +1,7 @@
-#include "Mvvm/Impl/TokenStreamUtils.h"
-#include "Mvvm/Impl/ViewModelPropertyReflection.h"
+// Copyright Andrei Sudarikov. All Rights Reserved.
+
+#include "Mvvm/Impl/Property/TokenStreamUtils.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
 #include "Algo/TopologicalSort.h"
 
 void UnrealMvvm_Impl::FTokenStreamUtils::EnrichWithDerivedClasses(TArray<UClass*>& Classes)

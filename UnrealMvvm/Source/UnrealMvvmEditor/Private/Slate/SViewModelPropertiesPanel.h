@@ -21,12 +21,7 @@ namespace UnrealMvvm_Impl
 class SViewModelPropertiesPanel : public SCompoundWidget
 {
 public:
-    struct FListItem
-    {
-        const UnrealMvvm_Impl::FViewModelPropertyReflection* Reflection;
-    };
-
-    using SPropertyListView = SListView<TSharedRef<FListItem>>;
+    using SBindingListView = SListView<UK2Node_ViewModelPropertyChanged*>;
     using ThisClass = SViewModelPropertiesPanel;
 
     SLATE_BEGIN_ARGS(SViewModelPropertiesPanel) {}
@@ -36,14 +31,17 @@ public:
 
 private:
     TSharedRef<SWidget> MakeViewModelSelector();
-    TSharedRef<ITableRow> MakeViewModelPropertyRow(TSharedRef<FListItem> Item, const TSharedRef<STableViewBase>& OwnerTable);
+    TSharedRef<SWidget> MakeAddBindingButton();
+    TSharedRef<SWidget> MakeAddBindingPopup();
+    void MakeAddBindingMenu(FMenuBuilder& Builder, UClass* ViewModelClass, TArray<FName> InPropertyPath);
+    TSharedRef<SWidget> MakeContextMenuEntryWidget(const UnrealMvvm_Impl::FViewModelPropertyReflection& Reflection);
 
-    TSharedRef<SWidget> MakePropertyNameContent(const FText& NameText);
-    TSharedRef<SWidget> MakePropertyValueContent(const UnrealMvvm_Impl::FViewModelPropertyReflection* Item, FName PropertyName);
+    TSharedRef<ITableRow> MakeBindingRow(UK2Node_ViewModelPropertyChanged* Node, const TSharedRef<STableViewBase>& OwnerTable);
 
-    void RegenerateProperties();
+    void RegenerateBindings();
     void CacheViewModelClass(bool bMayRemoveExtension);
     void OnViewClassChanged(UClass* ViewClass, UClass* ViewModelClass);
+    void OnBlueprintChanged(UBlueprint*);
 
     FText GetClassSelectorTooltip() const;
     bool IsClassSelectorEnabled() const;
@@ -55,25 +53,19 @@ private:
     FText GetGoToSourceTooltip() const;
     bool IsGoToSourceEnabled() const;
 
-    FText GetAddOrViewButtonTooltip(FName PropertyName) const;
-    bool IsAddOrViewButtonEnabled(FName PropertyName) const;
+    void HandleAddBinding(TArray<FName> InPropertyPath);
+    void HandleRemoveBinding(UK2Node_ViewModelPropertyChanged* Node);
 
-    FReply HandleAddOrViewEventForProperty(FName PropertyName);
-    int32 HandleAddOrViewIndexForButton(FName PropertyName) const;
-
-    UK2Node_ViewModelPropertyChanged* FindEventNode(FName PropertyName) const;
+    UK2Node_ViewModelPropertyChanged* FindEventNode(const TArray<FName>& InPropertyPath) const;
 
     TWeakPtr<FBlueprintEditor> WeakBlueprintEditor;
     TWeakObjectPtr<UBlueprint> Blueprint;
 
     bool bParentHasViewModel = false;
-    const UClass* ViewModelClass = nullptr;
+    UClass* ViewModelClass = nullptr;
 
-    TSharedPtr<SPropertyListView> PropertyList;
-    TArray<TSharedRef<FListItem>> Properties;
-
-    /** Container used by all splitters in the details view, so that they move in sync */
-    TSharedPtr<FDetailColumnSizeData> ColumnSizeData;
+    TSharedPtr<SBindingListView> BindingList;
+    TArray<UK2Node_ViewModelPropertyChanged*> BindingNodes;
 };
 
 class SViewModelPropertyRow : public SCompoundWidget

@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Mvvm/Impl/PropertyTypeSelector.h"
-#include "Mvvm/Impl/ViewModelPropertyNamesCache.h"
+#include "Mvvm/Impl/Property/PropertyTypeSelector.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyNamesCache.h"
 
 /** Base non-template class for use as an Id */
 class UNREALMVVM_API FViewModelPropertyBase
@@ -27,7 +27,7 @@ public:
     }
 
     /* Returns Name of UFunction that is called when this property changes */
-    FName GetCallbackName() const
+    FName GetLegacyCallbackName() const
     {
         return UnrealMvvm_Impl::FViewModelPropertyNamesCache::GetPropertyCallbackName(this);
     }
@@ -132,7 +132,7 @@ public:
     static const uint8 Registered;
 };
 
-#include "Mvvm/Impl/ViewModelRegistry.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 
 template
 <

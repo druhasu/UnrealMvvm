@@ -1,14 +1,10 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "K2Node_GetViewModelPropertyValue.h"
-#include "Mvvm/BaseViewModel.h"
-#include "Mvvm/Impl/ViewModelPropertyIterator.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
-#include "BlueprintNodeSpawner.h"
-#include "EditorCategoryUtils.h"
 #include "Kismet2/CompilerResultsLog.h"
-#include "Kismet2/BlueprintEditorUtils.h"
 
 void UK2Node_GetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
@@ -16,8 +12,7 @@ void UK2Node_GetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& Compi
 
     if (FindPin(ViewModelPropertyName)->LinkedTo.Num() > 0)
     {
-        FName FunctionName = FViewModelPropertyNodeHelper::GetFunctionNameForGetPropertyValue(FBlueprintEditorUtils::FindBlueprintForNodeChecked(this)->GeneratedClass);
-        FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
+        FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
     }
 }
 
@@ -44,6 +39,8 @@ void UK2Node_GetViewModelPropertyValue::AllocateDefaultPins()
             CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
         }
     }
+
+    Super::AllocateDefaultPins();
 }
 
 void UK2Node_GetViewModelPropertyValue::ValidateNodeDuringCompilation(FCompilerResultsLog& MessageLog) const
@@ -72,7 +69,7 @@ FText UK2Node_GetViewModelPropertyValue::GetNodeTitleForCache(ENodeTitleType::Ty
         : FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Title", "Get {0}"), FText::FromName(ViewModelPropertyName));
 }
 
-FText UK2Node_GetViewModelPropertyValue::GetTooltipTextForCache() const 
+FText UK2Node_GetViewModelPropertyValue::GetTooltipTextForCache() const
 {
     return FText::Format(NSLOCTEXT("UnrealMvvm", "GetViewModelPropertyValue_Tooltip", "Returns the value of property {0}"), FText::FromName(ViewModelPropertyName));
 }

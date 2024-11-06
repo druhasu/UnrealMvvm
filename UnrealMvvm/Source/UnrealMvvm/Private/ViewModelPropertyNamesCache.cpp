@@ -1,6 +1,6 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
-#include "Mvvm/Impl/ViewModelPropertyNamesCache.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyNamesCache.h"
 #include "Mvvm/ViewModelProperty.h"
 
 using namespace UnrealMvvm_Impl;

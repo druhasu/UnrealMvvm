@@ -18,7 +18,7 @@ void FNodesActionsSpec::Define()
     BeforeEach([]
     {
         // load Blueprint class, so node actions are added to database
-        StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView.BP_TestBaseWidgetView_C"));
+        StaticLoadClass(UObject::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/WidgetView/BP_TestWidgetView_BlueprintBased.BP_TestWidgetView_BlueprintBased_C"));
     });
 
     It("Should provide GetPropertyValue node for public property", [this]
@@ -62,7 +62,7 @@ void FNodesActionsSpec::Define()
         auto* FoundSpawner = FindSpawner("K2Node_GetViewModelPropertyValue", UDerivedClassViewModel::StaticClass(), UDerivedClassViewModel::DerivedClassValueProperty()->GetName());
         TestNotNull("Found K2Node_GetViewModelPropertyValue Spawner", FoundSpawner);
 
-        UBlueprint* Blueprint = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_DerivedViewModel.BP_TestBaseWidgetView_DerivedViewModel")));
+        UBlueprint* Blueprint = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/WidgetView/BP_TestWidgetView_DerivedViewModel.BP_TestWidgetView_DerivedViewModel")));
         FBlueprintActionFilter Filter;
         Filter.Context.Blueprints.Add(Blueprint);
 
@@ -75,7 +75,7 @@ void FNodesActionsSpec::Define()
         auto* FoundSpawner = FindSpawner("K2Node_GetViewModelPropertyValue", UBaseClassViewModel::StaticClass(), UBaseClassViewModel::BaseClassValueProperty()->GetName());
         TestNotNull("Found K2Node_GetViewModelPropertyValue Spawner", FoundSpawner);
 
-        UBlueprint* Blueprint = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/BP_TestBaseWidgetView_DerivedViewModel.BP_TestBaseWidgetView_DerivedViewModel")));
+        UBlueprint* Blueprint = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/WidgetView/BP_TestWidgetView_DerivedViewModel.BP_TestWidgetView_DerivedViewModel")));
         FBlueprintActionFilter Filter;
         Filter.Context.Blueprints.Add(Blueprint);
 

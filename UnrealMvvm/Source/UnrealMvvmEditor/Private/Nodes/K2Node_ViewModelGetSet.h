@@ -21,6 +21,7 @@ public:
     //~ Begin UEdGraphNode Interface
     void PostReconstructNode() override;
     void AllocateDefaultPins() override;
+    FString GetPinMetaData(FName InPinName, FName InKey) override;
     FText GetNodeTitle(ENodeTitleType::Type TitleType) const override;
     FLinearColor GetNodeTitleColor() const override;
     FSlateIcon GetIconAndTint(FLinearColor& OutColor) const override;
@@ -33,8 +34,6 @@ private:
     FName GetFunctionName() const;
     void OnViewClassChanged(UClass* ViewClass, UClass* ViewModelClass);
 
-    static const FName ViewPinName;
-    static const FName ViewModelPinName;
     static const FText GetViewModelNameText;
     static const FText SetViewModelNameText;
     static const FText NodeCategory;
