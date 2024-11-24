@@ -36,13 +36,15 @@
 #define UMVVM_IMPL_PROP_PROPERTY_GETTER_2(Name, ValueType, GetterPtr, SetterPtr, FieldOffset, GetterVisibility, SetterVisibility) \
     static const TViewModelProperty<ThisClass, UMVVM_IMPL_RP(ValueType)>* Name##Property() \
     { \
-        using EVisibility = TViewModelProperty<ThisClass, UMVVM_IMPL_RP(ValueType) >::EAccessorVisibility; \
-        using FPropertyType = TViewModelPropertyRegistered<ThisClass, UMVVM_IMPL_RP(ValueType), Name##Property>; \
-        static constexpr FPropertyType Property = FPropertyType \
-        { GetterPtr, SetterPtr, FieldOffset, EVisibility::V_##GetterVisibility, EVisibility::V_##SetterVisibility, #Name }; \
-        const uint8& Register = FPropertyType::Registered; \
-        return &Property; \
-    }
+        return &Name##PropertyValue; \
+    } \
+private: \
+    static constexpr TViewModelPropertyRegistered<ThisClass, UMVVM_IMPL_RP(ValueType), Name##Property> Init##Name##PropertyValue() \
+    { \
+        return TViewModelPropertyRegistered<ThisClass, UMVVM_IMPL_RP(ValueType), Name##Property> \
+        { GetterPtr, SetterPtr, FieldOffset, FViewModelPropertyBase::EAccessorVisibility::V_##GetterVisibility, FViewModelPropertyBase::EAccessorVisibility::V_##SetterVisibility, #Name }; \
+    } \
+    static inline TViewModelPropertyRegistered<ThisClass, UMVVM_IMPL_RP(ValueType), Name##Property> Name##PropertyValue = Init##Name##PropertyValue();
 
 // creates PropertyGetter method with provided Setter visibility and default Getter visibility (public)
 #define UMVVM_IMPL_PROP_PROPERTY_GETTER_1(Name, ValueType, GetterPtr, SetterPtr, FieldOffset, SetterVisibility) \

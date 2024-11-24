@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Mvvm/Impl/Property/ValueTypeTraits.h"
+#include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/Impl/Property/PropertyFactory.h"
 
 template<typename TOwner, typename TValue>

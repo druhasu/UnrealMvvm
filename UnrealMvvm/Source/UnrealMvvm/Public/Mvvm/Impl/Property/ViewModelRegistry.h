@@ -4,8 +4,6 @@
 
 #include "Mvvm/Impl/Property/PinTraits.h"
 #include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
-//#include "Templates/EnableIf.h"
-//#include "Templates/IsEnumClass.h"
 
 class UClass;
 class UUserWidget;
@@ -33,7 +31,7 @@ namespace UnrealMvvm_Impl
         static const TMap<UClass*, TArray<FViewModelPropertyReflection>>& GetAllProperties() { return ViewModelProperties; }
 
         template<typename TOwner, typename TValue>
-        static uint8 RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr);
+        static void RegisterProperty(const TViewModelProperty<TOwner, TValue>* Prop, const ANSICHAR* InName);
 
         static void ProcessPendingRegistrations();
         static void DeleteKeptProperties();
@@ -65,13 +63,17 @@ namespace UnrealMvvm_Impl
 #include "Mvvm/Impl/Property/ViewModelPropertyOperations.h"
 
 template<typename TOwner, typename TValue>
-inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr)
+inline void UnrealMvvm_Impl::FViewModelRegistry::RegisterProperty(const TViewModelProperty<TOwner, TValue>* Prop, const ANSICHAR* InName)
 {
     using namespace UnrealMvvm_Impl;
     using TDecayedValue = typename TDecay<TValue>::Type;
 
     FUnprocessedPropertyEntry& Entry = GetUnprocessedProperties().AddDefaulted_GetRef();
     Entry.GetClass = &StaticClass<TOwner>;
+
+    // emplace FName into the property object
+    FViewModelPropertyBase* MutablePropertyPtr = const_cast<FViewModelPropertyBase*>((const FViewModelPropertyBase*)Prop);
+    *(FName*)MutablePropertyPtr->NameData = FName(InName);
 
     const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
     const bool IsObject = TIsPointer<TValue>::Value && TModels<CStaticClassProvider, typename TRemoveObjectPointer<typename TRemovePointer<TValue>::Type>::Type>::Value;
@@ -89,7 +91,6 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
 
     FViewModelPropertyReflection& Item = Entry.Reflection;
 
-    const TViewModelProperty<TOwner, TValue>* Prop = PropertyGetterPtr();
     new (Item.OpsBuffer.Buffer.GetTypedPtr()) FEffectiveOpsType(Prop);
 
     Item.SizeOfValue = sizeof(TDecayedValue);
@@ -105,6 +106,4 @@ inline uint8 UnrealMvvm_Impl::FViewModelRegistry::RegisterPropertyGetter(typenam
     Item.GetPinSubCategoryObject = &TPinTraits<TDecayedValue>::GetSubCategoryObject;
     Item.GetPinValueSubCategoryObject = &TPinTraits<TDecayedValue>::GetValueSubCategoryObject;
 #endif
-
-    return 1;
 }
