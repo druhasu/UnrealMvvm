@@ -32,6 +32,7 @@ struct FDateTime;
 struct FPolyglotTextData;
 struct FAssetBundleData;
 struct FTestUninitializedScriptStructMembersTest;
+struct FFrameRate;
 
 namespace UnrealMvvm_Impl
 {
@@ -96,6 +97,12 @@ namespace UnrealMvvm_Impl
     // these types were exposed in 5.2
     DEFINE_BASE_STRUCTURE(FRay);
     DEFINE_BASE_STRUCTURE(FSphere);
+#endif
+
+#if !UE_VERSION_OLDER_THAN(5,5,0)
+    // these types were exposed in 5.5
+    DEFINE_BASE_STRUCTURE(FInt64Vector2);
+    DEFINE_BASE_STRUCTURE(FFrameRate);
 #endif
 
 #undef DEFINE_BASE_STRUCTURE
