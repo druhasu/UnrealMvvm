@@ -27,7 +27,7 @@ struct FBindingWorkerTestHandler : public UnrealMvvm_Impl::IPropertyChangeHandle
     mutable TArray<TTuple<UBaseViewModel*, const FViewModelPropertyBase*>> Calls;
 };
 
-BEGIN_DEFINE_SPEC(FBindingWorkerSpec, "UnrealMvvm.BindingWorker", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+BEGIN_DEFINE_SPEC(FBindingWorkerSpec, "UnrealMvvm.BindingWorker", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 void TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)> TestFunction);
 END_DEFINE_SPEC(FBindingWorkerSpec)
 

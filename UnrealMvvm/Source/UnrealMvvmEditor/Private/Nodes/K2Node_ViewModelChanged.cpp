@@ -41,7 +41,7 @@ void UK2Node_ViewModelChanged::ExpandNode(FKismetCompilerContext& CompilerContex
         return Result;
     };
 
-#if UE_VERSION_OLDER_THAN(5,5,0)
+#if UE_VERSION_OLDER_THAN(5,4,0)
     UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateEventNode<UK2Node_CustomEvent>(this, ExecPin, SourceGraph);
 #else
     UK2Node_CustomEvent* CustomEvent = CompilerContext.SpawnIntermediateNode<UK2Node_CustomEvent>(this, SourceGraph);

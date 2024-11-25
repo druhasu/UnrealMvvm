@@ -5,7 +5,7 @@
 #include "Mvvm/Impl/Binding/BindingConfigurationBuilder.h"
 #include "BindingWorkerTestViewModel.h"
 
-BEGIN_DEFINE_SPEC(FBindingConfigurationBuilderSpec, "UnrealMvvm.BindingConfigurationBuilder", EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+BEGIN_DEFINE_SPEC(FBindingConfigurationBuilderSpec, "UnrealMvvm.BindingConfigurationBuilder", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 void TestViewModel(const FString& Prefix, const UnrealMvvm_Impl::FResolvedViewModelEntry& Actual, const UnrealMvvm_Impl::FResolvedViewModelEntry& Expected);
 void TestProperty(const FString& Prefix, const UnrealMvvm_Impl::FResolvedPropertyEntry& Actual, const UnrealMvvm_Impl::FResolvedPropertyEntry& Expected);
 END_DEFINE_SPEC(FBindingConfigurationBuilderSpec)
