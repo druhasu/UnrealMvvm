@@ -28,7 +28,7 @@ struct FBindingWorkerTestHandler : public UnrealMvvm_Impl::IPropertyChangeHandle
 };
 
 BEGIN_DEFINE_SPEC(FBindingWorkerSpec, "UnrealMvvm.BindingWorker", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
-void TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)> TestFunction);
+void TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, UnrealMvvm_Impl::FBindingWorker& Worker)> TestFunction);
 END_DEFINE_SPEC(FBindingWorkerSpec)
 
 void FBindingWorkerSpec::Define()
@@ -118,6 +118,28 @@ void FBindingWorkerSpec::Define()
             Handler1.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::IntValueProperty());
             Handler2.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::IntValueProperty());
         });
+
+        It("Should handle value change after stopping and starting listening", [this]
+        {
+            FBindingConfigurationBuilder Builder(UBindingWorkerViewModel_Root::StaticClass());
+            Builder.AddBinding({ UBindingWorkerViewModel_Root::IntValueProperty() });
+            FBindingConfiguration Configuration = Builder.Build();
+
+            FBindingWorker Worker;
+            Worker.Init(Configuration);
+            FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
+
+            UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
+            Worker.SetViewModel(RootViewModel);
+
+            Worker.StartListening();
+            Worker.StopListening();
+            Worker.StartListening();
+
+            RootViewModel->SetIntValue(1);
+
+            Handler.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::IntValueProperty());
+        });
     });
 
     Describe("Multiple properties", [this]
@@ -173,13 +195,43 @@ void FBindingWorkerSpec::Define()
             HandlerMin.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::MinIntValueProperty());
             HandlerMax.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::MaxIntValueProperty());
         });
+
+        It("Should handle value change after stopping and starting listening", [this]
+        {
+            FBindingConfigurationBuilder Builder(UBindingWorkerViewModel_Root::StaticClass());
+            Builder.AddBinding({ UBindingWorkerViewModel_Root::IntValueProperty() });
+            Builder.AddBinding({ UBindingWorkerViewModel_Root::MinIntValueProperty() });
+            Builder.AddBinding({ UBindingWorkerViewModel_Root::MaxIntValueProperty() });
+            FBindingConfiguration Configuration = Builder.Build();
+
+            FBindingWorker Worker;
+            Worker.Init(Configuration);
+            FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
+            FBindingWorkerTestHandler& HandlerMin = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MinIntValueProperty() });
+            FBindingWorkerTestHandler& HandlerMax = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MaxIntValueProperty() });
+
+            UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
+            Worker.SetViewModel(RootViewModel);
+
+            Worker.StartListening();
+            Worker.StopListening();
+            Worker.StartListening();
+
+            RootViewModel->SetIntValue(1);
+            RootViewModel->SetMinIntValue(1);
+            RootViewModel->SetMaxIntValue(1);
+
+            Handler.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::IntValueProperty());
+            HandlerMin.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::MinIntValueProperty());
+            HandlerMax.TestCall(1, RootViewModel, UBindingWorkerViewModel_Root::MaxIntValueProperty());
+        });
     });
 
     Describe("PropertyPath", [this]
     {
         It("Should handle initial value", [this]
         {
-            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)
+            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, FBindingWorker& Worker)
             {
                 UBaseViewModel* SecondChildViewModel = RootViewModel->GetChild()->GetChild();
 
@@ -189,7 +241,7 @@ void FBindingWorkerSpec::Define()
 
         It("Should handle change of first Property in Path", [this]
         {
-            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)
+            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, FBindingWorker& Worker)
             {
                 UBindingWorkerViewModel_FirstChild* FirstChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_FirstChild>();
                 UBindingWorkerViewModel_SecondChild* SecondChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
@@ -203,7 +255,7 @@ void FBindingWorkerSpec::Define()
 
         It("Should handle change of middle Property in Path", [this]
         {
-            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)
+            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, FBindingWorker& Worker)
             {
                 UBindingWorkerViewModel_FirstChild* FirstChildViewModel = RootViewModel->GetChild();
 
@@ -216,8 +268,22 @@ void FBindingWorkerSpec::Define()
 
         It("Should handle change of last Property in Path", [this]
         {
-            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)
+            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, FBindingWorker& Worker)
             {
+                UBindingWorkerViewModel_SecondChild* SecondChildViewModel = RootViewModel->GetChild()->GetChild();
+                SecondChildViewModel->SetIntValue(1);
+
+                Handler.TestCall(1, SecondChildViewModel, UBindingWorkerViewModel_SecondChild::IntValueProperty());
+            });
+        });
+
+        It("Should handle change of last Property in Path after stopping and starting listening", [this]
+        {
+            TestPropertyPath([this](FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, FBindingWorker& Worker)
+            {
+                Worker.StopListening();
+                Worker.StartListening();
+
                 UBindingWorkerViewModel_SecondChild* SecondChildViewModel = RootViewModel->GetChild()->GetChild();
                 SecondChildViewModel->SetIntValue(1);
 
@@ -227,7 +293,7 @@ void FBindingWorkerSpec::Define()
     });
 }
 
-void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel)> TestFunction)
+void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, UnrealMvvm_Impl::FBindingWorker& Worker)> TestFunction)
 {
     using namespace UnrealMvvm_Impl;
 
@@ -235,7 +301,7 @@ void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHa
     Builder.AddBinding({ UBindingWorkerViewModel_Root::ChildProperty(), UBindingWorkerViewModel_FirstChild::ChildProperty(), UBindingWorkerViewModel_SecondChild::IntValueProperty() });
     FBindingConfiguration Configuration = Builder.Build();
 
-    UnrealMvvm_Impl::FBindingWorker Worker;
+    FBindingWorker Worker;
     Worker.Init(Configuration);
 
     UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
@@ -250,5 +316,5 @@ void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHa
     FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::ChildProperty(), UBindingWorkerViewModel_FirstChild::ChildProperty(), UBindingWorkerViewModel_SecondChild::IntValueProperty() });
     Worker.StartListening();
 
-    TestFunction(Handler, RootViewModel);
+    TestFunction(Handler, RootViewModel, Worker);
 }

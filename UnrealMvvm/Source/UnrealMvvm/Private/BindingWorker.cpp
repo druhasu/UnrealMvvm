@@ -71,12 +71,18 @@ void FBindingWorker::StopListening()
     TArrayView<FResolvedViewModelEntry> ViewModelEntries = Bindings.GetViewModels();
 
     // unsubscribe from existing ViewModels
-    for (FResolvedViewModelEntry& ViewModelEntry : ViewModelEntries)
+    for(int32 Index = 0; Index < ViewModelEntries.Num(); ++Index)
     {
+        FResolvedViewModelEntry& ViewModelEntry = ViewModelEntries[Index];
         if (ViewModelEntry.ViewModel != nullptr)
         {
             ViewModelEntry.ViewModel->Unsubscribe(this);
-            ViewModelEntry.ViewModel = nullptr;
+
+            // clear all entries except the first one
+            if (Index > 0)
+            {
+                ViewModelEntry.ViewModel = nullptr;
+            }
         }
     }
 
