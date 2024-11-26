@@ -1,5 +1,7 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
+#pragma once
+
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SCompoundWidget.h"
 

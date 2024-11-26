@@ -19,6 +19,7 @@
 #include "SViewModelBindingEntry.h"
 #include "Widgets/Images/SLayeredImage.h"
 #include "Styling/StyleColors.h"
+#include "ScopedTransaction.h"
 
 void SViewModelPropertiesPanel::Construct(const FArguments& InArgs, TSharedPtr<FBlueprintEditor> Editor)
 {

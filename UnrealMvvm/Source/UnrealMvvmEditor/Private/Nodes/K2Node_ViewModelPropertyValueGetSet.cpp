@@ -2,6 +2,9 @@
 
 #include "K2Node_ViewModelPropertyValueGetSet.h"
 #include "ViewModelPropertyNodeHelper.h"
+#include "ToolMenu.h"
+#include "ToolMenuSection.h"
+#include "ScopedTransaction.h"
 
 void UK2Node_ViewModelPropertyValueGetSet::PostPlacedNewNode()
 {
