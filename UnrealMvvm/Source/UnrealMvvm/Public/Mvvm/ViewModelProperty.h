@@ -108,24 +108,3 @@ private:
     FGetterPtr Getter;
     FSetterPtr Setter; // this variable MUST BE the last one due to a bug in MSVC compiler
 };
-
-#include "Mvvm/Impl/Property/ViewModelRegistry.h"
-
-/* Helper class that registers a property into reflection system */
-template
-<
-    typename TOwner,
-    typename TValue,
-    typename TViewModelProperty<TOwner, TValue>::FPropertyGetterPtr PropertyGetterPtr
->
-class TViewModelPropertyRegistered : public TViewModelProperty<TOwner, TValue>
-{
-    using Super = TViewModelProperty<TOwner, TValue>;
-
-public:
-    constexpr TViewModelPropertyRegistered(typename Super::FGetterPtr InGetter, typename Super::FSetterPtr InSetter, int32 InFieldOffset, typename Super::EAccessorVisibility GetterVisibility, typename Super::EAccessorVisibility SetterVisibility, const ANSICHAR* InName)
-        : Super(InGetter, InSetter, InFieldOffset, GetterVisibility, SetterVisibility)
-    {
-        UnrealMvvm_Impl::FViewModelRegistry::RegisterProperty<TOwner, TValue>(PropertyGetterPtr(), InName);
-    }
-};

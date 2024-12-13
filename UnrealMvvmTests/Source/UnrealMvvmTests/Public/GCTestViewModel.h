@@ -57,12 +57,10 @@ class UGCTestViewModel : public UBaseViewModel
     VM_PROP_AG_AS((TMap<UGCTestObject*, UGCTestObject*>), PointerMapKeyValue, public, public);
     VM_PROP_AG_AS((const TMap<UGCTestObject*, UGCTestObject*>&), PointerMapKeyValueRef, public, public);
 
-#if ENGINE_MAJOR_VERSION >= 5
     VM_PROP_AG_AS(TObjectPtr<UGCTestObject>, ObjectPtr, public, public);
     VM_PROP_AG_AS(TArray<TObjectPtr<UGCTestObject>>, ObjectPtrArray, public, public);
     VM_PROP_AG_AS(TSet<TObjectPtr<UGCTestObject>>, ObjectPtrSet, public, public);
     VM_PROP_AG_AS((TMap<TObjectPtr<UGCTestObject>, int32>), ObjectPtrMapKey, public, public);
-#endif
 
     VM_PROP_AG_AS(FGCTestStruct, Struct, public, public);
     VM_PROP_AG_AS(TArray<FGCTestStruct>, StructArray, public, public);

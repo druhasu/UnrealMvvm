@@ -3,6 +3,8 @@
 #include "Misc/AutomationTest.h"
 
 #include "PinTraitsViewModel.h"
+#include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 
 using namespace UnrealMvvm_Impl;
 

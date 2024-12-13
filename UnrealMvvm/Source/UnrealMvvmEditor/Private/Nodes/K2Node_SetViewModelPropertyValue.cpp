@@ -2,6 +2,7 @@
 
 #include "K2Node_SetViewModelPropertyValue.h"
 #include "Mvvm/BaseViewModel.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "Kismet2/CompilerResultsLog.h"

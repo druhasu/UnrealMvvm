@@ -153,6 +153,14 @@ void ViewModelRegistrySpec::Define()
             TestEqual("Fields[0]", Fields[0]->GetName(), TEXT("Pointer"));
             TestEqual("Fields[1]", Fields[1]->GetName(), TEXT("PointerMap"));
             TestEqual("Fields[2]", Fields[2]->GetName(), TEXT("PointerSet"));
+
+            // perform cleanup
+            TArray<FField*> KeptProperties;
+            FTokenStreamUtils::CleanupProperties(TargetClass, FirstField, KeptProperties);
+            for (FField* Field : KeptProperties)
+            {
+                delete Field;
+            }
         });
 
         It("Should Add Properties To Class With Own Properties", [this]
@@ -171,6 +179,14 @@ void ViewModelRegistrySpec::Define()
             TestEqual("Fields[1]", Fields[1]->GetName(), TEXT("PointerMap"));
             TestEqual("Fields[2]", Fields[2]->GetName(), TEXT("PointerSet"));
             TestEqual("Fields[3]", Fields[3]->GetName(), TEXT("FirstProperty"));
+
+            // perform cleanup
+            TArray<FField*> KeptProperties;
+            FTokenStreamUtils::CleanupProperties(TargetClass, FirstField, KeptProperties);
+            for (FField* Field : KeptProperties)
+            {
+                delete Field;
+            }
         });
 
         It("Should Remove Properties From Class Without Own Properties", [this]
@@ -403,7 +419,7 @@ void ViewModelRegistrySpec::Define()
 
                 int32 InValue = 123;
 
-                Property->GetOperations().SetValue(ViewModel, &InValue, true);                
+                Property->GetOperations().SetValue(ViewModel, &InValue, true);
                 TestEqual("Value", ViewModel->GetMyIntOptional(), TOptional<int32>(123));
 
                 Property->GetOperations().SetValue(ViewModel, &InValue, false);
@@ -466,6 +482,11 @@ UClass* ViewModelRegistrySpec::MakeTempClass(UClass* Class)
     Params.bSkipPostLoad = true; // prevent Fatal error during duplication
 
     UClass* Result = CastChecked<UClass>(StaticDuplicateObjectEx(Params));
+    Result->ClassConstructor = Class->ClassConstructor;
+    Result->ClassVTableHelperCtorCaller = Class->ClassVTableHelperCtorCaller;
+    Result->CppClassStaticFunctions = Class->CppClassStaticFunctions;
+    Result->ClassCastFlags = Class->ClassCastFlags;
+    Result->ClassWithin = Class->ClassWithin;
     Result->StaticLink(true);
 
     // make sure it won't be picked up by any TObjectIterator

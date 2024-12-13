@@ -5,22 +5,11 @@
 #include "Mvvm/BaseViewModel.h"
 #include "MacrosTestViewModel.generated.h"
 
-#define VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(Suffix, ...) \
-    VM_PROP_AG_AS(int32, PropAgAs ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_AG_MS(int32, PropAgMs ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_MG_AS(int32, PropMgAs ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_MG_MS(int32, PropMgMs ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_AG_AS_NF(int32, PropAgAsNf ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_AG_MS_NF(int32, PropAgMsNf ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_MG_AS_NF(int32, PropMgAsNf ## Suffix, ##__VA_ARGS__); \
-    VM_PROP_MG_MS_NF(int32, PropMgMsNf ## Suffix, ##__VA_ARGS__); \
+#define VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(Suffix) \
     int32 PropAgAsNf ## Suffix ## Field = 0; \
     int32 PropAgMsNf ## Suffix ## Field = 0; \
     int32 PropMgAsNf ## Suffix ## Field = 0; \
     int32 PropMgMsNf ## Suffix ## Field = 0;
-
-#define VM_PROP_ACCESSOR_TEST_GETTER_ONLY_DECLARE(Suffix, ...) \
-    VM_PROP_MG_NF(int32, PropMgNf ## Suffix, ##__VA_ARGS__) { return 42; }
 
 /*
  * Empty struct to force multiple inheritance in UMacrosTestViewModel
@@ -51,20 +40,86 @@ class UMacrosTestViewModel : public UBaseViewModel, public FMacrosTestMixin
     VM_PROP_AG_AS(const int32&, RefPropAgAs, public, public);
     VM_PROP_AG_AS(int32*, PtrPropAgAs, public, public);
 
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(PubPub, public, public);
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(PubPriv, public, private);
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(PrivPub, private, public);
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(PrivPriv, private, private);
+    // public, public
+    VM_PROP_AG_AS(int32, PropAgAsPubPub, public, public);
+    VM_PROP_AG_MS(int32, PropAgMsPubPub, public, public);
+    VM_PROP_MG_AS(int32, PropMgAsPubPub, public, public);
+    VM_PROP_MG_MS(int32, PropMgMsPubPub, public, public);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfPubPub, public, public);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfPubPub, public, public);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfPubPub, public, public);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfPubPub, public, public);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(PubPub);
 
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(Pub, public);
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(Priv, private);
+    // public, private
+    VM_PROP_AG_AS(int32, PropAgAsPubPriv, public, private);
+    VM_PROP_AG_MS(int32, PropAgMsPubPriv, public, private);
+    VM_PROP_MG_AS(int32, PropMgAsPubPriv, public, private);
+    VM_PROP_MG_MS(int32, PropMgMsPubPriv, public, private);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfPubPriv, public, private);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfPubPriv, public, private);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfPubPriv, public, private);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfPubPriv, public, private);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(PubPriv);
 
-    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE(Def);
+    // private, public
+    VM_PROP_AG_AS(int32, PropAgAsPrivPub, private, public);
+    VM_PROP_AG_MS(int32, PropAgMsPrivPub, private, public);
+    VM_PROP_MG_AS(int32, PropMgAsPrivPub, private, public);
+    VM_PROP_MG_MS(int32, PropMgMsPrivPub, private, public);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfPrivPub, private, public);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfPrivPub, private, public);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfPrivPub, private, public);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfPrivPub, private, public);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(PrivPub);
 
-    VM_PROP_ACCESSOR_TEST_GETTER_ONLY_DECLARE(Pub, public);
-    VM_PROP_ACCESSOR_TEST_GETTER_ONLY_DECLARE(Priv, private);
+    // private, private
+    VM_PROP_AG_AS(int32, PropAgAsPrivPriv, private, private);
+    VM_PROP_AG_MS(int32, PropAgMsPrivPriv, private, private);
+    VM_PROP_MG_AS(int32, PropMgAsPrivPriv, private, private);
+    VM_PROP_MG_MS(int32, PropMgMsPrivPriv, private, private);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfPrivPriv, private, private);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfPrivPriv, private, private);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfPrivPriv, private, private);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfPrivPriv, private, private);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(PrivPriv);
 
-    VM_PROP_ACCESSOR_TEST_GETTER_ONLY_DECLARE(Def);
+    // public
+    VM_PROP_AG_AS(int32, PropAgAsPub, public);
+    VM_PROP_AG_MS(int32, PropAgMsPub, public);
+    VM_PROP_MG_AS(int32, PropMgAsPub, public);
+    VM_PROP_MG_MS(int32, PropMgMsPub, public);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfPub, public);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfPub, public);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfPub, public);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfPub, public);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(Pub);
+
+    // private
+    VM_PROP_AG_AS(int32, PropAgAsPriv, private);
+    VM_PROP_AG_MS(int32, PropAgMsPriv, private);
+    VM_PROP_MG_AS(int32, PropMgAsPriv, private);
+    VM_PROP_MG_MS(int32, PropMgMsPriv, private);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfPriv, private);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfPriv, private);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfPriv, private);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfPriv, private);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(Priv);
+
+    // empty
+    VM_PROP_AG_AS(int32, PropAgAsDef);
+    VM_PROP_AG_MS(int32, PropAgMsDef);
+    VM_PROP_MG_AS(int32, PropMgAsDef);
+    VM_PROP_MG_MS(int32, PropMgMsDef);
+    VM_PROP_AG_AS_NF(int32, PropAgAsNfDef);
+    VM_PROP_AG_MS_NF(int32, PropAgMsNfDef);
+    VM_PROP_MG_AS_NF(int32, PropMgAsNfDef);
+    VM_PROP_MG_MS_NF(int32, PropMgMsNfDef);
+    VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS(Def);
+
+    VM_PROP_MG_NF(int32, PropMgNfPub, public) { return 42; }
+    VM_PROP_MG_NF(int32, PropMgNfPriv, private) { return 42; }
+    VM_PROP_MG_NF(int32, PropMgNfDef) { return 42; }
 
 private:
     int32 PropAgAsNfField = 0;
@@ -75,5 +130,4 @@ private:
     int32 PropMgNfField = 42;
 };
 
-#undef VM_PROP_ACCESSOR_TEST_COMMON_DECLARE
-#undef VM_PROP_ACCESSOR_TEST_GETTER_ONLY_DECLARE
+#undef VM_PROP_ACCESSOR_TEST_COMMON_DECLARE_FIELDS

@@ -101,7 +101,6 @@ void FViewModelGCSpec::Define()
             });
         });
 
-#if ENGINE_MAJOR_VERSION >= 5
         It("Should keep object stored as TObjectPtr<UObject>", [this]
         {
             TestCommon([](UGCTestViewModel* ViewModel, auto Obj)
@@ -133,7 +132,6 @@ void FViewModelGCSpec::Define()
                 ViewModel->SetObjectPtrMapKey({ { Obj, 1 } });
             });
         });
-#endif
     });
 
     Describe("Struct", [this]

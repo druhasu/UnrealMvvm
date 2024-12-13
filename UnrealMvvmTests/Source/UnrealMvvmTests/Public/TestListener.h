@@ -2,19 +2,12 @@
 
 #pragma once
 
-#include "Runtime/Launch/Resources/Version.h"
 #include "Templates/SharedPointer.h"
 #include "TestListener.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTestDynamicDelegate);
 
-struct FTestListener : public TSharedFromThis<FTestListener,
-#if ENGINE_MAJOR_VERSION >= 5
-    ESPMode::ThreadSafe
-#else
-    ESPMode::NotThreadSafe
-#endif
->
+struct FTestListener : public TSharedFromThis<FTestListener>
 {
 public:
     void SimpleCallback() { Invoked = true; }
@@ -26,6 +19,7 @@ UCLASS()
 class UTestListener : public UObject
 {
     GENERATED_BODY()
+
 public:
     void SimpleCallback() { Invoked = true; }
 

@@ -10,6 +10,7 @@ class FViewModelPropertyBase;
 
 namespace UnrealMvvm_Impl
 {
+    struct FViewModelPropertyReflection;
 
     /*
      * Helper class to build BindingConfiguration from Native and Blueprint bindings

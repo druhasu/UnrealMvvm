@@ -2,6 +2,7 @@
 
 #include "Mvvm/Impl/Binding/BindingConfigurationBuilder.h"
 #include "Mvvm/Impl/Binding/BindingConfiguration.h"
+#include "Mvvm/Impl/Property/ViewModelRegistry.h"
 
 namespace UnrealMvvm_Impl
 {
