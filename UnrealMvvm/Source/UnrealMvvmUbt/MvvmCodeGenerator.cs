@@ -1,6 +1,7 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +21,7 @@ public static class MvvmCodeGenerator
     private const string ExporterName = "UnrealMvvmGenerator";
     private const string ExporterNameFixup = "UnrealMvvmGeneratorFixup";
 
-    private static List<UhtMvvmProperty> Properties = new();
+    private static ConcurrentBag<UhtMvvmProperty> Properties = new();
 
     private static List<string> GeneratedFiles = new();
 
