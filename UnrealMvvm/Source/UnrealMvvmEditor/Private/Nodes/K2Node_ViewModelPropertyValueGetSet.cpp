@@ -5,6 +5,7 @@
 #include "ToolMenu.h"
 #include "ToolMenuSection.h"
 #include "ScopedTransaction.h"
+#include "EdGraphSchema_K2.h"
 
 void UK2Node_ViewModelPropertyValueGetSet::PostPlacedNewNode()
 {

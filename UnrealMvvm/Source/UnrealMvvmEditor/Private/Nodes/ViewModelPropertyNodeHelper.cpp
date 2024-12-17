@@ -10,6 +10,7 @@
 #include "EdGraph/EdGraphNode.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_Self.h"
+#include "EdGraphSchema_K2.h"
 
 const FName FViewModelPropertyNodeHelper::HasValuePinName("HasValue");
 const FName FViewModelPropertyNodeHelper::ViewModelPinName("ViewModel");

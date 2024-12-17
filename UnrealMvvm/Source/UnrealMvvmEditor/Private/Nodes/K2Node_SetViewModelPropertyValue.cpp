@@ -6,6 +6,7 @@
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "Kismet2/CompilerResultsLog.h"
+#include "EdGraphSchema_K2.h"
 
 void UK2Node_SetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {

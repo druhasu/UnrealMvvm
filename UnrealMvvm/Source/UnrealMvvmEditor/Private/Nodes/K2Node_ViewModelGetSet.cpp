@@ -14,6 +14,7 @@
 #include "K2Node_CallFunction.h"
 #include "K2Node_DynamicCast.h"
 #include "K2Node_Self.h"
+#include "EdGraphSchema_K2.h"
 
 const FText UK2Node_ViewModelGetSet::GetViewModelNameText = FText::FromString("Get ViewModel");
 const FText UK2Node_ViewModelGetSet::SetViewModelNameText = FText::FromString("Set ViewModel");

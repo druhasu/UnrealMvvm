@@ -6,6 +6,7 @@
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "KismetCompilerMisc.h"
+#include "EdGraphSchema_K2.h"
 
 FNodeHandlingFunctor* UK2Node_InitViewModelDynamicBinding::CreateNodeHandler(class FKismetCompilerContext& CompilerContext) const
 {
