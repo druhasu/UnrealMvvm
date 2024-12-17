@@ -43,51 +43,50 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
     CompilerContext.MovePinLinksToIntermediate(*ExecPin, *Schema->FindExecutionPin(*CustomEvent, EGPD_Output));
 
     UEdGraphPin* ValueOutPin = FindPin(PropertyPath.Last());
-    if (!ValueOutPin->HasAnyConnections())
-    {
-        // don't spawn GetPropertyValue nodes if result pin of this node is not connected
-        return;
-    }
-
-    // spawn GetViewModel node
-    UK2Node_CallFunction* GetViewModelCall = FViewModelPropertyNodeHelper::SpawnGetViewModelNodes(CompilerContext, this, SourceGraph);
-    UEdGraphPin* LastReturnValuePin = GetViewModelCall->GetReturnValuePin();
-
-    // spawn Get Value nodes for all properties in the path
-    FViewModelPropertyNodeHelper::ForEachPropertyInPath(PropertyPath, GetViewModelClass(),
-        [&](UClass* ViewModelClass, FName PropertyName, const UnrealMvvm_Impl::FViewModelPropertyReflection* Reflection)
-    {
-        // spawn GetViewModelPropertyValue
-        UK2Node_CallFunction* GetViewModelPropertyValueCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
-        GetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, UMvvmBlueprintLibrary::StaticClass());
-        GetViewModelPropertyValueCall->AllocateDefaultPins();
-
-        // set property name
-        UEdGraphPin* PropertyNamePin = GetViewModelPropertyValueCall->FindPin(TEXT("PropertyName"));
-        PropertyNamePin->DefaultValue = PropertyName.ToString();
-
-        // set correct type to ReturnValue pin
-        UEdGraphPin* ReturnValuePin = GetViewModelPropertyValueCall->FindPin(TEXT("Value"));
-        FViewModelPropertyNodeHelper::FillPinType(ReturnValuePin->PinType, PropertyName, ViewModelClass);
-
-        // connect ViewModel output pin of previous node to ViewModel input of a new node
-        UEdGraphPin* ViewModelInPin = GetViewModelPropertyValueCall->FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
-        Schema->TryCreateConnection(LastReturnValuePin, ViewModelInPin);
-
-        // update last ReturnValue pin to a new one
-        LastReturnValuePin = ReturnValuePin;
-    });
-
-    // connect ReturnValue pin of a last GetViewModelPropertyValue node to the output of this node
-    CompilerContext.MovePinLinksToIntermediate(*ValueOutPin, *LastReturnValuePin);
-
-    // connect HasValue pin if exists
     UEdGraphPin* HasValueOutPin = FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
-    if (HasValueOutPin)
+
+    // don't spawn GetPropertyValue nodes if result pin of this node is not connected
+    if (ValueOutPin->HasAnyConnections() || (HasValueOutPin != nullptr && HasValueOutPin->HasAnyConnections()))
     {
-        // find HasValue pin in the last node
-        UEdGraphPin* LastHasValuePin = LastReturnValuePin->GetOwningNode()->FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
-        CompilerContext.MovePinLinksToIntermediate(*HasValueOutPin, *LastHasValuePin);
+        // spawn GetViewModel node
+        UK2Node_CallFunction* GetViewModelCall = FViewModelPropertyNodeHelper::SpawnGetViewModelNodes(CompilerContext, this, SourceGraph);
+        UEdGraphPin* LastReturnValuePin = GetViewModelCall->GetReturnValuePin();
+
+        // spawn Get Value nodes for all properties in the path
+        FViewModelPropertyNodeHelper::ForEachPropertyInPath(PropertyPath, GetViewModelClass(),
+            [&](UClass* ViewModelClass, FName PropertyName, const UnrealMvvm_Impl::FViewModelPropertyReflection* Reflection)
+        {
+            // spawn GetViewModelPropertyValue
+            UK2Node_CallFunction* GetViewModelPropertyValueCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+            GetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, UMvvmBlueprintLibrary::StaticClass());
+            GetViewModelPropertyValueCall->AllocateDefaultPins();
+
+            // set property name
+            UEdGraphPin* PropertyNamePin = GetViewModelPropertyValueCall->FindPin(TEXT("PropertyName"));
+            PropertyNamePin->DefaultValue = PropertyName.ToString();
+
+            // set correct type to ReturnValue pin
+            UEdGraphPin* ReturnValuePin = GetViewModelPropertyValueCall->FindPin(TEXT("Value"));
+            FViewModelPropertyNodeHelper::FillPinType(ReturnValuePin->PinType, PropertyName, ViewModelClass);
+
+            // connect ViewModel output pin of previous node to ViewModel input of a new node
+            UEdGraphPin* ViewModelInPin = GetViewModelPropertyValueCall->FindPin(FViewModelPropertyNodeHelper::ViewModelPinName);
+            Schema->TryCreateConnection(LastReturnValuePin, ViewModelInPin);
+
+            // update last ReturnValue pin to a new one
+            LastReturnValuePin = ReturnValuePin;
+        });
+
+        // connect ReturnValue pin of a last GetViewModelPropertyValue node to the output of this node
+        CompilerContext.MovePinLinksToIntermediate(*ValueOutPin, *LastReturnValuePin);
+
+        // connect HasValue pin if exists
+        if (HasValueOutPin)
+        {
+            // find HasValue pin in the last node
+            UEdGraphPin* LastHasValuePin = LastReturnValuePin->GetOwningNode()->FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
+            CompilerContext.MovePinLinksToIntermediate(*HasValueOutPin, *LastHasValuePin);
+        }
     }
 }
 
