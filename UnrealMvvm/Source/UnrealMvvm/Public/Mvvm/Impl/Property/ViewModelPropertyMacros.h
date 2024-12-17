@@ -40,7 +40,7 @@
         return &Name##PropertyValue; \
     } \
 private: \
-    static const F##Name##Property Name##PropertyValue;
+    static F##Name##Property Name##PropertyValue;
 
 // creates PropertyGetter method with provided Setter visibility and default Getter visibility (public)
 #define UMVVM_IMPL_PROP_PROPERTY_GETTER_1(Name, ValueType, GetterPtr, SetterPtr, FieldOffset, SetterVisibility) \

@@ -8,7 +8,6 @@ static class UhtMvvmPropertyStringBuilderExtensions
 {
     public static void AppendPropertyVariableType(this StringBuilder sb, UhtMvvmProperty p)
     {
-        sb.Append("const ");
         sb.Append(p.Class.SourceName);
         sb.Append("::F");
         sb.Append(p.SourceName);

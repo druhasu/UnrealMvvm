@@ -165,7 +165,7 @@ public static class MvvmCodeGenerator
             var originalWriteTime = File.GetLastWriteTime(originalFilepath);
             var newFilepath = originalFilepath.Substring(0, originalFilepath.Length - ".keep".Length) + ".cpp";
 
-            File.Copy(originalFilepath, newFilepath);
+            File.Copy(originalFilepath, newFilepath, true);
             File.SetLastWriteTime(newFilepath, originalWriteTime);
         }
     }
