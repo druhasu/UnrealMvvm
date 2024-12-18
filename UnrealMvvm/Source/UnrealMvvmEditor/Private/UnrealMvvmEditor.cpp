@@ -175,7 +175,7 @@ private:
     {
         using namespace UnrealMvvm_Impl;
 
-        if (!SavedBlueprint->ParentClass->IsNative() && FViewRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
+        if (!SavedBlueprint->ParentClass->IsNative() && UBaseViewBlueprintExtension::GetViewModelClass(SavedBlueprint))
         {
             // if our parent class have ViewModel defined, then we don't need our own BlueprintExtension
             // but only if our parent is also a Blueprint class
@@ -199,7 +199,7 @@ private:
         // check that this Blueprint represents a View
         if (Blueprint != nullptr)
         {
-            UClass* ViewModelClass = FViewRegistry::GetViewModelClass(Blueprint->GeneratedClass);
+            UClass* ViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(Blueprint);
 
             if (ViewModelClass != nullptr)
             {

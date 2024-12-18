@@ -303,7 +303,7 @@ void SViewModelPropertiesPanel::RegenerateBindings()
 
 void SViewModelPropertiesPanel::CacheViewModelClass(bool bMayRemoveExtension)
 {
-    ViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->ParentClass);
+    ViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(Blueprint.Get());
     bParentHasViewModel = ViewModelClass != nullptr;
 
     if (!ViewModelClass)

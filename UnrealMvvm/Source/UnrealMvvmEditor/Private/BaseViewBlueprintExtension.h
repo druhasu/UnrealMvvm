@@ -18,6 +18,7 @@ public:
     static UBaseViewBlueprintExtension* Request(UBlueprint* Blueprint);
     static UBaseViewBlueprintExtension* Get(UBlueprint* Blueprint);
     static void Remove(UBlueprint* Blueprint);
+    static UClass* GetViewModelClass(UBlueprint* Blueprint);
 
     void Serialize(FArchive& Ar) override;
 

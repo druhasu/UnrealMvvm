@@ -2,7 +2,7 @@
 
 #include "ViewModelPropertyNodeHelper.h"
 #include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
-#include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "BaseViewBlueprintExtension.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "KismetCompiler.h"
@@ -261,7 +261,7 @@ bool FViewModelPropertyNodeHelper::IsBlueprintViewModelCompatible(const UEdGraph
         return false;
     }
 
-    UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->GeneratedClass);
+    UClass* BlueprintViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(Blueprint);
     if (BlueprintViewModelClass == nullptr)
     {
         // not compatible, because there is no ViewModel for current Blueprint class

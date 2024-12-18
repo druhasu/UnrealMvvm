@@ -4,6 +4,7 @@
 #include "Mvvm/BaseViewModel.h"
 #include "Mvvm/Impl/BaseView/BaseViewComponentImpl.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "BaseViewBlueprintExtension.h"
 #include "GraphEditorSettings.h"
 #include "EdGraphSchema_K2.h"
 #include "KismetCompiler.h"
@@ -29,7 +30,7 @@ void UK2Node_ViewModelChanged::ExpandNode(FKismetCompilerContext& CompilerContex
         return;
     }
 
-    UClass* ViewModelClass = FViewRegistry::GetViewModelClass(GetViewClass());
+    UClass* ViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(GetBlueprint());
     auto MakePinInfo = [&](const FName& NewName)
     {
         TSharedPtr<FUserPinInfo> Result = MakeShared<FUserPinInfo>();
@@ -75,8 +76,7 @@ bool UK2Node_ViewModelChanged::IsActionFilteredOut(class FBlueprintActionFilter 
 
     for (UBlueprint* Blueprint : Filter.Context.Blueprints)
     {
-        UClass* ViewClass = Blueprint->GeneratedClass;
-        UClass* ViewModelClass = FViewRegistry::GetViewModelClass(ViewClass);
+        UClass* ViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(Blueprint);
 
         if (!ViewModelClass)
         {
@@ -133,7 +133,7 @@ void UK2Node_ViewModelChanged::UpdatePinTypes()
 {
     using namespace UnrealMvvm_Impl;
 
-    UClass* ViewModelClass = FViewRegistry::GetViewModelClass(GetViewClass());
+    UClass* ViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(GetBlueprint());
     FindPin(OldViewModelPinName)->PinType.PinSubCategoryObject = ViewModelClass;
     FindPin(NewViewModelPinName)->PinType.PinSubCategoryObject = ViewModelClass;
 }

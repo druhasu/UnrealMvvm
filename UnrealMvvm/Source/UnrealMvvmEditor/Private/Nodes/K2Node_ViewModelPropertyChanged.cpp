@@ -3,6 +3,7 @@
 #include "K2Node_ViewModelPropertyChanged.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
+#include "BaseViewBlueprintExtension.h"
 #include "EdGraphSchema_K2.h"
 #include "KismetCompiler.h"
 #include "K2Node_CustomEvent.h"
@@ -194,8 +195,7 @@ FName UK2Node_ViewModelPropertyChanged::MakeCallbackName() const
 
 UClass* UK2Node_ViewModelPropertyChanged::GetViewModelClass() const
 {
-    UClass* ViewClass = GetBlueprint()->GeneratedClass;
-    return UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(ViewClass);
+    return UBaseViewBlueprintExtension::GetViewModelClass(GetBlueprint());
 }
 
 FText UK2Node_ViewModelPropertyChanged::GetNodeTitleForCache(ENodeTitleType::Type TitleType) const

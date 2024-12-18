@@ -2,7 +2,7 @@
 
 #include "K2Node_ViewModelPropertyBase.h"
 #include "Mvvm/Impl/Property/ViewModelRegistry.h"
-#include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "BaseViewBlueprintExtension.h"
 #include "Mvvm/ViewModelProperty.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "BlueprintActionDatabaseRegistrar.h"
@@ -60,8 +60,7 @@ bool UK2Node_ViewModelPropertyBase::IsActionFilteredOut(class FBlueprintActionFi
         // Prevent this node from showing up in Blueprints that do not have appropriate ViewModel
         for (UBlueprint* Blueprint : Filter.Context.Blueprints)
         {
-            UClass* BlueprintViewClass = Blueprint->GeneratedClass;
-            UClass* BlueprintViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(BlueprintViewClass);
+            UClass* BlueprintViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(Blueprint);
 
             if (BlueprintViewModelClass && BlueprintViewModelClass->IsChildOf(ViewModelOwnerClass))
             {

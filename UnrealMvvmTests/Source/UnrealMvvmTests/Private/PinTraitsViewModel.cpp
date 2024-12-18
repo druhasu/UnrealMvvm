@@ -4,7 +4,7 @@
 #include "Mvvm/Impl/Property/ViewModelRegistry.h"
 
 #define VM_PROP_PIN_TRAITS_TEST_IMPL_SINGLE(ValueType, Name) \
-    const UPinTraitsViewModel::F##Name##Property UPinTraitsViewModel::Name##PropertyValue = { &UPinTraitsViewModel::Get##Name, &UPinTraitsViewModel::Set##Name, STRUCT_OFFSET(UPinTraitsViewModel, Name##Field), FViewModelPropertyBase::EAccessorVisibility::V_public, FViewModelPropertyBase::EAccessorVisibility::V_public }
+    UPinTraitsViewModel::F##Name##Property UPinTraitsViewModel::Name##PropertyValue = { &UPinTraitsViewModel::Get##Name, &UPinTraitsViewModel::Set##Name, STRUCT_OFFSET(UPinTraitsViewModel, Name##Field), FViewModelPropertyBase::EAccessorVisibility::V_public, FViewModelPropertyBase::EAccessorVisibility::V_public }
 
 #define VM_PROP_PIN_TRAITS_TEST_REGISTER_SINGLE(Name) \
     UnrealMvvm_Impl::FViewModelRegistry::RegisterProperty(UPinTraitsViewModel::Name##Property(), #Name);

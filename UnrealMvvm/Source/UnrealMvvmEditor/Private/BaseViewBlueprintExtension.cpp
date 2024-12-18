@@ -41,6 +41,18 @@ void UBaseViewBlueprintExtension::Remove(UBlueprint* Blueprint)
     }
 }
 
+UClass* UBaseViewBlueprintExtension::GetViewModelClass(UBlueprint* Blueprint)
+{
+    if (Blueprint)
+    {
+        UBaseViewBlueprintExtension* Extension = Get(Blueprint);
+
+        return Extension != nullptr ? Extension->GetViewModelClass() : UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->GeneratedClass);
+    }
+
+    return nullptr;
+}
+
 void UBaseViewBlueprintExtension::Serialize(FArchive& Ar)
 {
     Super::Serialize(Ar);
