@@ -1,7 +1,7 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "Modules/ModuleManager.h"
-#include "Mvvm/BaseView.h"
+#include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/Impl/BaseView/WidgetExtensionsAccessor.h"
 #include "Slate/ViewModelPropertiesSummoner.h"
 #include "Slate/UnrealMvvmEditorStyle.h"
@@ -13,10 +13,26 @@
 #include "BlueprintModes/WidgetBlueprintApplicationModes.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "KismetCompiler.h"
+
+class FUnrealMvvmEditorModule;
+
+struct FBlueprintCreateListener : public FUObjectArray::FUObjectCreateListener
+{
+    FBlueprintCreateListener(FUnrealMvvmEditorModule* InModule);
+    ~FBlueprintCreateListener();
+
+    void NotifyUObjectCreated(const class UObjectBase* Object, int32 Index) override;
+    void OnUObjectArrayShutdown() override;
+
+    FUnrealMvvmEditorModule* Module;
+};
 
 class FUnrealMvvmEditorModule : public IModuleInterface
 {
 public:
+    friend struct FBlueprintCreateListener;
+
     using ThisClass = FUnrealMvvmEditorModule;
 
     void StartupModule() override
@@ -47,6 +63,8 @@ public:
     void ShutdownModule() override
     {
         FUnrealMvvmEditorStyle::Shutdown();
+
+        BlueprintListener = nullptr;
 
         if (IUMGEditorModule* UMGEditorModule = FModuleManager::GetModulePtr<IUMGEditorModule>("UMGEditor"))
         {
@@ -175,7 +193,7 @@ private:
     {
         using namespace UnrealMvvm_Impl;
 
-        if (!SavedBlueprint->ParentClass->IsNative() && UBaseViewBlueprintExtension::GetViewModelClass(SavedBlueprint))
+        if (!SavedBlueprint->ParentClass->IsNative() && FViewRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
         {
             // if our parent class have ViewModel defined, then we don't need our own BlueprintExtension
             // but only if our parent is also a Blueprint class
@@ -189,6 +207,21 @@ private:
         {
             GEditor->OnBlueprintPreCompile().AddRaw(this, &ThisClass::OnBlueprintPreCompile);
         }
+        else
+        {
+            // we hit this path when launching uncooked game
+            // in this case WITH_EDITOR is defined, but GEditor is nullptr
+            // we still need to be able to patch Blueprints containing View classes
+
+            // listen to creation of UObjects and collect all UBlueprint instances into PendingBlueprints
+            BlueprintListener = MakeUnique<FBlueprintCreateListener>(this);
+            GUObjectArray.AddUObjectCreateListener(BlueprintListener.Get());
+
+            // listen to event right before UBlueprint is compiled and add our UBaseViewExtension into it
+            // this event does not tell us which UBlueprint is compiled, so we have check them all
+            FKismetCompilerContext::OnPreCompile.AddRaw(this, &ThisClass::OnKismetPreCompile);
+        }
+
         FCoreDelegates::OnPostEngineInit.RemoveAll(this);
     }
 
@@ -215,6 +248,46 @@ private:
             }
         }
     }
+
+    void OnKismetPreCompile()
+    {
+        for (TWeakObjectPtr<UBlueprint> Blueprint : PendingBlueprints)
+        {
+            OnBlueprintPreCompile(Blueprint.Get());
+        }
+
+        PendingBlueprints.Reset();
+    }
+
+    TUniquePtr<FBlueprintCreateListener> BlueprintListener;
+    TArray<TWeakObjectPtr<UBlueprint>> PendingBlueprints;
 };
+
+
+FBlueprintCreateListener::FBlueprintCreateListener(FUnrealMvvmEditorModule* InModule)
+    : Module(InModule)
+{}
+
+FBlueprintCreateListener::~FBlueprintCreateListener()
+{
+    OnUObjectArrayShutdown();
+}
+
+void FBlueprintCreateListener::NotifyUObjectCreated(const class UObjectBase* Object, int32 Index)
+{
+    if (Object->GetClass()->IsChildOf<UBlueprint>())
+    {
+        Module->PendingBlueprints.Add((UBlueprint*)Object);
+    }
+}
+
+void FBlueprintCreateListener::OnUObjectArrayShutdown()
+{
+    if (Module != nullptr)
+    {
+        GUObjectArray.RemoveUObjectCreateListener(this);
+        Module = nullptr;
+    }
+}
 
 IMPLEMENT_MODULE(FUnrealMvvmEditorModule, UnrealMvvmEditor)
