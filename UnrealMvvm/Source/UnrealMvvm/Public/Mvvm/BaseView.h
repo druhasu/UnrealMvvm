@@ -7,6 +7,7 @@
 #include "Mvvm/Impl/BaseView/BaseViewExtension.h"
 #include "Mvvm/Impl/BaseView/BaseViewComponent.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "Mvvm/Impl/Utils/VariadicHelpers.h"
 
 template<typename TOwner, typename TViewModel>
 class TBaseView;
@@ -102,9 +103,22 @@ protected:
     /* Override this method to get notified about ViewModel changes. OldViewModel and NewViewModel may be nullptr */
     virtual void OnViewModelChanged(TViewModel* OldViewModel, TViewModel* NewViewModel) {}
 
+    /* Creates Property Path for passing into Bind function */
+    template
+    <
+        typename... TProps,
+        uint32 Size = sizeof...(TProps),
+        typename TViewModel = typename UnrealMvvm_Impl::TFirstType_T<typename UnrealMvvm_Impl::TJustType_T<TProps>...>::FViewModelType,
+        typename TValue = typename UnrealMvvm_Impl::TLastType_T<typename UnrealMvvm_Impl::TJustType_T<TProps>...>::FValueType
+    >
+    constexpr UnrealMvvm_Impl::TPropertyPath<TViewModel, TValue, Size> Path(TProps&&... Props)
+    {
+        return { { Props... } };
+    }
+
 private:
     template<typename T, typename P, typename C>
-    friend void __BindImpl(T*, P*, C&&);
+    friend void __BindImpl(T*, P, C&&);
 
     template<typename O, typename V, typename U>
     friend class UnrealMvvm_Impl::TBaseViewImplWithComponent;

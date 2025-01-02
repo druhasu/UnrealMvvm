@@ -5,6 +5,8 @@
 #include "Mvvm/Impl/Binding/BindingWorker.h"
 #include "Mvvm/Impl/Binding/BindingConfigurationBuilder.h"
 #include "BindingWorkerTestViewModel.h"
+#include "BindingWorkerTestView.h"
+#include "TempWorldHelper.h"
 
 struct FBindingWorkerTestHandler : public UnrealMvvm_Impl::IPropertyChangeHandler
 {
@@ -29,6 +31,7 @@ struct FBindingWorkerTestHandler : public UnrealMvvm_Impl::IPropertyChangeHandle
 
 BEGIN_DEFINE_SPEC(FBindingWorkerSpec, "UnrealMvvm.BindingWorker", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 void TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, UnrealMvvm_Impl::FBindingWorker& Worker)> TestFunction);
+void TestPropertyPathNative(TFunctionRef<void(UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)> TestFunction);
 END_DEFINE_SPEC(FBindingWorkerSpec)
 
 void FBindingWorkerSpec::Define()
@@ -291,6 +294,86 @@ void FBindingWorkerSpec::Define()
             });
         });
     });
+
+    Describe("PropertyPath Native", [this]
+    {
+        It("Should handle initial value", [this]
+        {
+            TestPropertyPathNative([this](UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)
+            {
+                TestEqual("RootValue", View->RootValue, RootViewModel->GetIntValue());
+                TestEqual("FirstChildValue", View->FirstChildValue, RootViewModel->GetChild()->GetIntValue());
+                TestEqual("SecondChildValue", View->SecondChildValue, RootViewModel->GetChild()->GetChild()->GetIntValue());
+            });
+        });
+
+        It("Should handle change of all values", [this]
+        {
+            TestPropertyPathNative([this](UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)
+            {
+                UBindingWorkerViewModel_FirstChild* FirstChildViewModel = RootViewModel->GetChild();
+                UBindingWorkerViewModel_SecondChild* SecondChildViewModel = RootViewModel->GetChild()->GetChild();
+
+                RootViewModel->SetIntValue(11);
+                FirstChildViewModel->SetIntValue(21);
+                SecondChildViewModel->SetIntValue(31);
+
+                TestEqual("RootValue", View->RootValue, RootViewModel->GetIntValue());
+                TestEqual("FirstChildValue", View->FirstChildValue, FirstChildViewModel->GetIntValue());
+                TestEqual("SecondChildValue", View->SecondChildValue, SecondChildViewModel->GetIntValue());
+            });
+        });
+
+        It("Should handle change of first Property in Path", [this]
+        {
+            TestPropertyPathNative([this](UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)
+            {
+                UBindingWorkerViewModel_FirstChild* FirstChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_FirstChild>();
+                FirstChildAlternativeViewModel->SetIntValue(11);
+
+                UBindingWorkerViewModel_SecondChild* SecondChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
+                SecondChildAlternativeViewModel->SetIntValue(21);
+
+                FirstChildAlternativeViewModel->SetChild(SecondChildAlternativeViewModel);
+
+                RootViewModel->SetChild(FirstChildAlternativeViewModel);
+
+                TestEqual("RootValue", View->RootValue, RootViewModel->GetIntValue());
+                TestEqual("FirstChildValue", View->FirstChildValue, RootViewModel->GetChild()->GetIntValue());
+                TestEqual("SecondChildValue", View->SecondChildValue, RootViewModel->GetChild()->GetChild()->GetIntValue());
+            });
+        });
+
+        It("Should handle change of middle Property in Path", [this]
+        {
+            TestPropertyPathNative([this](UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)
+            {
+                UBindingWorkerViewModel_FirstChild* FirstChildViewModel = RootViewModel->GetChild();
+
+                UBindingWorkerViewModel_SecondChild* SecondChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
+                SecondChildAlternativeViewModel->SetIntValue(21);
+
+                FirstChildViewModel->SetChild(SecondChildAlternativeViewModel);
+
+                TestEqual("RootValue", View->RootValue, RootViewModel->GetIntValue());
+                TestEqual("FirstChildValue", View->FirstChildValue, RootViewModel->GetChild()->GetIntValue());
+                TestEqual("SecondChildValue", View->SecondChildValue, RootViewModel->GetChild()->GetChild()->GetIntValue());
+            });
+        });
+
+        It("Should handle change of last Property in Path", [this]
+        {
+            TestPropertyPathNative([this](UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)
+            {
+                UBindingWorkerViewModel_SecondChild* SecondChildViewModel = RootViewModel->GetChild()->GetChild();
+                SecondChildViewModel->SetIntValue(21);
+
+                TestEqual("RootValue", View->RootValue, RootViewModel->GetIntValue());
+                TestEqual("FirstChildValue", View->FirstChildValue, RootViewModel->GetChild()->GetIntValue());
+                TestEqual("SecondChildValue", View->SecondChildValue, RootViewModel->GetChild()->GetChild()->GetIntValue());
+            });
+        });
+    });
 }
 
 void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, UnrealMvvm_Impl::FBindingWorker& Worker)> TestFunction)
@@ -317,4 +400,30 @@ void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHa
     Worker.StartListening();
 
     TestFunction(Handler, RootViewModel, Worker);
+}
+
+void FBindingWorkerSpec::TestPropertyPathNative(TFunctionRef<void(UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)> TestFunction)
+{
+    using namespace UnrealMvvm_Impl;
+
+    FTempWorldHelper Helper;
+
+    UBindingWorkerTestView* View = CreateWidget<UBindingWorkerTestView>(Helper.World);
+
+    UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
+    UBindingWorkerViewModel_FirstChild* FirstChildViewModel = NewObject<UBindingWorkerViewModel_FirstChild>();
+    UBindingWorkerViewModel_SecondChild* SecondChildViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
+
+    RootViewModel->SetChild(FirstChildViewModel);
+    FirstChildViewModel->SetChild(SecondChildViewModel);
+
+    // initialize values to not match defaults from UBindingWorkerTestView
+    RootViewModel->SetIntValue(123);
+    FirstChildViewModel->SetIntValue(123);
+    SecondChildViewModel->SetIntValue(123);
+
+    View->SetViewModel(RootViewModel);
+    TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
+
+    TestFunction(View, RootViewModel);
 }
