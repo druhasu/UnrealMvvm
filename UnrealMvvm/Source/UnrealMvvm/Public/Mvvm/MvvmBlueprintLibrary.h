@@ -39,6 +39,9 @@ public:
         SetViewModelToActor(View, ViewModel);
     }
 
+    /* Returns class of ViewModel that a View of ViewClass expects to use. Returns nullptr if no ViewModel is associated with the View */
+    static TSubclassOf<UBaseViewModel> GetViewModelClass(UClass* ViewClass);
+
 private:
     // to access GetViewModelPropertyValueFrom... and SetViewModelPropertyValueTo... via GET_MEMBER_NAME_CHECKED
     friend class FViewModelPropertyNodeHelper;

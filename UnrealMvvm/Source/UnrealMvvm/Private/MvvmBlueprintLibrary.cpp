@@ -12,6 +12,11 @@
 #include "Blueprint/BlueprintExceptionInfo.h"
 #endif
 
+TSubclassOf<UBaseViewModel> UMvvmBlueprintLibrary::GetViewModelClass(UClass* ViewClass)
+{
+    return UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(ViewClass);;
+}
+
 UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelFromWidget(UUserWidget* View)
 {
     return GetViewModelInternal<UUserWidget, UBaseViewExtension>(View);
