@@ -47,7 +47,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
 
             UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
@@ -66,7 +66,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler1 = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
             FBindingWorkerTestHandler& Handler2 = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
 
@@ -86,7 +86,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
 
             UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
@@ -107,7 +107,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler1 = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
             FBindingWorkerTestHandler& Handler2 = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
 
@@ -129,7 +129,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
 
             UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
@@ -156,7 +156,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
             FBindingWorkerTestHandler& HandlerMin = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MinIntValueProperty() });
             FBindingWorkerTestHandler& HandlerMax = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MaxIntValueProperty() });
@@ -180,7 +180,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
             FBindingWorkerTestHandler& HandlerMin = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MinIntValueProperty() });
             FBindingWorkerTestHandler& HandlerMax = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MaxIntValueProperty() });
@@ -208,7 +208,7 @@ void FBindingWorkerSpec::Define()
             FBindingConfiguration Configuration = Builder.Build();
 
             FBindingWorker Worker;
-            Worker.Init(Configuration);
+            Worker.Init(nullptr, Configuration);
             FBindingWorkerTestHandler& Handler = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::IntValueProperty() });
             FBindingWorkerTestHandler& HandlerMin = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MinIntValueProperty() });
             FBindingWorkerTestHandler& HandlerMax = Worker.AddBindingHandler<FBindingWorkerTestHandler>({ UBindingWorkerViewModel_Root::MaxIntValueProperty() });
@@ -385,7 +385,7 @@ void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHa
     FBindingConfiguration Configuration = Builder.Build();
 
     FBindingWorker Worker;
-    Worker.Init(Configuration);
+    Worker.Init(nullptr, Configuration);
 
     UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
     UBindingWorkerViewModel_FirstChild* FirstChildViewModel = NewObject<UBindingWorkerViewModel_FirstChild>();

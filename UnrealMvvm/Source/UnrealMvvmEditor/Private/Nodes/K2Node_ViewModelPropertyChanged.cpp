@@ -4,6 +4,7 @@
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "BaseViewBlueprintExtension.h"
+#include "Blueprint/UserWidget.h"
 #include "EdGraphSchema_K2.h"
 #include "KismetCompiler.h"
 #include "K2Node_CustomEvent.h"
@@ -11,6 +12,8 @@
 #include "GraphEditorSettings.h"
 #include "ViewModelPropertyNodeHelper.h"
 #include "Misc/EngineVersionComparison.h"
+
+const FName UK2Node_ViewModelPropertyChanged::IsInitialPinName(TEXT("IsInitial"));
 
 void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& CompilerContext, UEdGraph* SourceGraph)
 {
@@ -89,6 +92,25 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
             CompilerContext.MovePinLinksToIntermediate(*HasValueOutPin, *LastHasValuePin);
         }
     }
+
+    // don't spawn nodes if not connected
+    UEdGraphPin* IsInitialPin = FindPin(IsInitialPinName);
+    if (IsInitialPin != nullptr && IsInitialPin->HasAnyConnections())
+    {
+        static const FName IsInitializingWidget = GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, IsInitializingPropertyInWidget);
+        static const FName IsInitializingActor = GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, IsInitializingPropertyInActor);
+
+        FName IsInitializingFunctionName = GetBlueprint()->GeneratedClass->IsChildOf<UUserWidget>()
+            ? IsInitializingWidget
+            : IsInitializingActor;
+
+        // spawn call to appropriate IsInitializing variant
+        UK2Node_CallFunction* IsInitializingCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
+        IsInitializingCall->FunctionReference.SetExternalMember(IsInitializingFunctionName, UMvvmBlueprintLibrary::StaticClass());
+        IsInitializingCall->AllocateDefaultPins();
+
+        CompilerContext.MovePinLinksToIntermediate(*IsInitialPin, *IsInitializingCall->GetReturnValuePin());
+    }
 }
 
 void UK2Node_ViewModelPropertyChanged::AllocateDefaultPins()
@@ -117,6 +139,10 @@ void UK2Node_ViewModelPropertyChanged::AllocateDefaultPins()
         {
             CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, FViewModelPropertyNodeHelper::HasValuePinName);
         }
+
+        // create pin for easier access to IsInitializing function
+        UEdGraphPin* IsInitialPin = CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Boolean, TEXT("IsInitial"));
+        IsInitialPin->PinToolTip = TEXT("Whether value is changed because ViewModel is first set to View (true), or value changed inside ViewModel after it was set (false)");
     }
 }
 

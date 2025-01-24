@@ -11,7 +11,10 @@ void UK2Node_GetViewModelPropertyValue::ExpandNode(FKismetCompilerContext& Compi
 {
     Super::ExpandNode(CompilerContext, SourceGraph);
 
-    if (FindPin(ViewModelPropertyName)->LinkedTo.Num() > 0)
+    UEdGraphPin* ValuePin = FindPin(ViewModelPropertyName);
+    UEdGraphPin* HasValuePin = FindPin(FViewModelPropertyNodeHelper::HasValuePinName);
+
+    if ((ValuePin != nullptr && ValuePin->LinkedTo.Num() > 0) || (HasValuePin != nullptr && HasValuePin->LinkedTo.Num() > 0))
     {
         FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, CompilerContext, this, SourceGraph, ViewModelPropertyName);
     }

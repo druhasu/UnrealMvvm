@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
+#include "Mvvm/Impl/BaseView/ViewChangeTracker.h"
 #include "Mvvm/Impl/Binding/IPropertyChangeHandler.h"
 #include "Mvvm/Impl/Binding/ViewModelDynamicBinding.h"
 #include "Mvvm/Impl/Binding/BindingWorker.h"
@@ -57,7 +58,7 @@ namespace UnrealMvvm_Impl
                 return;
             }
 
-            Worker.Init(*FoundConfiguration);
+            Worker.Init(ViewObject, *FoundConfiguration);
 
             // native bindings
             FViewRegistry::FBindingsCollectorPtr BindingsCollector = FViewRegistry::GetBindingsCollector(ViewObject->GetClass());
@@ -78,6 +79,12 @@ namespace UnrealMvvm_Impl
             }
         }
 
+        static void InvokeStartListening(UObject* ViewObject, FBindingWorker& Worker)
+        {
+            UnrealMvvm_Impl::FViewInitializationScope Scope(ViewObject, Worker.GetViewModel());
+            Worker.StartListening();
+        }
+
         /* Name of UFunction to call when ViewModel changes */
         static FName ViewModelChangedFunctionName;
     };
@@ -91,28 +98,27 @@ namespace UnrealMvvm_Impl
         /* Sets ViewModel and call required events */
         void SetViewModelInternal(UBaseViewModel* InViewModel)
         {
-            UBaseViewModel* OldViewModel = ThisView()->ViewModel;
+            TView* ThisView = static_cast<TView*>(this);
 
-            if (OldViewModel && ThisView()->IsConstructed())
+            UBaseViewModel* OldViewModel = ThisView->ViewModel;
+
+            if (OldViewModel && ThisView->IsConstructed())
             {
-                ThisView()->BindingWorker.StopListening();
+                ThisView->BindingWorker.StopListening();
             }
 
-            ThisView()->ViewModel = InViewModel;
-            ThisView()->BindingWorker.SetViewModel(InViewModel);
-            TryCallViewModelChanged(ThisView()->GetViewObject(), OldViewModel, InViewModel);
+            ThisView->ViewModel = InViewModel;
+            ThisView->BindingWorker.SetViewModel(InViewModel);
+            TryCallViewModelChanged(ThisView->GetViewObject(), OldViewModel, InViewModel);
 
             if (InViewModel)
             {
-                if (ThisView()->IsConstructed())
+                if (ThisView->IsConstructed())
                 {
-                    ThisView()->BindingWorker.StartListening();
+                    InvokeStartListening(ThisView->GetViewObject(), ThisView->BindingWorker);
                 }
             }
         }
-
-        const TView* ThisView() const { return static_cast<const TView*>(this); }
-        TView* ThisView() { return static_cast<TView*>(this); }
     };
 
 }

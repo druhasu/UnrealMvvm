@@ -17,10 +17,19 @@ public:
     ViewModelType* OldViewModel = nullptr;
     ViewModelType* NewViewModel = nullptr;
 
+    TFunction<void(int32)> IntValueChangedCallback;
+
 protected:
     void BindProperties() override
     {
-        Bind(this, ViewModelType::IntValueProperty(), [this](const int32& InValue) { MyValue = InValue; });
+        Bind(this, ViewModelType::IntValueProperty(), [this](const int32& InValue)
+        {
+            MyValue = InValue;
+            if (IntValueChangedCallback)
+            {
+                IntValueChangedCallback(InValue);
+            }
+        });
     }
 
     void OnViewModelChanged(ViewModelType* InOldViewModel, ViewModelType* InNewViewModel) override

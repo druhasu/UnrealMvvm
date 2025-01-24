@@ -178,6 +178,136 @@ void FBaseActorViewSpec::Define()
             View->SetViewModel(ViewModel);
             View->DispatchBeginPlay();
         });
+
+        It("Should report initialization when Constructed and then Set ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPure* View = CreateActor<ATestBaseActorViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            View->IntValueChangedCallback = [&](auto)
+            {
+                TestTrue("IsInitializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+                TestTrue("IsInitializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            };
+
+            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+
+            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+        });
+
+        It("Should report initialization when Set ViewModel and then Constructed", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPure* View = CreateActor<ATestBaseActorViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            View->IntValueChangedCallback = [&](auto)
+            {
+                TestTrue("IsInitializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+                TestTrue("IsInitializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            };
+
+            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+
+            View->SetViewModel(ViewModel);
+            View->DispatchBeginPlay();
+
+            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+        });
+
+        It("Should report change", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPure* View = CreateActor<ATestBaseActorViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+
+            TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
+            TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+
+            View->IntValueChangedCallback = [&](auto)
+            {
+                TestTrue("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
+                TestTrue("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+            };
+
+            ViewModel->SetIntValue(2);
+
+            TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
+            TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+        });
+
+        It("Should not report initialization during change", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPure* View = CreateActor<ATestBaseActorViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+
+            View->IntValueChangedCallback = [&](auto)
+            {
+                TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
+                TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            };
+
+            ViewModel->SetIntValue(2);
+        });
+
+        It("Should not report change during initialization when Set ViewModel and then Constructed", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPure* View = CreateActor<ATestBaseActorViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            View->IntValueChangedCallback = [&](auto)
+            {
+                TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
+                TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+            };
+
+            View->SetViewModel(ViewModel);
+            View->DispatchBeginPlay();
+        });
+
+        It("Should not report change during initialization when Constructed and then Set ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewPure* View = CreateActor<ATestBaseActorViewPure>(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            View->IntValueChangedCallback = [&](auto)
+            {
+                TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
+                TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+            };
+
+            View->DispatchBeginPlay();
+            View->SetViewModel(ViewModel);
+        });
     });
 
     Describe("TBaseView<> derived in Blueprint", [this]

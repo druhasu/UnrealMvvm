@@ -42,6 +42,8 @@ protected:
     FText GetTooltipTextForCache() const override;
 
 private:
+    static const FName IsInitialPinName;
+
     /* Legacy Property name that this node is associated with */
     UPROPERTY()
     FName ViewModelPropertyName_DEPRECATED;

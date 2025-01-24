@@ -7,7 +7,7 @@ void UBaseViewComponent::BeginPlay()
     Super::BeginPlay();
 
     // View is constructed, start listening and update current state
-    BindingWorker.StartListening();
+    InvokeStartListening(GetViewObject(), BindingWorker);
 }
 
 void UBaseViewComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)

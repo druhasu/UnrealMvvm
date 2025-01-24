@@ -18,7 +18,7 @@ namespace UnrealMvvm_Impl
             StopListening();
         }
 
-        void Init(const FBindingConfiguration& ConfigurationTemplate);
+        void Init(UObject* InOwningView, const FBindingConfiguration& ConfigurationTemplate);
 
         template<typename THandler, typename... TArgs>
         THandler& AddBindingHandler(TArrayView<const FViewModelPropertyBase* const> PropertyPath, TArgs&&... Args)
@@ -37,7 +37,7 @@ namespace UnrealMvvm_Impl
             TArrayView<FResolvedViewModelEntry> ViewModelEntries = Bindings.GetViewModels();
             if (ViewModelEntries.Num() > 0)
             {
-                // set Main ViewModel
+                // get Main ViewModel
                 return ViewModelEntries[0].ViewModel;
             }
             return nullptr;
@@ -101,6 +101,7 @@ namespace UnrealMvvm_Impl
 
         UBaseViewModel* GetViewModelFromProperty(UBaseViewModel* ViewModel, const FViewModelPropertyBase* Property);
 
+        UObject* OwningView;
         FBindingConfiguration Bindings;
     };
 

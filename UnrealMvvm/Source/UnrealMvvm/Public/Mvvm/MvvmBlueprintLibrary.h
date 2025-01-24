@@ -42,12 +42,51 @@ public:
     /* Returns class of ViewModel that a View of ViewClass expects to use. Returns nullptr if no ViewModel is associated with the View */
     static TSubclassOf<UBaseViewModel> GetViewModelClass(UClass* ViewClass);
 
+    /* Returns whether given Widget is in process of setting initial values from ViewModel */
+    static bool IsInitializingProperty(UUserWidget* View)
+    {
+        return IsInitializingPropertyInWidget(View);
+    }
+
+    /* Returns whether given Actor is in process of setting initial values from ViewModel */
+    static bool IsInitializingProperty(AActor* View)
+    {
+        return IsInitializingPropertyInActor(View);
+    }
+
+    /* Returns whether any View is in process of setting initial values from given ViewModel */
+    static bool IsInitializingProperty(UBaseViewModel* ViewModel)
+    {
+        return IsInitializingPropertyFromViewModel(ViewModel);
+    }
+
+    /* Returns whether given Widget is in process of receiving new Value from any ViewModel property */
+    static bool IsChangingProperty(UUserWidget* View)
+    {
+        return IsChangingPropertyInWidget(View);
+    }
+
+    /* Returns whether given Actor is in process of receiving new Value from any ViewModel property */
+    static bool IsChangingProperty(AActor* View)
+    {
+        return IsChangingPropertyInActor(View);
+    }
+
+    /* Returns whether any View is in process of receiving new Value from given ViewModel */
+    static bool IsChangingProperty(UBaseViewModel* ViewModel)
+    {
+        return IsChangingPropertyFromViewModel(ViewModel);
+    }
+
 private:
     // to access GetViewModelPropertyValueFrom... and SetViewModelPropertyValueTo... via GET_MEMBER_NAME_CHECKED
     friend class FViewModelPropertyNodeHelper;
 
     // to access GetViewModelFrom... and SetViewModelTo... via GET_MEMBER_NAME_CHECKED
     friend class UK2Node_ViewModelGetSet;
+
+    // to access IsInitializingProperty... via GET_MEMBER_NAME_CHECKED
+    friend class UK2Node_ViewModelPropertyChanged;
 
     UFUNCTION(BlueprintPure, CustomThunk, meta = (CustomStructureParam = "Value", BlueprintInternalUseOnly = "true"))
     static void GetViewModelPropertyValue(UBaseViewModel* ViewModel, FName PropertyName, int32& Value, bool& HasValue)
@@ -72,6 +111,30 @@ private:
 
     UFUNCTION(BlueprintCallable, Category = "ViewModel", meta = (BlueprintInternalUseOnly = "true"))
     static void SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel);
+
+    /* Returns whether given Widget is in process of setting initial values from ViewModel */
+    UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (DefaultToSelf = "View"))
+    static bool IsInitializingPropertyInWidget(UUserWidget* View);
+
+    /* Returns whether given Actor is in process of setting initial values from ViewModel */
+    UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (DefaultToSelf = "View"))
+    static bool IsInitializingPropertyInActor(AActor* View);
+
+    /* Returns whether any View is in process of setting initial values from given ViewModel */
+    UFUNCTION(BlueprintPure, Category = "ViewModel")
+    static bool IsInitializingPropertyFromViewModel(UBaseViewModel* ViewModel);
+
+    /* Returns whether given Widget is in process of receiving new Value from any ViewModel property */
+    UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (DefaultToSelf = "View"))
+    static bool IsChangingPropertyInWidget(UUserWidget* View);
+
+    /* Returns whether given Actor is in process of receiving new Value from any ViewModel property */
+    UFUNCTION(BlueprintPure, Category = "ViewModel", meta = (DefaultToSelf = "View"))
+    static bool IsChangingPropertyInActor(AActor* View);
+
+    /* Returns whether any View is in process of receiving new Value from given ViewModel */
+    UFUNCTION(BlueprintPure, Category = "ViewModel")
+    static bool IsChangingPropertyFromViewModel(UBaseViewModel* ViewModel);
 
     DECLARE_FUNCTION(execGetViewModelPropertyValue);
     DECLARE_FUNCTION(execSetViewModelPropertyValue);

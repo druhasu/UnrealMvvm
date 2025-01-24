@@ -33,11 +33,15 @@ void UK2Node_InitViewModelDynamicBinding::RegisterDynamicBinding(UDynamicBluepri
     // We need to do this because UBlueprint is not cooked and we need to know about this class in runtime
     Binding->ViewModelClass = Extension->GetViewModelClass();
 
-    // Collect all ViewModel property bindings into DynamicBinding object
-    Binding->BlueprintBindings = Extension->CollectBlueprintBindings();
+    // ViewModelClass may be nullptr if ViewModel was removed from the project and not redirected
+    if (Binding->ViewModelClass != nullptr)
+    {
+        // Collect all ViewModel property bindings into DynamicBinding object
+        Binding->BlueprintBindings = Extension->CollectBlueprintBindings();
 
-    // register View class to generate proper ViewModel property bindings
-    UnrealMvvm_Impl::FViewRegistry::RegisterViewClass(Blueprint->GeneratedClass, Binding->ViewModelClass);
+        // register View class to generate proper ViewModel property bindings
+        UnrealMvvm_Impl::FViewRegistry::RegisterViewClass(Blueprint->GeneratedClass, Binding->ViewModelClass);
+    }
 }
 
 void UK2Node_InitViewModelDynamicBinding::AllocateDefaultPins()

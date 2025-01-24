@@ -2,13 +2,15 @@
 
 #include "Mvvm/Impl/Binding/BindingWorker.h"
 #include "Mvvm/Impl/Binding/IPropertyChangeHandler.h"
+#include "Mvvm/Impl/BaseView/ViewChangeTracker.h"
 #include "Mvvm/Impl/Property/ViewModelRegistry.h"
 
 namespace UnrealMvvm_Impl
 {
 
-void FBindingWorker::Init(const FBindingConfiguration& ConfigurationTemplate)
+void FBindingWorker::Init(UObject* InOwningView, const FBindingConfiguration& ConfigurationTemplate)
 {
+    OwningView = InOwningView;
     Bindings = ConfigurationTemplate;
 
     for (FResolvedViewModelEntry& ViewModelEntry : Bindings.GetViewModels())
@@ -138,6 +140,7 @@ void FBindingWorker::ProcessPropertyChange(UBaseViewModel* ViewModel, const FRes
     // property may have no handler if it is used only inside "property path" binding
     if (IPropertyChangeHandler* Handler = PropertyEntry.GetHandler())
     {
+        UnrealMvvm_Impl::FViewChangeScope Scope(OwningView, ViewModel, PropertyEntry.Property);
         Handler->Invoke(ViewModel, PropertyEntry.Property);
     }
 }

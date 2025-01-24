@@ -3,6 +3,7 @@
 #include "Mvvm/MvvmBlueprintLibrary.h"
 #include "Mvvm/Impl/BaseView/BaseViewExtension.h"
 #include "Mvvm/Impl/BaseView/BaseViewComponent.h"
+#include "Mvvm/Impl/BaseView/ViewChangeTracker.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/Impl/Property/ViewModelRegistry.h"
 #include "Mvvm/BaseViewModel.h"
@@ -35,6 +36,36 @@ void UMvvmBlueprintLibrary::SetViewModelToWidget(UUserWidget* View, UBaseViewMod
 void UMvvmBlueprintLibrary::SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel)
 {
     SetViewModelInternal<AActor, UBaseViewComponent>(View, ViewModel);
+}
+
+bool UMvvmBlueprintLibrary::IsInitializingPropertyInWidget(UUserWidget* View)
+{
+    return UnrealMvvm_Impl::FViewChangeTracker::IsInitializing(View);
+}
+
+bool UMvvmBlueprintLibrary::IsInitializingPropertyInActor(AActor* View)
+{
+    return UnrealMvvm_Impl::FViewChangeTracker::IsInitializing(View);
+}
+
+bool UMvvmBlueprintLibrary::IsInitializingPropertyFromViewModel(UBaseViewModel* ViewModel)
+{
+    return UnrealMvvm_Impl::FViewChangeTracker::IsInitializing(ViewModel);
+}
+
+bool UMvvmBlueprintLibrary::IsChangingPropertyInWidget(UUserWidget* View)
+{
+    return UnrealMvvm_Impl::FViewChangeTracker::IsChanging(View);
+}
+
+bool UMvvmBlueprintLibrary::IsChangingPropertyInActor(AActor* View)
+{
+    return UnrealMvvm_Impl::FViewChangeTracker::IsChanging(View);
+}
+
+bool UMvvmBlueprintLibrary::IsChangingPropertyFromViewModel(UBaseViewModel* ViewModel)
+{
+    return UnrealMvvm_Impl::FViewChangeTracker::IsChanging(ViewModel);
 }
 
 DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)

@@ -5,7 +5,7 @@
 void UBaseViewExtension::Construct()
 {
     // View is constructed (i.e. visible), start listening and update current state
-    BindingWorker.StartListening();
+    InvokeStartListening(GetViewObject(), BindingWorker);
 }
 
 void UBaseViewExtension::Destruct()
