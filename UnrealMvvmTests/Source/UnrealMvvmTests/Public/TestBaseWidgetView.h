@@ -87,3 +87,14 @@ public:
     UPROPERTY(BlueprintReadWrite)
     UTestBaseViewModel* ViewModelFromGetter = nullptr;
 };
+
+/* Test View base class to record IsInitial results from PropertyChanged events */
+UCLASS()
+class UTestBaseWidgetViewIsInitialTracker : public UUserWidget
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(BlueprintReadWrite)
+    TArray<bool> IsInitialResults;
+};

@@ -745,6 +745,25 @@ void FBaseActorViewSpec::Define()
             TestEqual("MyValue in View", View->MyValue, 1);
             TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
         });
+
+        It("Should receive IsInitial value", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* WidgetClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_IsInitial.BP_TestActorView_IsInitial_C"));
+
+            ATestBaseActorViewIsInitialTracker* View = CreateActor<ATestBaseActorViewIsInitialTracker>(Helper.World, WidgetClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            View->DispatchBeginPlay();
+
+            ViewModel->SetIntValue(2);
+
+            TestEqual("Num Changes", View->IsInitialResults.Num(), 2);
+            TestTrue("Change[0].IsInitial", View->IsInitialResults[0]);
+            TestFalse("Change[1].IsInitial", View->IsInitialResults[1]);
+        });
     });
 }
 

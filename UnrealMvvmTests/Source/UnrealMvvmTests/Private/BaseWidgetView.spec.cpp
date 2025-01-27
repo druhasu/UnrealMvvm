@@ -785,6 +785,25 @@ void FBaseWidgetViewSpec::Define()
             TestEqual("MyValue in View", View->MyValue, 1);
             TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
         });
+
+        It("Should receive IsInitial value", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/WidgetView/BP_TestWidgetView_IsInitial.BP_TestWidgetView_IsInitial_C"));
+
+            UTestBaseWidgetViewIsInitialTracker* View = CreateWidget<UTestBaseWidgetViewIsInitialTracker>(Helper.World, WidgetClass);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            ViewModel->SetIntValue(1);
+
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
+
+            ViewModel->SetIntValue(2);
+
+            TestEqual("Num Changes", View->IsInitialResults.Num(), 2);
+            TestTrue("Change[0].IsInitial", View->IsInitialResults[0]);
+            TestFalse("Change[1].IsInitial", View->IsInitialResults[1]);
+        });
     });
 }
 
