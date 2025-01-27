@@ -147,6 +147,7 @@ TSharedRef<SWidget> SViewModelPropertiesPanel::MakeAddBindingButton()
         .ButtonStyle(&FAppStyle::Get().GetWidgetStyle<FButtonStyle>("Button"))
         .HasDownArrow(false)
         .ContentPadding(FMargin(4, 2))
+        .IsEnabled_Lambda([this]() { return ViewModelClass != nullptr; })
         .ButtonContent()
         [
             SNew(SHorizontalBox)
