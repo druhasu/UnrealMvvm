@@ -65,7 +65,7 @@ namespace UnrealMvvm_Impl
             }
         }
 
-        constexpr TArrayView<const FViewModelPropertyBase*> ToArrayView() const
+        TArrayView<const FViewModelPropertyBase*> ToArrayView() const
         {
             return MakeArrayView(const_cast<const FViewModelPropertyBase**>(Properties.GetData()), Size);
         }

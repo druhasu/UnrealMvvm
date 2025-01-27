@@ -4,70 +4,9 @@
 
 #include "Mvvm/ViewModelProperty.h"
 #include "Mvvm/Impl/Binding/BindImpl.h"
-#include "Mvvm/Impl/BaseView/BaseViewExtension.h"
-#include "Mvvm/Impl/BaseView/BaseViewComponent.h"
+#include "Mvvm/Impl/BaseView/BaseViewImpl.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/Impl/Utils/VariadicHelpers.h"
-
-template<typename TOwner, typename TViewModel>
-class TBaseView;
-
-namespace UnrealMvvm_Impl
-{
-    template<typename TOwner, typename TViewModel, typename TComponent>
-    class TBaseViewImplWithComponent
-    {
-    public:
-        using FView = TBaseView<TOwner, TViewModel>;
-
-        static TViewModel* GetViewModel(const FView* BaseView)
-        {
-            return (TViewModel*)GetExtension(BaseView)->ViewModel;
-        }
-
-        static void SetViewModel(FView* BaseView, TViewModel* InViewModel)
-        {
-            TComponent* Extension = GetExtension(BaseView);
-
-            TViewModel* OldViewModel = (TViewModel*)Extension->ViewModel;
-
-            Extension->SetViewModelInternal(InViewModel);
-            BaseView->OnViewModelChanged(OldViewModel, InViewModel);
-        }
-
-        static TComponent* GetExtension(const FView* BaseView)
-        {
-            if (!BaseView->CachedComponent)
-            {
-                const_cast<FView*>(BaseView)->CachedComponent = TComponent::Request(const_cast<TOwner*>(static_cast<const TOwner*>(BaseView)));
-            }
-
-            return (TComponent*)BaseView->CachedComponent;
-        }
-
-        static auto& GetBindingWorker(const FView* BaseView)
-        {
-            return GetExtension(BaseView)->BindingWorker;
-        }
-    };
-
-    template<typename TOwner, typename TViewModel, typename = void>
-    class TBaseViewImpl;
-
-    /* Implementation for UserWidget */
-    template<typename TOwner, typename TViewModel>
-    class TBaseViewImpl<TOwner, TViewModel, typename TEnableIf<TIsDerivedFrom<TOwner, UUserWidget>::Value>::Type>
-        : public TBaseViewImplWithComponent<TOwner, TViewModel, UBaseViewExtension>
-    {
-    };
-
-    /* Implementation for Actor */
-    template<typename TOwner, typename TViewModel>
-    class TBaseViewImpl<TOwner, TViewModel, typename TEnableIf<TIsDerivedFrom<TOwner, AActor>::Value>::Type>
-        : public TBaseViewImplWithComponent<TOwner, TViewModel, UBaseViewComponent>
-    {
-    };
-}
 
 template<typename TOwner, typename TViewModel>
 class TBaseView
@@ -108,11 +47,11 @@ protected:
     <
         typename... TProps,
         uint32 Size = sizeof...(TProps),
-        typename TViewModel = typename UnrealMvvm_Impl::TFirstType_T<typename UnrealMvvm_Impl::TJustType_T<TProps>...>::FViewModelType,
         typename TValue = typename UnrealMvvm_Impl::TLastType_T<typename UnrealMvvm_Impl::TJustType_T<TProps>...>::FValueType
     >
     constexpr UnrealMvvm_Impl::TPropertyPath<TViewModel, TValue, Size> Path(TProps&&... Props)
     {
+        UnrealMvvm_Impl::TPropertyPathValidator<TViewModel, TProps...>::Validate();
         return { { Props... } };
     }
 

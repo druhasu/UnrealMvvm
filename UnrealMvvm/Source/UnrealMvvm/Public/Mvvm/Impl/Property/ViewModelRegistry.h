@@ -76,7 +76,7 @@ inline void UnrealMvvm_Impl::FViewModelRegistry::RegisterProperty(const TViewMod
     *(FName*)MutablePropertyPtr->NameData = FName(InName);
 
     const bool IsOptional = TPinTraits<TDecayedValue>::IsOptional;
-    const bool IsObject = TIsPointer<TValue>::Value && TModels<CStaticClassProvider, typename TRemoveObjectPointer<typename TRemovePointer<TValue>::Type>::Type>::Value;
+    const bool IsObject = TModels<CStaticClassProvider, typename TRemoveObjectPointer<std::remove_pointer_t<TValue>>::Type>::Value;
 
     using FBaseOps    = Details::TBaseOperation<TOwner, TValue>;
     using FGetOps     = Details::TGetValueOperation<FBaseOps, TOwner, TValue, IsOptional>;

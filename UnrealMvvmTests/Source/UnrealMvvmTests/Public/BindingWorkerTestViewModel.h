@@ -20,7 +20,7 @@ class UBindingWorkerViewModel_FirstChild : public UBaseViewModel
     GENERATED_BODY()
 
     VM_PROP_AG_AS(int32, IntValue, public);
-    VM_PROP_AG_AS(UBindingWorkerViewModel_SecondChild*, Child, public);
+    VM_PROP_AG_AS(TObjectPtr<UBindingWorkerViewModel_SecondChild>, Child, public);
 };
 
 UCLASS()

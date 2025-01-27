@@ -24,5 +24,11 @@ protected:
         Bind(this, Path(ViewModelType::IntValueProperty()), [this](int32 V) { RootValue = V; });
         Bind(this, Path(ViewModelType::ChildProperty(), UBindingWorkerViewModel_FirstChild::IntValueProperty()), [this](int32 V) { FirstChildValue = V; });
         Bind(this, Path(ViewModelType::ChildProperty(), UBindingWorkerViewModel_FirstChild::ChildProperty(), UBindingWorkerViewModel_SecondChild::IntValueProperty()), [this](int32 V) { SecondChildValue = V; });
+
+        // Examples of invalid Paths for validation checking
+        // Commented out, because they trigger static_assert
+
+        //Bind(this, Path(ViewModelType::ChildProperty(), UBindingWorkerViewModel_SecondChild::IntValueProperty()), [this](int32 V) { SecondChildValue = V; }); // wrong property at index 1
+        //Bind(this, Path(ViewModelType::ChildProperty(), UBindingWorkerViewModel_FirstChild::ChildProperty(), UBindingWorkerViewModel_FirstChild::IntValueProperty()), [this](int32 V) { SecondChildValue = V; }); // wrong property at index 2
     }
 };

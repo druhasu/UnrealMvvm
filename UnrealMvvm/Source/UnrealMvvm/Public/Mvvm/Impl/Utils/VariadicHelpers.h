@@ -35,6 +35,6 @@ namespace UnrealMvvm_Impl
 
     /* Removes const and pointer from a type */
     template <typename T>
-    using TJustType_T = std::remove_const_t<typename TRemovePointer<T>::Type>;
+    using TJustType_T = std::remove_const_t<std::remove_pointer_t<T>>;
 
 }
