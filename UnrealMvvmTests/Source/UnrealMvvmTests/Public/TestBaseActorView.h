@@ -70,6 +70,9 @@ public:
     void SetValueToViewModelConstant();
 
     UFUNCTION(BlueprintImplementableEvent)
+    void SetValueToViewModelStruct();
+
+    UFUNCTION(BlueprintImplementableEvent)
     int32 GetValueFromViewModel();
 
     UPROPERTY(BlueprintReadWrite)

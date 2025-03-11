@@ -115,12 +115,40 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
     {
         if (const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName))
         {
+            // remember current Code pointer, because ReadProperty modifies it
+            uint8* SavedCode = Stack.Code;
+
+            // increase Code to emulate single Step, but without actually executing anything
+            Stack.Code++;
+
+            // try read property from Stack. It may be nullptr in some cases
+            FProperty* NextProperty = Stack.ReadPropertyUnchecked();
+
+            // restore previous pointer
+            Stack.Code = SavedCode;
+
+            // allocate enough space for holding property value
             void* StorageSpace = FMemory_Alloca(MyProperty->SizeOfValue);
+
+            if (NextProperty)
+            {
+                // initialize it properly
+                NextProperty->InitializeValue(StorageSpace);
+            }
+
+            // read the value from Blueprint graph
             Stack.StepCompiledIn<FProperty>(StorageSpace);
 
             P_GET_UBOOL(HasValue);
 
+            // store the value into ViewModel
             MyProperty->GetOperations().SetValue(ViewModel, StorageSpace, HasValue);
+
+            if (NextProperty)
+            {
+                // properly destroy the value
+                NextProperty->DestroyValue(StorageSpace);
+            }
         }
         else
         {

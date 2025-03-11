@@ -677,6 +677,19 @@ void FBaseActorViewSpec::Define()
             TestEqual("Value in ViewModel", ViewModel->GetIntValue(), 123);
         });
 
+        It("Should Set Value To ViewModel via K2Node From Struct", [this]
+        {
+            FTempWorldHelper Helper;
+
+            ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
+            UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+
+            View->SetValueToViewModelStruct();
+
+            TestEqual("Value in ViewModel", ViewModel->GetStructValue().TextData.ToString(), FString(TEXT("123")));
+        });
+
         It("Should Get Value From ViewModel via K2Node Explicit", [this]
         {
             FTempWorldHelper Helper;
