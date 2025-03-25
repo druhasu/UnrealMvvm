@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<!-- UBT tries to parse expressions inside these properties and fails, so they are in separate file -->
+	<PropertyGroup>
+		<EngineVersionFile>$(EngineDir)\Build\Build.version</EngineVersionFile>
+		<EngineVersionFileContents>$([System.IO.File]::ReadAllText('$(EngineVersionFile)'))</EngineVersionFileContents>
+
+		<EngineMajorVersionRegex><![CDATA["MajorVersion": (\d+),]]></EngineMajorVersionRegex>
+		<EngineMinorVersionRegex><![CDATA["MinorVersion": (\d+),]]></EngineMinorVersionRegex>
+		<EnginePatchVersionRegex><![CDATA["PatchVersion": (\d+),]]></EnginePatchVersionRegex>
+
+		<EngineMajorVersion>$([System.Text.RegularExpressions.Regex]::Match('$(EngineVersionFileContents)', '$(EngineMajorVersionRegex)').Result('$1'))</EngineMajorVersion>
+		<EngineMinorVersion>$([System.Text.RegularExpressions.Regex]::Match('$(EngineVersionFileContents)', '$(EngineMinorVersionRegex)').Result('$1'))</EngineMinorVersion>
+		<EnginePatchVersion>$([System.Text.RegularExpressions.Regex]::Match('$(EngineVersionFileContents)', '$(EnginePatchVersionRegex)').Result('$1'))</EnginePatchVersion>
+
+		<EngineVersion>$(EngineMajorVersion).$(EngineMinorVersion).$(EnginePatchVersion)</EngineVersion>
+
+		<TargetFramework Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(EngineVersion)', '5.5.0'))">net8.0</TargetFramework>
+		<TargetFramework Condition="$([MSBuild]::VersionLessThan('$(EngineVersion)', '5.5.0'))">net6.0</TargetFramework>
+	</PropertyGroup>
+</Project>

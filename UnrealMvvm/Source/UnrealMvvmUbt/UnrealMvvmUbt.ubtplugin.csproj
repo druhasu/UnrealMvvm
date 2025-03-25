@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="UnrealMvvmUbt.ubtplugin.csproj.props" Condition="Exists('UnrealMvvmUbt.ubtplugin.csproj.props')" />
 	<Import Project="$(EngineDir)\Source\Programs\Shared\UnrealEngine.csproj.props" />
+	<Import Project="TargetFrameworkDetect.props" />
 
 	<PropertyGroup>
 		<RootNamespace>UnrealMvvm</RootNamespace>
@@ -10,7 +11,6 @@
 
 	<PropertyGroup>
 		<AssemblyName>UnrealMvvm.CodeGen</AssemblyName>
-		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<TreatWarningsAsErrors>Nullable</TreatWarningsAsErrors>
 		<Configuration Condition=" '$(Configuration)' == '' ">Development</Configuration>
