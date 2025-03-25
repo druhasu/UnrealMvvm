@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "Concepts/EqualityComparable.h"
+#include "Templates/Models.h"
+#include "UObject/Class.h"
 
 namespace UnrealMvvm_Impl
 {

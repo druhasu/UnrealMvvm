@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Mvvm/Impl/Property/PropertyTypeSelector.h"
+#include "UObject/NameTypes.h"
 
 namespace UnrealMvvm_Impl
 {

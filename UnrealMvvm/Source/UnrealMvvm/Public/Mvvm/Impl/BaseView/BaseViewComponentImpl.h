@@ -7,6 +7,7 @@
 #include "Mvvm/Impl/Binding/IPropertyChangeHandler.h"
 #include "Mvvm/Impl/Binding/ViewModelDynamicBinding.h"
 #include "Mvvm/Impl/Binding/BindingWorker.h"
+#include "Engine/BlueprintGeneratedClass.h"
 
 class FViewModelPropertyBase;
 class UBaseViewModel;

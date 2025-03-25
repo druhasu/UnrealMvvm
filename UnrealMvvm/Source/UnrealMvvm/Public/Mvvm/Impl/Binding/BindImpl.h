@@ -7,6 +7,8 @@
 
 #include "Mvvm/Impl/Binding/BindingWorker.h"
 #include "Mvvm/Impl/Utils/VariadicHelpers.h"
+#include "Containers/StaticArray.h"
+#include "Templates/IsInvocable.h"
 #include "Templates/IsMemberPointer.h"
 #include <type_traits>
 

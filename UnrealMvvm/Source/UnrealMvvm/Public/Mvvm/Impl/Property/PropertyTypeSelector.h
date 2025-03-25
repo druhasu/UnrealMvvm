@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Templates/IsArithmetic.h"
+#include "Templates/IsEnum.h"
 #include "Mvvm/ViewModelPropertyTypeTraits.h"
 #include <type_traits>
 
