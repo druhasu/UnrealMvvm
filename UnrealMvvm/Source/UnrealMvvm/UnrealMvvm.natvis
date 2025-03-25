@@ -29,4 +29,19 @@
     </Expand>
   </Type>
 
+  <Type Name="UnrealMvvm_Impl::FViewModelPropertyReflection">
+    <Intrinsic Name="GetNameData" Expression="*(FName*)((((UnrealMvvm_Impl::FViewModelPropertyOperations*)Buffer.Pad)->Property)->NameData)" />
+    <DisplayString Condition="ContainerType == EPinContainerType::None">{PinCategoryType,en} {GetNameData()}, Optional: {Flags.IsOptional}</DisplayString>
+    <DisplayString Condition="ContainerType == EPinContainerType::Array">TArray&lt;{PinCategoryType,en}&gt; {GetNameData()}, Optional: {Flags.IsOptional}</DisplayString>
+    <DisplayString Condition="ContainerType == EPinContainerType::Set">TSet&lt;{PinCategoryType,en}&gt; {GetNameData()}, Optional: {Flags.IsOptional}</DisplayString>
+    <DisplayString Condition="ContainerType == EPinContainerType::Map">TMap&lt;{PinCategoryType,en}, {GetNameData()}, Optional: {Flags.IsOptional}</DisplayString>
+  </Type>
+
+  <Type Name="FViewModelPropertyBase">
+    <DisplayString>{*(FName*)NameData}</DisplayString>
+    <Expand>
+      <Item Name="Name">*(FName*)NameData</Item>
+    </Expand>
+  </Type>
+
 </AutoVisualizer>

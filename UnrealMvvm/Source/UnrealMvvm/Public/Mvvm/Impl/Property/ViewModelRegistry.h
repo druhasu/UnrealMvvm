@@ -91,7 +91,7 @@ inline void UnrealMvvm_Impl::FViewModelRegistry::RegisterProperty(const TViewMod
 
     FViewModelPropertyReflection& Item = Entry.Reflection;
 
-    new (Item.OpsBuffer.Buffer.GetTypedPtr()) FEffectiveOpsType(Prop);
+    new (Item.Buffer.GetTypedPtr()) FEffectiveOpsType(Prop);
 
     Item.SizeOfValue = sizeof(TDecayedValue);
 

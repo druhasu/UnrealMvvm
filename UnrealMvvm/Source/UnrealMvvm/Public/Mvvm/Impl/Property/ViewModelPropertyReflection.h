@@ -73,20 +73,9 @@ namespace UnrealMvvm_Impl
             bool HasPublicSetter : 1;
         };
 
-        // this union is for debugging only, that way we can see names of properties
-        union FOpsBuffer
-        {
-            TTypeCompatibleBytes<FViewModelPropertyOperations> Buffer;
-            struct
-            {
-                void* Unused;
-                const FViewModelPropertyBase* Property;
-            } Prop;
-        };
-
         const FViewModelPropertyOperations& GetOperations() const
         {
-            return *OpsBuffer.Buffer.GetTypedPtr();
+            return *Buffer.GetTypedPtr();
         }
 
         const FViewModelPropertyBase* GetProperty() const
@@ -94,7 +83,7 @@ namespace UnrealMvvm_Impl
             return GetOperations().Property;
         }
 
-        FOpsBuffer OpsBuffer;
+        TTypeCompatibleBytes<FViewModelPropertyOperations> Buffer;
         int32 SizeOfValue;
         FFlags Flags;
 
