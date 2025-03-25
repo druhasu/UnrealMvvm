@@ -16,9 +16,11 @@ You can use [UnrealDI](https://github.com/druhasu/UnrealDI) plugin in Model laye
 
 ## Supported versions
 
-This plugin was tested to work with Unreal 5.1, 5.2 and 5.3. It should probably work with 5.0 too, but I cannot properly test it, because Blueprint test classes are already saved with 5.1 version. It is difficult to downgrade them
+I test this plugin to work with the latest version of Unreal Engine and two versions before it.
 
-The goal is to provide support for latest Unreal version and 2 previous versions.
+It should probably work with previous versions too, but I cannot properly test it, because Blueprint test classes are already saved with 5.3 version. It is difficult to downgrade them.
+
+If you have any issues, please submit them [here](https://github.com/druhasu/UnrealMvvm/issues/new)
 
 ## Installation
 
@@ -53,13 +55,13 @@ class UMyViewModel : public UBaseViewModel
        The macro will generate GetTitle and SetTitle methods and TitleField variable to store the value
        This property will also be bindable from Blueprints
      */
-    VM_PROP_AG_AS(FText, Title, public, public);
+    VM_PROP_AG_AS(FText, Title, public);
 
     /*
        Define Icon property of type UTexture2D*
        This property will prevent GC from destroying stored object
      */
-    VM_PROP_AG_AS(UTexture2D*, Icon, public, public);
+    VM_PROP_AG_AS(UTexture2D*, Icon, public);
 };
 
 ```
@@ -69,8 +71,8 @@ Note `VM_PROP_AG_AS` macro. It is used to define ViewModel properties. It has fo
    If you need to use TMap here just wrap whole type name in parantheses, like this:  
    `VM_PROP_AG_AS((TMap<int32, int32>), MyMap, public, public)`.
 3. Name of Property. Dictates naming of Getter, Setter and Backing field. This name is also displayed in Blueprint editor
-4. Getter visibility. May be `public`, `protected` or `private`.
-5. Setter visibility. May be `public`, `protected` or `private`.
+4. Optinal Getter visibility. May be `public`, `protected` or `private`. If only one parameter is supplied, it is used for setter
+5. Optional Setter visibility. May be `public`, `protected` or `private`.
 
 There are multiple flavours of this macro allowing you to manually define Getter and Setter methods:
 * `VM_PROP_AG_AS` generates both Setter and Getter bodies for you
@@ -86,7 +88,7 @@ Finally, there is `VM_PROP_MG_NF` macro that does not generate Getter method bod
 
 View may be implemented as Widget or Actor. They are very similar and follow the same pattern.
 
-To create a View you need to inherit from either UUserWidget or AActor and additionally from TBaseView<,>.
+To create a View you need to inherit from either `UUserWidget` or `AActor` and additionally from `TBaseView<,>`.
 
 Something like that:
 ```c++
@@ -147,7 +149,7 @@ UMyViewWidget Widget = CreateWidget<UMyViewWidget>(MyViewWidgetBlueprintClass);
 // Set ViewModel to View widget
 Widget->SetViewModel(ViewModel);
 
-// Add widget to Viewport. All binding will be evaluated and widget will display "Hello World!" message
+// Add widget to Viewport. All bindings will be evaluated and widget will display "Hello World!" message
 Widget->AddToViewport();
 
 // Change value of Title property to something different. Widget will now display new message 
