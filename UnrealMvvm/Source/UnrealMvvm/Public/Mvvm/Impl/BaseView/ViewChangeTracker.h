@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Containers/Array.h"
+#include "Misc/EngineVersionComparison.h"
 
 class UObject;
 class UBaseViewModel;
@@ -66,7 +67,11 @@ namespace UnrealMvvm_Impl
         static void PopInitialization()
         {
             check(CurrentInitializations.Num() > 0);
+#if UE_VERSION_OLDER_THAN(5,5,0)
             CurrentInitializations.RemoveAt(CurrentInitializations.Num() - 1, 1, false);
+#else
+            CurrentInitializations.RemoveAt(CurrentInitializations.Num() - 1, 1, EAllowShrinking::No);
+#endif
         }
 
         static void PushChange(UObject* View, UBaseViewModel* ViewModel, const FViewModelPropertyBase* Property)
@@ -77,7 +82,11 @@ namespace UnrealMvvm_Impl
         static void PopChange()
         {
             check(CurrentChanges.Num() > 0);
+#if UE_VERSION_OLDER_THAN(5,5,0)
             CurrentChanges.RemoveAt(CurrentChanges.Num() - 1, 1, false);
+#else
+            CurrentChanges.RemoveAt(CurrentChanges.Num() - 1, 1, EAllowShrinking::No);
+#endif
         }
 
         struct FInitEntry
