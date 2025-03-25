@@ -490,7 +490,9 @@ UClass* ViewModelRegistrySpec::MakeTempClass(UClass* Class)
     Result->StaticLink(true);
 
     // make sure it won't be picked up by any TObjectIterator
+    Result->RemoveFromRoot();
     Result->MarkAsGarbage();
+    Result->GetDefaultObject()->RemoveFromRoot();
     Result->GetDefaultObject()->MarkAsGarbage();
 
     return Result;

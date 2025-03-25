@@ -57,8 +57,8 @@ class UNREALMVVMTESTS_API UPinTraitsViewModel : public UBaseViewModel
 
     VM_PROP_PIN_TRAITS_TEST(bool, MyBoolean);
     VM_PROP_PIN_TRAITS_TEST(uint8, MyByte);
-    VM_PROP_PIN_TRAITS_TEST(TSubclassOf<UClass>, MyClass);
-    VM_PROP_PIN_TRAITS_TEST(TSoftClassPtr<UClass>, MySoftClass);
+    VM_PROP_PIN_TRAITS_TEST(TSubclassOf<UObject>, MyClass);
+    VM_PROP_PIN_TRAITS_TEST(TSoftClassPtr<UObject>, MySoftClass);
     VM_PROP_PIN_TRAITS_TEST(int32, MyInt);
     VM_PROP_PIN_TRAITS_TEST(int64, MyInt64);
     VM_PROP_PIN_TRAITS_TEST(float, MyFloat);
@@ -73,6 +73,16 @@ class UNREALMVVMTESTS_API UPinTraitsViewModel : public UBaseViewModel
     VM_PROP_PIN_TRAITS_TEST(FPinTraitsStruct, MyStruct);
     VM_PROP_PIN_TRAITS_TEST(EPinTraitsEnum, MyEnum);
     VM_PROP_PIN_TRAITS_TEST(EPinTraitsSimpleEnum, MySimpleEnum);
+    VM_PROP_PIN_TRAITS_TEST(FTimespan, MyTimespan);
 
     VM_PROP_AG_AS(TSharedPtr<EPinTraitsEnum>, Unsupported, public, public);
+};
+
+UCLASS(BlueprintType)
+class UNREALMVVMTESTS_API UPinTraitsInterfaceImpl : public UObject, public IPinTraitsInterface
+{
+    GENERATED_BODY()
+
+public:
+    FString GetSomeString() override { return GetName(); }
 };

@@ -39,6 +39,19 @@ namespace UnrealMvvm_Impl
 #if WITH_EDITOR
     // Traits for structs from Core modules
 
+    // special case for FTimespan, because it does not have builtin TBaseStruct for some reason
+    template<>
+    struct TBaseStructure<FTimespan>
+    {
+        static UNREALMVVM_API UScriptStruct* Get()
+        {
+            // copied from StaticGetBaseStructureInternal
+            static UPackage* CoreUObjectPkg = FindObjectChecked<UPackage>(nullptr, TEXT("/Script/CoreUObject"));
+            static UScriptStruct* Result = (UScriptStruct*)StaticFindObjectFastInternal(UScriptStruct::StaticClass(), CoreUObjectPkg, "Timespan", false, RF_NoFlags, EInternalObjectFlags::None);
+            return Result;
+        }
+    };
+
     template <typename T>
     struct TIsBaseStructure : TIntegralConstant<bool, false> {};
 
@@ -81,6 +94,7 @@ namespace UnrealMvvm_Impl
     DEFINE_BASE_STRUCTURE(FPolyglotTextData);
     DEFINE_BASE_STRUCTURE(FAssetBundleData);
     DEFINE_BASE_STRUCTURE(FTestUninitializedScriptStructMembersTest);
+    DEFINE_BASE_STRUCTURE(FTimespan);
 
 #if !UE_VERSION_OLDER_THAN(5,1,0)
     // these types were exposed in 5.1

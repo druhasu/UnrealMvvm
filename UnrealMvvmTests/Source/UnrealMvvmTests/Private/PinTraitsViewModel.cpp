@@ -27,8 +27,8 @@
 
 VM_PROP_PIN_TRAITS_TEST_IMPL(bool, MyBoolean);
 VM_PROP_PIN_TRAITS_TEST_IMPL(uint8, MyByte);
-VM_PROP_PIN_TRAITS_TEST_IMPL(TSubclassOf<UClass>, MyClass);
-VM_PROP_PIN_TRAITS_TEST_IMPL(TSoftClassPtr<UClass>, MySoftClass);
+VM_PROP_PIN_TRAITS_TEST_IMPL(TSubclassOf<UObject>, MyClass);
+VM_PROP_PIN_TRAITS_TEST_IMPL(TSoftClassPtr<UObject>, MySoftClass);
 VM_PROP_PIN_TRAITS_TEST_IMPL(int32, MyInt);
 VM_PROP_PIN_TRAITS_TEST_IMPL(int64, MyInt64);
 VM_PROP_PIN_TRAITS_TEST_IMPL(float, MyFloat);
@@ -43,6 +43,7 @@ VM_PROP_PIN_TRAITS_TEST_IMPL(FText, MyText);
 VM_PROP_PIN_TRAITS_TEST_IMPL(FPinTraitsStruct, MyStruct);
 VM_PROP_PIN_TRAITS_TEST_IMPL(EPinTraitsEnum, MyEnum);
 VM_PROP_PIN_TRAITS_TEST_IMPL(EPinTraitsSimpleEnum, MySimpleEnum);
+VM_PROP_PIN_TRAITS_TEST_IMPL(FTimespan, MyTimespan);
 
 struct FPinTraitsPropertiesRegistrator
 {

@@ -115,26 +115,52 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
     {
         if (const UnrealMvvm_Impl::FViewModelPropertyReflection* MyProperty = UnrealMvvm_Impl::FViewModelRegistry::FindProperty(ViewModel->GetClass(), PropertyName))
         {
-            // remember current Code pointer, because ReadProperty modifies it
+            // allocate enough space for holding property value
+            void* StorageSpace = FMemory_Alloca(MyProperty->SizeOfValue);
+            FProperty* NextProperty = nullptr;
+            UScriptStruct* NextStruct = nullptr;
+
+            // remember current Code pointer, because we may need to modify it and restore later
             uint8* SavedCode = Stack.Code;
 
-            // increase Code to emulate single Step, but without actually executing anything
-            Stack.Code++;
+            switch (*Stack.Code)
+            {
+                case EX_LocalVariable:
+                case EX_InstanceVariable:
+                case EX_DefaultVariable:
+                {
+                    // increase Code to emulate single Step, but without actually executing anything
+                    Stack.Code++;
 
-            // try read property from Stack. It may be nullptr in some cases
-            FProperty* NextProperty = Stack.ReadPropertyUnchecked();
+                    // read property from Stack
+                    NextProperty = Stack.ReadPropertyUnchecked();
+                    check(NextProperty != nullptr);
+
+                    // initialize memory for storing property value
+                    NextProperty->InitializeValue(StorageSpace);
+                }
+                break;
+
+                case EX_StructConst:
+                {
+                    // increase Code to emulate single Step, but without actually executing anything
+                    Stack.Code++;
+
+                    // read struct from Stack
+                    NextStruct = (UScriptStruct*)Stack.ReadObject();
+                    check(NextStruct != nullptr);
+
+                    // initialize memory for storing struct value
+                    NextStruct->InitializeStruct(StorageSpace);
+                }
+                break;
+
+                default:
+                    FMemory::Memzero(StorageSpace, MyProperty->SizeOfValue);
+            }
 
             // restore previous pointer
             Stack.Code = SavedCode;
-
-            // allocate enough space for holding property value
-            void* StorageSpace = FMemory_Alloca(MyProperty->SizeOfValue);
-
-            if (NextProperty)
-            {
-                // initialize it properly
-                NextProperty->InitializeValue(StorageSpace);
-            }
 
             // read the value from Blueprint graph
             Stack.StepCompiledIn<FProperty>(StorageSpace);
@@ -144,10 +170,15 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
             // store the value into ViewModel
             MyProperty->GetOperations().SetValue(ViewModel, StorageSpace, HasValue);
 
-            if (NextProperty)
+            if (NextProperty != nullptr)
             {
                 // properly destroy the value
                 NextProperty->DestroyValue(StorageSpace);
+            }
+            else if (NextStruct != nullptr)
+            {
+                // properly destroy the value
+                NextStruct->DestroyStruct(StorageSpace);
             }
         }
         else

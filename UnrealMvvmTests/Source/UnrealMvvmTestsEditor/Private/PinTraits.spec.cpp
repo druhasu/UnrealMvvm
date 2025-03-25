@@ -115,6 +115,7 @@ void PinTraitsSpec::Define()
         BASE_STRUCTURE_TEST_CASE(FSoftObjectPath);
         BASE_STRUCTURE_TEST_CASE(FSoftClassPath);
         BASE_STRUCTURE_TEST_CASE(FDateTime);
+        BASE_STRUCTURE_TEST_CASE(FTimespan);
 
     #undef BASE_STRUCTURE_TEST_CASE
     });
@@ -202,19 +203,15 @@ TArray<FTestCase> PinTraitsSpec::GetTestCases() const
     {
         { TEXT("MyBoolean"), EPinCategoryType::Boolean, nullptr },
         { TEXT("MyByte"), EPinCategoryType::Byte, nullptr },
-        { TEXT("MyClass"), EPinCategoryType::Class, UClass::StaticClass() },
-        { TEXT("MySoftClass"), EPinCategoryType::SoftClass, UClass::StaticClass() },
+        { TEXT("MyClass"), EPinCategoryType::Class, UObject::StaticClass() },
+        { TEXT("MySoftClass"), EPinCategoryType::SoftClass, UObject::StaticClass() },
         { TEXT("MyInt"), EPinCategoryType::Int, nullptr },
         { TEXT("MyInt64"), EPinCategoryType::Int64, nullptr },
         { TEXT("MyFloat"), EPinCategoryType::Float, nullptr },
-#if ENGINE_MAJOR_VERSION >= 5
         { TEXT("MyDouble"), EPinCategoryType::Double, nullptr },
-#endif
         { TEXT("MyName"), EPinCategoryType::Name, nullptr },
         { TEXT("MyObject"), EPinCategoryType::Object, UObject::StaticClass() },
-#if ENGINE_MAJOR_VERSION >= 5
         { TEXT("MyObjectPtr"), EPinCategoryType::Object, UObject::StaticClass() },
-#endif
         { TEXT("MyInterface"), EPinCategoryType::Interface, UPinTraitsInterface::StaticClass() },
         { TEXT("MySoftObject"), EPinCategoryType::SoftObject, UTexture2D::StaticClass() },
         { TEXT("MyString"), EPinCategoryType::String, nullptr },
@@ -241,9 +238,7 @@ const TCHAR* PinTraitsSpec::ToString(EPinCategoryType Type)
         CASE(Int);
         CASE(Int64);
         CASE(Float);
-#if ENGINE_MAJOR_VERSION >= 5
         CASE(Double);
-#endif
         CASE(Name);
         CASE(Object);
         CASE(Interface);
