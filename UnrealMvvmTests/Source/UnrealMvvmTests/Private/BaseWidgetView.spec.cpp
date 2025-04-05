@@ -799,6 +799,26 @@ void FBaseWidgetViewSpec::Define()
             TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
         });
 
+        It("Should receive changes in derived blueprint with Subclassed ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/WidgetView/BP_TestWidgetView_BlueprintBased_DerivedOverride.BP_TestWidgetView_BlueprintBased_DerivedOverride_C"));
+
+            UTestBaseWidgetViewBlueprint* View = CreateWidget<UTestBaseWidgetViewBlueprint>(Helper.World, WidgetClass);
+            UTestDerivedViewModel* ViewModel = NewObject<UTestDerivedViewModel>();
+
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
+
+            ViewModel->SetIntValue(1);
+            ViewModel->SetFloatValue(2.f);
+            ViewModel->SetDerivedIntValue(3);
+
+            TestEqual("MyValue in View", View->MyValue, 1);
+            TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
+            TestEqual("MyDerivedValue in View", View->MyDerivedValue, 3);
+        });
+
         It("Should receive IsInitial value", [this]
         {
             FTempWorldHelper Helper;

@@ -32,7 +32,6 @@ private:
     void AddPropertyPathEntry(SWrapBox& WrapBox, FName PropertyName, const UnrealMvvm_Impl::FViewModelPropertyReflection* Reflection);
 
     FReply HandleViewButtonClicked();
-    void HandleRemoveButtonClicked();
 
     TWeakObjectPtr<UK2Node_ViewModelPropertyChanged> Node;
     FSimpleDelegate RemoveDelegate;

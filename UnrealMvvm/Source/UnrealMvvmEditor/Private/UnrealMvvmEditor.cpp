@@ -6,6 +6,7 @@
 #include "Slate/ViewModelPropertiesSummoner.h"
 #include "Slate/UnrealMvvmEditorStyle.h"
 #include "BaseViewBlueprintExtension.h"
+#include "ViewModelClassSelectorHelper.h"
 #include "UMGEditorModule.h"
 #include "BlueprintEditorModule.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -168,7 +169,7 @@ private:
             FixupWidgetExtensions(WidgetBlueprint);
         }
 
-        FixupRedundantBlueprintExtensions(SavedBlueprint);
+        UBaseViewBlueprintExtension::TryRemoveUnnecessary(SavedBlueprint);
     }
 
     void FixupWidgetExtensions(UWidgetBlueprint* SavedBlueprint)
@@ -187,18 +188,6 @@ private:
                 Extensions.RemoveSwap(nullptr);
             }
         });
-    }
-
-    void FixupRedundantBlueprintExtensions(UBlueprint* SavedBlueprint)
-    {
-        using namespace UnrealMvvm_Impl;
-
-        if (!SavedBlueprint->ParentClass->IsNative() && FViewRegistry::GetViewModelClass(SavedBlueprint->ParentClass))
-        {
-            // if our parent class have ViewModel defined, then we don't need our own BlueprintExtension
-            // but only if our parent is also a Blueprint class
-            UBaseViewBlueprintExtension::Remove(SavedBlueprint);
-        }
     }
 
     void OnPostEngineInit()
@@ -232,7 +221,7 @@ private:
         // check that this Blueprint represents a View
         if (Blueprint != nullptr)
         {
-            UClass* ViewModelClass = UBaseViewBlueprintExtension::GetViewModelClass(Blueprint);
+            UClass* ViewModelClass = FViewModelClassSelectorHelper::GetViewModelClass(Blueprint);
 
             if (ViewModelClass != nullptr)
             {

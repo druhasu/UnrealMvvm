@@ -759,6 +759,26 @@ void FBaseActorViewSpec::Define()
             TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
         });
 
+        It("Should receive changes in derived blueprint with Subclassed ViewModel", [this]
+        {
+            FTempWorldHelper Helper;
+            UClass* ActorClass = StaticLoadClass(AActor::StaticClass(), nullptr, TEXT("/UnrealMvvmTests/ActorView/BP_TestActorView_BlueprintBased_DerivedOverride.BP_TestActorView_BlueprintBased_DerivedOverride_C"));
+
+            ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
+            UTestDerivedViewModel* ViewModel = NewObject<UTestDerivedViewModel>();
+
+            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            View->DispatchBeginPlay();
+
+            ViewModel->SetIntValue(1);
+            ViewModel->SetFloatValue(2.f);
+            ViewModel->SetDerivedIntValue(3);
+
+            TestEqual("MyValue in View", View->MyValue, 1);
+            TestEqual("MyFloatValue in View", View->MyFloatValue, 2.f);
+            TestEqual("MyDerivedValue in View", View->MyDerivedValue, 3);
+        });
+
         It("Should receive IsInitial value", [this]
         {
             FTempWorldHelper Helper;

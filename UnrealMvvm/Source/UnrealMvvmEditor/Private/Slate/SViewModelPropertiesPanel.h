@@ -38,13 +38,16 @@ private:
 
     TSharedRef<ITableRow> MakeBindingRow(UK2Node_ViewModelPropertyChanged* Node, const TSharedRef<STableViewBase>& OwnerTable);
 
+    TSharedRef<SWidget> MakeViewModelClassSelector();
+
     void RegenerateBindings();
     void CacheViewModelClass(bool bMayRemoveExtension);
     void OnViewClassChanged(UClass* ViewClass, UClass* ViewModelClass);
     void OnBlueprintChanged(UBlueprint*);
 
     FText GetClassSelectorTooltip() const;
-    bool IsClassSelectorEnabled() const;
+    EVisibility GetClassErrorVisibility() const;
+    FText GetClassErrorTooltip() const;
 
     const UClass* GetViewModelClass() const;
     void OnViewModelClassSelected(const UClass* NewClass);
@@ -63,9 +66,12 @@ private:
 
     bool bParentHasViewModel = false;
     UClass* ViewModelClass = nullptr;
+    UClass* ParentViewModelClass = nullptr;
 
     TSharedPtr<SBindingListView> BindingList;
     TArray<UK2Node_ViewModelPropertyChanged*> BindingNodes;
+
+    SHorizontalBox::FSlot* ClassSelectorSlot = nullptr;
 };
 
 class SViewModelPropertyRow : public SCompoundWidget

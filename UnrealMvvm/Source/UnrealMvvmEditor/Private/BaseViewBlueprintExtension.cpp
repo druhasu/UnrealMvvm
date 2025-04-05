@@ -1,12 +1,14 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
 #include "BaseViewBlueprintExtension.h"
+#include "ViewModelClassSelectorHelper.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Nodes/K2Node_InitViewModelDynamicBinding.h"
 #include "Nodes/K2Node_ViewModelPropertyChanged.h"
 #include "Nodes/ViewModelPropertyNodeHelper.h"
 #include "KismetCompiler.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Serialization/DuplicatedDataReader.h"
 
 UBaseViewBlueprintExtension* UBaseViewBlueprintExtension::Request(UBlueprint* Blueprint)
 {
@@ -41,23 +43,37 @@ void UBaseViewBlueprintExtension::Remove(UBlueprint* Blueprint)
     }
 }
 
-UClass* UBaseViewBlueprintExtension::GetViewModelClass(UBlueprint* Blueprint)
+bool UBaseViewBlueprintExtension::TryRemoveUnnecessary(UBlueprint* Blueprint)
 {
-    if (Blueprint)
+    if (Blueprint == nullptr || Blueprint->ParentClass->IsNative())
     {
-        UBaseViewBlueprintExtension* Extension = Get(Blueprint);
-
-        return Extension != nullptr ? Extension->GetViewModelClass() : UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->GeneratedClass);
+        return false;
     }
 
-    return nullptr;
+    if (UBaseViewBlueprintExtension* Extension = Get(Blueprint))
+    {
+        UClass* ParentViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->ParentClass);
+
+        // our parent class defines same ViewModel, no need to keep our own extension
+        if (ParentViewModelClass == Extension->GetViewModelClass())
+        {
+            Extension->SetViewModelClass(nullptr);
+            Blueprint->RemoveExtension(Extension);
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void UBaseViewBlueprintExtension::Serialize(FArchive& Ar)
 {
     Super::Serialize(Ar);
 
-    if (Ar.IsLoading())
+    // do not add anything during duplication
+    static FString DuplicateReaderName = TEXT("FDuplicateDataReader");
+    if (Ar.IsLoading() && Ar.GetArchiveName() != DuplicateReaderName)
     {
         // pickup legacy bindings by function name
         TryAddLegacyBindings();
@@ -128,6 +144,14 @@ void UBaseViewBlueprintExtension::HandleGenerateFunctionGraphs(FKismetCompilerCo
     // we need to do this here for correct handling of Blueprint duplication
     // we cannot handle it inside our PostDuplicate because compilation happens first
     TryRegisterViewModelClass();
+
+    // validate our ViewModel class
+    FText Message;
+    if (!FViewModelClassSelectorHelper::ValidateViewModelClass(GetTypedOuter<UBlueprint>(), &Message))
+    {
+        Message = FText::FormatOrdered(NSLOCTEXT("UnrealMvvm", "Error.ViewModelClassInvalid.BlueprintCompileFormat", "Invalid ViewModel class in @@. {0}"), Message);
+        CompilerContext->MessageLog.Error(*Message.ToString(), GetTypedOuter<UBlueprint>());
+    }
 }
 
 void UBaseViewBlueprintExtension::TryRegisterViewModelClass()

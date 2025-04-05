@@ -82,6 +82,9 @@ public:
     float MyFloatValue = 0;
 
     UPROPERTY(BlueprintReadWrite)
+    int32 MyDerivedValue = 0;
+
+    UPROPERTY(BlueprintReadWrite)
     UTestBaseViewModel* OldViewModel = nullptr;
 
     UPROPERTY(BlueprintReadWrite)

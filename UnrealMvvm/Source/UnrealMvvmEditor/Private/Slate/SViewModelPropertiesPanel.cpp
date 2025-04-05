@@ -6,6 +6,7 @@
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
 #include "BaseViewBlueprintExtension.h"
+#include "ViewModelClassSelectorHelper.h"
 #include "Nodes/ViewModelPropertyNodeHelper.h"
 #include "Nodes/K2Node_ViewModelPropertyChanged.h"
 
@@ -106,20 +107,25 @@ TSharedRef<SWidget> SViewModelPropertiesPanel::MakeViewModelSelector()
             .ToolTipText(this, &ThisClass::GetClassSelectorTooltip)
         ]
 
+        // Error indicator
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        .Padding(0, -1, 5, -1)
+        [
+            SNew(SImage)
+            .ColorAndOpacity(FStyleColors::Error)
+            .Image(FAppStyle::Get().GetBrush("Icons.Error"))
+            .ToolTipText(this, &ThisClass::GetClassErrorTooltip)
+            .Visibility(this, &ThisClass::GetClassErrorVisibility)
+        ]
+
         // Add a class entry box.  Even though this isn't an class entry, we will simulate one
         + SHorizontalBox::Slot()
         .Padding(0, 0, 5, 0)
+        .Expose(ClassSelectorSlot)
         [
-            SNew(SClassPropertyEntryBox)
-            .MetaClass(UBaseViewModel::StaticClass())
-            .AllowAbstract(true)
-            .AllowNone(true)
-            .ShowTreeView(false)
-            .HideViewOptions(false)
-            .ShowDisplayNames(true)
-            .SelectedClass(this, &ThisClass::GetViewModelClass)
-            .OnSetClass(this, &ThisClass::OnViewModelClassSelected)
-            .IsEnabled(this, &ThisClass::IsClassSelectorEnabled)
+            MakeViewModelClassSelector()
         ]
 
         // Add "Go to Source" button
@@ -296,6 +302,19 @@ TSharedRef<ITableRow> SViewModelPropertiesPanel::MakeBindingRow(UK2Node_ViewMode
     ];
 }
 
+TSharedRef<SWidget> SViewModelPropertiesPanel::MakeViewModelClassSelector()
+{
+    return SNew(SClassPropertyEntryBox)
+        .MetaClass(ParentViewModelClass != nullptr ? ParentViewModelClass : UBaseViewModel::StaticClass())
+        .AllowAbstract(true)
+        .AllowNone(ParentViewModelClass == nullptr)
+        .ShowTreeView(false)
+        .HideViewOptions(false)
+        .ShowDisplayNames(true)
+        .SelectedClass(this, &ThisClass::GetViewModelClass)
+        .OnSetClass(this, &ThisClass::OnViewModelClassSelected);
+}
+
 void SViewModelPropertiesPanel::RegenerateBindings()
 {
     BindingNodes.Reset();
@@ -304,21 +323,17 @@ void SViewModelPropertiesPanel::RegenerateBindings()
 
 void SViewModelPropertiesPanel::CacheViewModelClass(bool bMayRemoveExtension)
 {
-    ViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->ParentClass);
-    bParentHasViewModel = ViewModelClass != nullptr;
+    ParentViewModelClass = UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(Blueprint->ParentClass);
+    bParentHasViewModel = ParentViewModelClass != nullptr;
 
-    if (!ViewModelClass)
+    ViewModelClass = ParentViewModelClass;
+    if (UBaseViewBlueprintExtension* Extension = UBaseViewBlueprintExtension::Get(Blueprint.Get()))
     {
-        if (UBaseViewBlueprintExtension* Extension = UBaseViewBlueprintExtension::Get(Blueprint.Get()))
-        {
-            ViewModelClass = Extension->GetViewModelClass();
-        }
+        ViewModelClass = Extension->GetViewModelClass();
     }
-    else if (bMayRemoveExtension && !Blueprint->ParentClass->IsNative())
-    {
-        // our parent class defines ViewModel, no need to keep our own extension
-        UBaseViewBlueprintExtension::Remove(Blueprint.Get());
 
+    if (bMayRemoveExtension && UBaseViewBlueprintExtension::TryRemoveUnnecessary(Blueprint.Get()))
+    {
         FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint.Get());
     }
 }
@@ -330,6 +345,7 @@ void SViewModelPropertiesPanel::OnViewClassChanged(UClass* ViewClass, UClass* In
         CacheViewModelClass(true);
         RegenerateBindings();
         BindingList->RebuildList();
+        ClassSelectorSlot->AttachWidget(MakeViewModelClassSelector());
     }
 }
 
@@ -341,14 +357,19 @@ void SViewModelPropertiesPanel::OnBlueprintChanged(UBlueprint*)
 
 FText SViewModelPropertiesPanel::GetClassSelectorTooltip() const
 {
-    return IsClassSelectorEnabled() ?
-        NSLOCTEXT("UnrealMvvm", "ClassSelectorEnabledTooltip", "Select ViewModel class for this View") :
-        NSLOCTEXT("UnrealMvvm", "ClassSelectorDisaabledTooltip", "ViewModel class is set in Parent class and cannot be changed in this Blueprint");
+    return NSLOCTEXT("UnrealMvvm", "ClassSelectorEnabledTooltip", "Select ViewModel class for this View");
 }
 
-bool SViewModelPropertiesPanel::IsClassSelectorEnabled() const
+EVisibility SViewModelPropertiesPanel::GetClassErrorVisibility() const
 {
-    return !bParentHasViewModel;
+    return FViewModelClassSelectorHelper::ValidateViewModelClass(Blueprint.Get()) ? EVisibility::Collapsed : EVisibility::Visible;
+}
+
+FText SViewModelPropertiesPanel::GetClassErrorTooltip() const
+{
+    FText Error;
+    FViewModelClassSelectorHelper::ValidateViewModelClass(Blueprint.Get(), &Error);
+    return Error;
 }
 
 const UClass* SViewModelPropertiesPanel::GetViewModelClass() const
@@ -360,15 +381,7 @@ void SViewModelPropertiesPanel::OnViewModelClassSelected(const UClass* NewClass)
 {
     ViewModelClass = const_cast<UClass*>(NewClass);
 
-    if (ViewModelClass)
-    {
-        UBaseViewBlueprintExtension* Extension = UBaseViewBlueprintExtension::Request(Blueprint.Get());
-        Extension->SetViewModelClass(ViewModelClass);
-    }
-    else
-    {
-        UBaseViewBlueprintExtension::Remove(Blueprint.Get());
-    }
+    FViewModelClassSelectorHelper::SetViewModelClass(Blueprint.Get(), ViewModelClass);
 
     RegenerateBindings();
     BindingList->RebuildList();

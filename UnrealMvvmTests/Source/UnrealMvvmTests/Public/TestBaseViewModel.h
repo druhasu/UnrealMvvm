@@ -53,3 +53,13 @@ protected:
         LastSubscriptionStatus = bHasConnectedViews;
     }
 };
+
+UCLASS()
+class UNREALMVVMTESTS_API UTestDerivedViewModel : public UTestBaseViewModel
+{
+    GENERATED_BODY()
+
+    VM_PROP_AG_AS(int32, DerivedIntValue, public);
+
+public:
+};
