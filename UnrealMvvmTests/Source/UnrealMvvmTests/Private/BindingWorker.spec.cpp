@@ -32,6 +32,7 @@ struct FBindingWorkerTestHandler : public UnrealMvvm_Impl::IPropertyChangeHandle
 BEGIN_DEFINE_SPEC(FBindingWorkerSpec, "UnrealMvvm.BindingWorker", EAutomationTestFlags::ClientContext | EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext | EAutomationTestFlags::EngineFilter)
 void TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, UnrealMvvm_Impl::FBindingWorker& Worker)> TestFunction);
 void TestPropertyPathNative(TFunctionRef<void(UBindingWorkerTestView* View, UBindingWorkerViewModel_Root* RootViewModel)> TestFunction);
+void TestPropertyPathMultiple(const TArray<TArray<const FViewModelPropertyBase*>>& Bindings, TFunctionRef<void(UBindingWorkerViewModel_Root* ViewModel, const TArray<FBindingWorkerTestHandler*>& Handlers)> TestFunction);
 END_DEFINE_SPEC(FBindingWorkerSpec)
 
 void FBindingWorkerSpec::Define()
@@ -374,6 +375,85 @@ void FBindingWorkerSpec::Define()
             });
         });
     });
+
+    Describe("PropertyPath multiple", [this]
+    {
+        It("Should handle change Root + Root", [this]
+        {
+            TestPropertyPathMultiple(
+            {
+                { UBindingWorkerViewModel_Root::ChildProperty() },
+                { UBindingWorkerViewModel_Root::ChildProperty() },
+            },
+            [&](UBindingWorkerViewModel_Root* ViewModel, const TArray<FBindingWorkerTestHandler*>& Handlers)
+            {
+                ViewModel->SetChild(NewObject<UBindingWorkerViewModel_FirstChild>());
+
+                TestEqual("Handler[0] Call count", Handlers[0]->Calls.Num(), 1);
+                TestEqual("Handler[1] Call count", Handlers[1]->Calls.Num(), 1);
+
+                Handlers[0]->TestCall(0, ViewModel, UBindingWorkerViewModel_Root::ChildProperty());
+                Handlers[1]->TestCall(0, ViewModel, UBindingWorkerViewModel_Root::ChildProperty());
+            });
+        });
+
+        It("Should handle change Child + Root", [this]
+        {
+            TestPropertyPathMultiple(
+            {
+                { UBindingWorkerViewModel_Root::ChildProperty(), UBindingWorkerViewModel_FirstChild::IntValueProperty() },
+                { UBindingWorkerViewModel_Root::ChildProperty() },
+            },
+            [&](UBindingWorkerViewModel_Root* ViewModel, const TArray<FBindingWorkerTestHandler*>& Handlers)
+            {
+                ViewModel->SetChild(NewObject<UBindingWorkerViewModel_FirstChild>());
+
+                TestEqual("Handler[0] Call count", Handlers[0]->Calls.Num(), 1);
+                TestEqual("Handler[1] Call count", Handlers[1]->Calls.Num(), 1);
+
+                Handlers[0]->TestCall(0, ViewModel->GetChild(), UBindingWorkerViewModel_FirstChild::IntValueProperty());
+                Handlers[1]->TestCall(0, ViewModel, UBindingWorkerViewModel_Root::ChildProperty());
+            });
+        });
+
+        It("Should handle change Root + Child", [this]
+        {
+            TestPropertyPathMultiple(
+            {
+                { UBindingWorkerViewModel_Root::ChildProperty() },
+                { UBindingWorkerViewModel_Root::ChildProperty(), UBindingWorkerViewModel_FirstChild::IntValueProperty() },
+            },
+            [&](UBindingWorkerViewModel_Root* ViewModel, const TArray<FBindingWorkerTestHandler*>& Handlers)
+            {
+                ViewModel->SetChild(NewObject<UBindingWorkerViewModel_FirstChild>());
+
+                TestEqual("Handler[0] Call count", Handlers[0]->Calls.Num(), 1);
+                TestEqual("Handler[1] Call count", Handlers[1]->Calls.Num(), 1);
+
+                Handlers[0]->TestCall(0, ViewModel, UBindingWorkerViewModel_Root::ChildProperty());
+                Handlers[1]->TestCall(0, ViewModel->GetChild(), UBindingWorkerViewModel_FirstChild::IntValueProperty());
+            });
+        });
+
+        It("Should handle change Child + Child", [this]
+        {
+            TestPropertyPathMultiple(
+            {
+                { UBindingWorkerViewModel_Root::ChildProperty(), UBindingWorkerViewModel_FirstChild::IntValueProperty() },
+                { UBindingWorkerViewModel_Root::ChildProperty(), UBindingWorkerViewModel_FirstChild::IntValueProperty() },
+            },
+            [&](UBindingWorkerViewModel_Root* ViewModel, const TArray<FBindingWorkerTestHandler*>& Handlers)
+            {
+                ViewModel->SetChild(NewObject<UBindingWorkerViewModel_FirstChild>());
+
+                TestEqual("Handler[0] Call count", Handlers[0]->Calls.Num(), 1);
+                TestEqual("Handler[1] Call count", Handlers[1]->Calls.Num(), 1);
+
+                Handlers[0]->TestCall(0, ViewModel->GetChild(), UBindingWorkerViewModel_FirstChild::IntValueProperty());
+                Handlers[1]->TestCall(0, ViewModel->GetChild(), UBindingWorkerViewModel_FirstChild::IntValueProperty());
+            });
+        });
+    });
 }
 
 void FBindingWorkerSpec::TestPropertyPath(TFunctionRef<void(FBindingWorkerTestHandler& Handler, UBindingWorkerViewModel_Root* RootViewModel, UnrealMvvm_Impl::FBindingWorker& Worker)> TestFunction)
@@ -426,4 +506,37 @@ void FBindingWorkerSpec::TestPropertyPathNative(TFunctionRef<void(UBindingWorker
     TSharedPtr<SWidget> SWidgetPtr = View->TakeWidget();
 
     TestFunction(View, RootViewModel);
+}
+
+void FBindingWorkerSpec::TestPropertyPathMultiple(const TArray<TArray<const FViewModelPropertyBase*>>& Bindings, TFunctionRef<void(UBindingWorkerViewModel_Root* ViewModel, const TArray<FBindingWorkerTestHandler*>& Handlers)> TestFunction)
+{
+    using namespace UnrealMvvm_Impl;
+
+    FBindingConfigurationBuilder Builder(UBindingWorkerViewModel_Root::StaticClass());
+    for (const TArray<const FViewModelPropertyBase*>& Binding : Bindings)
+    {
+        Builder.AddBinding(Binding);
+    }
+
+    FBindingWorker Worker;
+    Worker.Init(nullptr, Builder.Build());
+
+    UBindingWorkerViewModel_Root* RootViewModel = NewObject<UBindingWorkerViewModel_Root>();
+    Worker.SetViewModel(RootViewModel);
+
+    TArray<FBindingWorkerTestHandler*> Handlers;
+    for (const TArray<const FViewModelPropertyBase*>& Binding : Bindings)
+    {
+        Handlers.Add(&Worker.AddBindingHandler<FBindingWorkerTestHandler>(Binding));
+    }
+
+    Worker.StartListening();
+
+    // reset calls produced by StartListening to not mess with what TestFunction expects
+    for (FBindingWorkerTestHandler* Handler : Handlers)
+    {
+        Handler->Calls.Reset();
+    }
+
+    TestFunction(RootViewModel, Handlers);
 }

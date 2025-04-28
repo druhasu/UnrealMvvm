@@ -72,6 +72,7 @@ namespace UnrealMvvm_Impl
         template<typename TPathEntry, typename THandler, typename... TArgs>
         THandler& AddBindingHandlerImpl(TArrayView<TPathEntry> PropertyPath, TArgs&&... Args)
         {
+            check(PropertyPath.Num() > 0);
             check(Bindings.Data != nullptr);
 
             TArrayView<FResolvedViewModelEntry> ViewModelEntries = Bindings.GetViewModels();
@@ -79,23 +80,36 @@ namespace UnrealMvvm_Impl
             const FResolvedViewModelEntry* ViewModelEntry = &ViewModelEntries[0];
             FResolvedPropertyEntry* PropertyEntry = nullptr;
 
-            for (const TPathEntry& Property : PropertyPath)
+            for (int32 Index = 0, LastIndex = PropertyPath.Num() - 1; Index <= LastIndex; ++Index)
             {
                 check(ViewModelEntry);
 
-                PropertyEntry = Bindings.GetProperties(*ViewModelEntry).FindByPredicate([&](const FResolvedPropertyEntry& Entry)
-                {
-                    return Entry == Property && !Entry.bHasHandler;
-                });
-                check(PropertyEntry != nullptr);
+                const TPathEntry& Property = PropertyPath[Index];
 
-                if (PropertyEntry->NextViewModelIndex != INDEX_NONE)
+                if (Index == LastIndex)
                 {
+                    // find first entry that does not have a handler
+                    PropertyEntry = Bindings.GetProperties(*ViewModelEntry).FindByPredicate([&](const FResolvedPropertyEntry& Entry)
+                    {
+                        return Entry == Property && !Entry.bHasHandler;
+                    });
+
+                    check(PropertyEntry != nullptr);
+                    PropertyEntry->EmplaceHandler<THandler>(Forward<TArgs>(Args)...);
+                }
+                else
+                {
+                    // find first entry that has next view model
+                    PropertyEntry = Bindings.GetProperties(*ViewModelEntry).FindByPredicate([&](const FResolvedPropertyEntry& Entry)
+                    {
+                        return Entry == Property && Entry.NextViewModelIndex != INDEX_NONE;
+                    });
+
+                    check(PropertyEntry != nullptr);
                     ViewModelEntry = &ViewModelEntries[PropertyEntry->NextViewModelIndex];
                 }
             }
 
-            PropertyEntry->EmplaceHandler<THandler>(Forward<TArgs>(Args)...);
             return *(THandler*)PropertyEntry->GetHandler();
         }
 
