@@ -48,6 +48,7 @@ public static class MvvmCodeGenerator
         UhtMvvmProperty property = new(topScope.ScopeType, token.InputLine);
 #endif
         Properties.Add(property);
+        topScope.ScopeType.AddChild(property);
 
         string macroName = token.ToString();
 
@@ -60,7 +61,7 @@ public static class MvvmCodeGenerator
 
         reader.Require('(');
 
-        property.PropertyType = ReadPropertyType(reader);
+        property.PropertyTypeTokens = new ReadOnlyMemory<UhtToken>(ReadPropertyTypeTokens(reader).ToArray());
         property.SourceName = ReadPropertyName(reader);
 
         var firstSpecifier = ReadAccessSpecifier(reader);
@@ -105,12 +106,15 @@ public static class MvvmCodeGenerator
         return UhtParseResult.Handled;
     }
 
-    private static string ReadPropertyType(IUhtTokenReader reader)
+    private static List<UhtToken> ReadPropertyTypeTokens(IUhtTokenReader reader)
     {
-        string PropertyType = "";
+        List<UhtToken> result = new();
 
         char EndSymbol = reader.TryOptional('(') ? ')' : ',';
-        bool bIdentifierPrev = false;
+
+        // UhtProperty parser expects this token to be removed from type tokens
+        reader.Optional("const");
+
         while (!reader.IsEOF)
         {
             if (reader.TryOptional(EndSymbol))
@@ -118,19 +122,12 @@ public static class MvvmCodeGenerator
                 break;
             }
 
-            UhtToken Token = reader.GetToken();
-            if (bIdentifierPrev && Token.IsIdentifier())
-            {
-                PropertyType += ' ';
-            }
-
-            PropertyType += Token.ToString();
-            bIdentifierPrev = Token.IsIdentifier();
+            result.Add(reader.GetToken());
         }
 
         reader.TryOptional(',');
 
-        return PropertyType;
+        return result;
     }
 
     private static string ReadPropertyName(IUhtTokenReader reader)

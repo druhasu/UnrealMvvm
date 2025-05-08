@@ -462,10 +462,10 @@ void FBaseWidgetViewSpec::Define()
 
             View->SetViewModel(ViewModel);
             TestNull("OldViewModel", View->OldViewModel);
-            TestEqual("NewViewModel", View->NewViewModel, ViewModel);
+            TestEqual("NewViewModel", View->NewViewModel.Get(), ViewModel);
 
             View->SetViewModel(nullptr);
-            TestEqual("OldViewModel", View->OldViewModel, ViewModel);
+            TestEqual("OldViewModel", View->OldViewModel.Get(), ViewModel);
             TestNull("NewViewModel", View->NewViewModel);
         });
 
@@ -638,11 +638,11 @@ void FBaseWidgetViewSpec::Define()
 
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
             TestNull("OldViewModel", View->OldViewModel);
-            TestEqual("NewViewModel", View->NewViewModel, ViewModel);
+            TestEqual("NewViewModel", View->NewViewModel.Get(), ViewModel);
 
             UMvvmBlueprintLibrary::SetViewModel(View, nullptr);
-            TestEqual("OldViewModel", View->OldViewModel, ViewModel);
-            TestNull("NewViewModel", View->NewViewModel);
+            TestEqual("OldViewModel", View->OldViewModel.Get(), ViewModel);
+            TestNull("NewViewModel", View->NewViewModel.Get());
         });
 
         It("Should Support Views Without Bindings", [this]
@@ -675,7 +675,7 @@ void FBaseWidgetViewSpec::Define()
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
-            TestEqual("NewViewModel", View->ViewModelFromGetter, ViewModel);
+            TestEqual("NewViewModel", View->ViewModelFromGetter.Get(), ViewModel);
         });
 
         It("Should Get Value From ViewModel via K2Node", [this]

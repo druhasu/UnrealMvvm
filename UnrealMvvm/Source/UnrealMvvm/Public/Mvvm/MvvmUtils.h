@@ -9,6 +9,8 @@
 #define UE_REQUIRES , TEMPLATE_REQUIRES
 #endif
 
+class UBaseViewModel;
+
 namespace MvvmUtils
 {
     /*
@@ -23,9 +25,9 @@ namespace MvvmUtils
      * Models are assigned via call to `ViewModel->SetModel(Model);`
      */
     template <typename TViewModel, typename TAllocator, typename TModels>
-    void SyncViewModelCollection(TArray<TViewModel*, TAllocator>& ViewModels, const TModels& Models)
+    void SyncViewModelCollection(TArray<TViewModel, TAllocator>& ViewModels, const TModels& Models)
     {
-        SyncViewModelCollection(ViewModels, Models, [] { return NewObject<TViewModel>(); }, [](auto* ViewModel, auto& Model) { ViewModel->SetModel(Model); });
+        SyncViewModelCollection(ViewModels, Models, [] { return NewObject<TPointedToType<TViewModel>>(); }, [](auto* ViewModel, auto& Model) { ViewModel->SetModel(Model); });
     }
 
     /*
@@ -40,7 +42,7 @@ namespace MvvmUtils
      * Models are assigned via call to `ViewModel->SetModel(Model);`
      */
     template <typename TViewModel, typename TAllocator, typename TModels, typename TFactory UE_REQUIRES(TIsInvocable<TFactory>::Value)>
-    void SyncViewModelCollection(TArray<TViewModel*, TAllocator>& ViewModels, const TModels& Models, TFactory&& Factory)
+    void SyncViewModelCollection(TArray<TViewModel, TAllocator>& ViewModels, const TModels& Models, TFactory&& Factory)
     {
         SyncViewModelCollection(ViewModels, Models, Factory, [](auto* ViewModel, auto& Model) { ViewModel->SetModel(Model); });
     }
@@ -57,9 +59,9 @@ namespace MvvmUtils
      * Models are assigned via call to provided Setter function. It has following signature: void (ViewModelType* ViewModel, const ModelType& Model)
      */
     template <typename TViewModel, typename TAllocator, typename TModels, typename TSetter UE_REQUIRES(!TIsInvocable<TSetter>::Value)>
-    void SyncViewModelCollection(TArray<TViewModel*, TAllocator>& ViewModels, const TModels& Models, TSetter&& Setter)
+    void SyncViewModelCollection(TArray<TViewModel, TAllocator>& ViewModels, const TModels& Models, TSetter&& Setter)
     {
-        SyncViewModelCollection(ViewModels, Models, [] { return NewObject<TViewModel>(); }, Setter);
+        SyncViewModelCollection(ViewModels, Models, [] { return NewObject<TPointedToType<TViewModel>>(); }, Setter);
     }
 
     /*
@@ -74,8 +76,10 @@ namespace MvvmUtils
      * Models are assigned via call to provided Setter function. It has following signature: void (ViewModelType* ViewModel, const ModelType& Model)
      */
     template <typename TViewModel, typename TAllocator, typename TModels, typename TFactory, typename TSetter>
-    void SyncViewModelCollection(TArray<TViewModel*, TAllocator>& ViewModels, const TModels& Models, TFactory&& Factory, TSetter&& Setter)
+    void SyncViewModelCollection(TArray<TViewModel, TAllocator>& ViewModels, const TModels& Models, TFactory&& Factory, TSetter&& Setter)
     {
+        static_assert(TIsPointerOrObjectPtrToBaseOf<TViewModel, UBaseViewModel>::Value, "ViewModels array must contain pointers to or TObjectPtrs of UBaseViewModel");
+
         ViewModels.Reserve(Models.Num());
 
         while (ViewModels.Num() < Models.Num())
@@ -95,7 +99,7 @@ namespace MvvmUtils
         int32 Index = 0;
         for (auto& Model : Models)
         {
-            Setter(ViewModels[Index], Model);
+            Setter(ToRawPtr(ViewModels[Index]), Model);
             ++Index;
         }
     }

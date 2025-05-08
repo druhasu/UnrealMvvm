@@ -134,8 +134,8 @@ Bind(TOwner* ThisPtr, TProperty Property, TMemberPtr Callback)
 
 // Binds FText property to UTextBlock or any other class that has SetText method
 template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<std::is_same_v<UnrealMvvm_Impl::TPropertyValueType_T<TProperty>, FText> && UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
-Bind(TOwner* ThisPtr, TProperty Property, TTextBlock* Text)
+typename TEnableIf<std::is_same_v<UnrealMvvm_Impl::TPropertyValueType_T<TProperty>, FText> && UnrealMvvm_Impl::THasSetText<typename TRemovePointer<typename TRemoveObjectPointer<TTextBlock>::Type>::Type>::Value>::Type
+Bind(TOwner* ThisPtr, TProperty Property, TTextBlock Text)
 {
     check(Text || ThisPtr->IsTemplate());
     __BindImpl(ThisPtr, Property, [Text](UnrealMvvm_Impl::TPropertyValueType_T<TProperty> V) { Text->SetText(V); });
@@ -143,8 +143,8 @@ Bind(TOwner* ThisPtr, TProperty Property, TTextBlock* Text)
 
 // Binds FString property to UTextBlock or any other class that has SetText method
 template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<std::is_same_v<UnrealMvvm_Impl::TPropertyValueType_T<TProperty>, FString> && UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
-Bind(TOwner* ThisPtr, TProperty Property, TTextBlock* Text)
+typename TEnableIf<std::is_same_v<UnrealMvvm_Impl::TPropertyValueType_T<TProperty>, FString> && UnrealMvvm_Impl::THasSetText<typename TRemovePointer<typename TRemoveObjectPointer<TTextBlock>::Type>::Type>::Value>::Type
+Bind(TOwner* ThisPtr, TProperty Property, TTextBlock Text)
 {
     check(Text || ThisPtr->IsTemplate());
     __BindImpl(ThisPtr, Property, [Text](UnrealMvvm_Impl::TPropertyValueType_T<TProperty> V) { Text->SetText(FText::FromString(V)); });
@@ -152,8 +152,8 @@ Bind(TOwner* ThisPtr, TProperty Property, TTextBlock* Text)
 
 // Binds numeric property to UTextBlock or any other class that has SetText method
 template<typename TOwner, typename TProperty, typename TTextBlock>
-typename TEnableIf<UnrealMvvm_Impl::THasNumberToText<UnrealMvvm_Impl::TPropertyValueType_T<TProperty>>::Value&& UnrealMvvm_Impl::THasSetText<TTextBlock>::Value>::Type
-Bind(TOwner* ThisPtr, TProperty Property, TTextBlock* Text, const FNumberFormattingOptions* const Options = nullptr, const FCulturePtr& TargetCulture = nullptr)
+typename TEnableIf<UnrealMvvm_Impl::THasNumberToText<UnrealMvvm_Impl::TPropertyValueType_T<TProperty>>::Value&& UnrealMvvm_Impl::THasSetText<typename TRemovePointer<typename TRemoveObjectPointer<TTextBlock>::Type>::Type>::Value>::Type
+Bind(TOwner* ThisPtr, TProperty Property, TTextBlock Text, const FNumberFormattingOptions* const Options = nullptr, const FCulturePtr& TargetCulture = nullptr)
 {
     check(Text || ThisPtr->IsTemplate());
     if (Options)

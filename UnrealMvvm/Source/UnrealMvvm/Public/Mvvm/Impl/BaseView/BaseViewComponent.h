@@ -36,7 +36,7 @@ private:
     static UBaseViewComponent* Get(const AActor* Actor);
 
     UPROPERTY()
-    UBaseViewModel* ViewModel;
+    TObjectPtr<UBaseViewModel> ViewModel;
 
     UnrealMvvm_Impl::FBindingWorker BindingWorker;
 };

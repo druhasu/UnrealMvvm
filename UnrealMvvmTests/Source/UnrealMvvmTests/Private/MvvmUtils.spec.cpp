@@ -13,7 +13,7 @@ void FMvvmUtilsSpec::Define()
     {
         auto DefineTests = [this](auto SyncFunction)
         {
-            auto DoTest = [this, SyncFunction](TArray<UUtilsTestViewModel*>&& ViewModels)
+            auto DoTest = [this, SyncFunction](TArray<TObjectPtr<UUtilsTestViewModel>>&& ViewModels)
             {
                 TArray<FString> Models{ TEXT("1"), TEXT("2"), TEXT("3") };
 
@@ -51,33 +51,77 @@ void FMvvmUtilsSpec::Define()
 
         Describe("Default Factory, Default Setter", [this, DefineTests]
         {
-            DefineTests([](auto& ViewModels, auto& Models)
+            Describe("RawPtr", [this, DefineTests]
             {
-                MvvmUtils::SyncViewModelCollection(ViewModels, Models);
+                DefineTests([](TArray<UUtilsTestViewModel*>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models);
+                });
+            });
+
+            Describe("ObjectPtr", [this, DefineTests]
+            {
+                DefineTests([](TArray<TObjectPtr<UUtilsTestViewModel>>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models);
+                });
             });
         });
 
         Describe("Custom Factory, Default Setter", [this, DefineTests, Factory]
         {
-            DefineTests([Factory](auto& ViewModels, auto& Models)
+            Describe("RawPtr", [this, DefineTests, Factory]
             {
-                MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory);
+                DefineTests([Factory](TArray<UUtilsTestViewModel*>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory);
+                });
+            });
+
+            Describe("ObjectPtr", [this, DefineTests, Factory]
+            {
+                DefineTests([Factory](TArray<TObjectPtr<UUtilsTestViewModel>>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory);
+                });
             });
         });
 
         Describe("Default Factory, Custom Setter", [this, DefineTests, Setter]
         {
-            DefineTests([Setter](auto& ViewModels, auto& Models)
+            Describe("RawPtr", [this, DefineTests, Setter]
             {
-                MvvmUtils::SyncViewModelCollection(ViewModels, Models, Setter);
+                DefineTests([Setter](TArray<UUtilsTestViewModel*>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models, Setter);
+                });
+            });
+
+            Describe("ObjectPtr", [this, DefineTests, Setter]
+            {
+                DefineTests([Setter](TArray<TObjectPtr<UUtilsTestViewModel>>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models, Setter);
+                });
             });
         });
 
         Describe("Custom Factory, Custom Setter", [this, DefineTests, Factory, Setter]
         {
-            DefineTests([Factory, Setter](auto& ViewModels, auto& Models)
+            Describe("RawPtr", [this, DefineTests, Factory, Setter]
             {
-                MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory, Setter);
+                DefineTests([Factory, Setter](TArray<UUtilsTestViewModel*>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory, Setter);
+                });
+            });
+
+            Describe("ObjectPtr", [this, DefineTests, Factory, Setter]
+            {
+                DefineTests([Factory, Setter](TArray<TObjectPtr<UUtilsTestViewModel>>& ViewModels, auto& Models)
+                {
+                    MvvmUtils::SyncViewModelCollection(ViewModels, Models, Factory, Setter);
+                });
             });
         });
 

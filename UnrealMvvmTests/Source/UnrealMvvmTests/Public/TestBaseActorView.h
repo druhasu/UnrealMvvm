@@ -50,10 +50,10 @@ public:
     int32 MyValue = 0;
 
     UPROPERTY(BlueprintReadWrite)
-    UTestBaseViewModel* OldViewModel = nullptr;
+    TObjectPtr<UTestBaseViewModel> OldViewModel = nullptr;
 
     UPROPERTY(BlueprintReadWrite)
-    UTestBaseViewModel* NewViewModel = nullptr;
+    TObjectPtr<UTestBaseViewModel> NewViewModel = nullptr;
 };
 
 /* Test View base class for Blueprint-only view */
@@ -85,13 +85,13 @@ public:
     int32 MyDerivedValue = 0;
 
     UPROPERTY(BlueprintReadWrite)
-    UTestBaseViewModel* OldViewModel = nullptr;
+    TObjectPtr<UTestBaseViewModel> OldViewModel = nullptr;
 
     UPROPERTY(BlueprintReadWrite)
-    UTestBaseViewModel* NewViewModel = nullptr;
+    TObjectPtr<UTestBaseViewModel> NewViewModel = nullptr;
 
     UPROPERTY(BlueprintReadWrite)
-    UTestBaseViewModel* ViewModelFromGetter = nullptr;
+    TObjectPtr<UTestBaseViewModel> ViewModelFromGetter = nullptr;
 };
 
 /* Test View base class to record IsInitial results from PropertyChanged events */

@@ -27,7 +27,7 @@ public:
     void PostLoad() override;
 
     UPROPERTY()
-    UClass* ViewModelClass;
+    TObjectPtr<UClass> ViewModelClass;
 
     UPROPERTY()
     TArray<FBlueprintBindingEntry> BlueprintBindings;

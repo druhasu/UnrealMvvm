@@ -35,5 +35,5 @@ private:
     void TryRegisterViewModelClass();
 
     UPROPERTY()
-    UClass* ViewModelClass;
+    TObjectPtr<UClass> ViewModelClass;
 };

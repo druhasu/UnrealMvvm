@@ -28,7 +28,7 @@ public:
 
     /* Class of ViewModel that this node is associated with */
     UPROPERTY()
-    UClass* ViewModelOwnerClass;
+    TObjectPtr<UClass> ViewModelOwnerClass;
 
     /* Property name that this node is associated with */
     UPROPERTY()

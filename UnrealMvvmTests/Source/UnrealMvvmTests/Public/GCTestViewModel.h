@@ -19,10 +19,10 @@ struct FGCTestStruct
 
 public:
     UPROPERTY()
-    UGCTestObject* ObjPointer;
+    TObjectPtr<UGCTestObject> ObjPointer;
 
     UPROPERTY()
-    TArray<UGCTestObject*> ObjPointerArray;
+    TArray<TObjectPtr<UGCTestObject>> ObjPointerArray;
 
     friend uint32 GetTypeHash(const FGCTestStruct& Struct)
     {

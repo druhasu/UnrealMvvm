@@ -39,7 +39,7 @@ private:
     static UBaseViewExtension* Get(const UUserWidget* Widget);
 
     UPROPERTY()
-    UBaseViewModel* ViewModel;
+    TObjectPtr<UBaseViewModel> ViewModel;
 
     UnrealMvvm_Impl::FBindingWorker BindingWorker;
 };
