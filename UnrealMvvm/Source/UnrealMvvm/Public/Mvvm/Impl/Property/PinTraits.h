@@ -34,23 +34,23 @@ struct FAssetBundleData;
 struct FTestUninitializedScriptStructMembersTest;
 struct FFrameRate;
 
+// special case for FTimespan, because it does not have builtin TBaseStruct for some reason
+template<>
+struct TBaseStructure<FTimespan>
+{
+    static UNREALMVVM_API UScriptStruct* Get()
+    {
+        // copied from StaticGetBaseStructureInternal
+        static UPackage* CoreUObjectPkg = FindObjectChecked<UPackage>(nullptr, TEXT("/Script/CoreUObject"));
+        static UScriptStruct* Result = (UScriptStruct*)StaticFindObjectFastInternal(UScriptStruct::StaticClass(), CoreUObjectPkg, "Timespan", false, RF_NoFlags, EInternalObjectFlags::None);
+        return Result;
+    }
+};
+
 namespace UnrealMvvm_Impl
 {
 #if WITH_EDITOR
     // Traits for structs from Core modules
-
-    // special case for FTimespan, because it does not have builtin TBaseStruct for some reason
-    template<>
-    struct TBaseStructure<FTimespan>
-    {
-        static UNREALMVVM_API UScriptStruct* Get()
-        {
-            // copied from StaticGetBaseStructureInternal
-            static UPackage* CoreUObjectPkg = FindObjectChecked<UPackage>(nullptr, TEXT("/Script/CoreUObject"));
-            static UScriptStruct* Result = (UScriptStruct*)StaticFindObjectFastInternal(UScriptStruct::StaticClass(), CoreUObjectPkg, "Timespan", false, RF_NoFlags, EInternalObjectFlags::None);
-            return Result;
-        }
-    };
 
     template <typename T>
     struct TIsBaseStructure : TIntegralConstant<bool, false> {};
