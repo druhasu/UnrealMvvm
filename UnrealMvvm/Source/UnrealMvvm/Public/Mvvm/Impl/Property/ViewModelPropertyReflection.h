@@ -73,9 +73,20 @@ namespace UnrealMvvm_Impl
             bool HasPublicSetter : 1;
         };
 
+        struct FBuffer
+        {
+            FBuffer() = default;
+            FBuffer(const FBuffer& Other)
+            {
+                FMemory::Memcpy(&Data, &Other.Data, sizeof(Data));
+            }
+
+            TTypeCompatibleBytes<FViewModelPropertyOperations> Data;
+        };
+
         const FViewModelPropertyOperations& GetOperations() const
         {
-            return *Buffer.GetTypedPtr();
+            return *Buffer.Data.GetTypedPtr();
         }
 
         const FViewModelPropertyBase* GetProperty() const
@@ -83,7 +94,7 @@ namespace UnrealMvvm_Impl
             return GetOperations().Property;
         }
 
-        TTypeCompatibleBytes<FViewModelPropertyOperations> Buffer;
+        FBuffer Buffer;
         int32 SizeOfValue;
         FFlags Flags;
 

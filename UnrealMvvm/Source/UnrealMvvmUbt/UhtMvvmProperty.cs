@@ -11,7 +11,11 @@ namespace UnrealMvvm;
 
 public class UhtMvvmProperty : UhtType
 {
+#if UE_5_6_OR_LATER
+    public UhtTypeTokens PropertyTypeTokens { get; set; }
+#else
     public ReadOnlyMemory<UhtToken> PropertyTypeTokens { get; set; }
+#endif
 
     public bool AutoSetter { get; set; } = false;
 
@@ -68,11 +72,20 @@ public class UhtMvvmProperty : UhtType
                     Outer = Outer!,
                     SourceName = SourceName,
                     EngineName = SourceName,
-                    PropertyCategory = UhtPropertyCategory.Member
+                    PropertyCategory = UhtPropertyCategory.Member,
+#if UE_5_6_OR_LATER
+                    TypeTokens = new(PropertyTypeTokens, 0),
+#endif
                 };
 
                 // ask default property parser to do all the heavy work
+#if UE_5_6_OR_LATER
+                using UhtTokenReplayReaderBorrower borrowedReader = new(Class.HeaderFile, Class.HeaderFile.Data.Memory, PropertyTypeTokens.AllTokens, UhtTokenType.EndOfType);
+                UhtPropertyResolveArgs args = new(UhtPropertyResolvePhase.Resolving, propertySettings, borrowedReader.Reader);
+                args.ResolveProperty();
+#else
                 UhtPropertyParser.ResolveProperty(UhtPropertyResolvePhase.Resolving, propertySettings, Class.HeaderFile.Data.Memory, PropertyTypeTokens);
+#endif
             }
         }
 
@@ -81,9 +94,14 @@ public class UhtMvvmProperty : UhtType
 
     private bool TypeMayContainUObject()
     {
-        for (int i = 0; i < PropertyTypeTokens.Length; i++)
+#if UE_5_6_OR_LATER
+        ReadOnlySpan<UhtToken> tokensSpan = PropertyTypeTokens.AllTokens.Span;
+#else
+        ReadOnlySpan<UhtToken> tokensSpan = PropertyTypeTokens.Span;
+#endif
+        for (int i = 0; i < tokensSpan.Length; i++)
         {
-            ref readonly var token = ref PropertyTypeTokens.Span[i];
+            ref readonly var token = ref tokensSpan[i];
             if (token.IsIdentifier() && (token.ValueStartsWith("U") || token.ValueStartsWith("A")))
             {
                 return true;

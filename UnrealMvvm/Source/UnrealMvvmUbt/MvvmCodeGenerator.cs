@@ -61,7 +61,7 @@ public static class MvvmCodeGenerator
 
         reader.Require('(');
 
-        property.PropertyTypeTokens = new ReadOnlyMemory<UhtToken>(ReadPropertyTypeTokens(reader).ToArray());
+        ReadPropertyTypeTokens(property, reader);
         property.SourceName = ReadPropertyName(reader);
 
         var firstSpecifier = ReadAccessSpecifier(reader);
@@ -106,15 +106,17 @@ public static class MvvmCodeGenerator
         return UhtParseResult.Handled;
     }
 
-    private static List<UhtToken> ReadPropertyTypeTokens(IUhtTokenReader reader)
+    private static void ReadPropertyTypeTokens(UhtMvvmProperty property, IUhtTokenReader reader)
     {
-        List<UhtToken> result = new();
-
         char EndSymbol = reader.TryOptional('(') ? ')' : ',';
 
         // UhtProperty parser expects this token to be removed from type tokens
         reader.Optional("const");
 
+#if UE_5_6_OR_LATER
+        property.PropertyTypeTokens = UhtTypeTokens.Gather(reader);
+#else
+        List<UhtToken> result = new();
         while (!reader.IsEOF)
         {
             if (reader.TryOptional(EndSymbol))
@@ -124,16 +126,16 @@ public static class MvvmCodeGenerator
 
             result.Add(reader.GetToken());
         }
-
-        reader.TryOptional(',');
-
-        return result;
+        property.PropertyTypeTokens = new ReadOnlyMemory<UhtToken>(result.ToArray());
+#endif
+        reader.Optional(')');
+        reader.Optional(',');
     }
 
     private static string ReadPropertyName(IUhtTokenReader reader)
     {
         string result = reader.GetToken().ToString();
-        reader.TryOptional(',');
+        reader.Optional(',');
         return result;
     }
 
@@ -141,7 +143,7 @@ public static class MvvmCodeGenerator
     {
         if (reader.TryOptionalIdentifier(out var token))
         {
-            reader.TryOptional(',');
+            reader.Optional(',');
             return token.ToString();
         }
 

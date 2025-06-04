@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Containers/Array.h"
+#include "Templates/IsInvocable.h"
 #include "Misc/EngineVersionComparison.h"
 
 #ifndef UE_REQUIRES
