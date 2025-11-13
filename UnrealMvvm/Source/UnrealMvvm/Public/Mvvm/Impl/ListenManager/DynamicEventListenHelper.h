@@ -4,6 +4,7 @@
 
 #include "Mvvm/Impl/ListenManager/BaseEventListenHelper.h"
 #include "Mvvm/Impl/Utils/PointerToMember.h"
+#include "Misc/EngineVersionComparison.h"
 
 namespace UnrealMvvm_Impl
 {
@@ -36,6 +37,10 @@ namespace UnrealMvvm_Impl
     };
 
     /* Adds Listener with UFunction */
+#if UE_VERSION_OLDER_THAN(5,7,0)
     #define WithDynamic(Listener, Function) __WithDynamicImpl(Listener, Function, STATIC_FUNCTION_FNAME( TEXT( #Function ) ) )
+#else
+    #define WithDynamic(Listener, Function) __WithDynamicImpl(Listener, Function, STATIC_FUNCTION_FNAME( #Function ) )
+#endif
 
 }

@@ -92,7 +92,11 @@ public static class MvvmCodeGenerator
         if (reader.TryPeekOptional('{'))
         {
             UhtToken dummy = new();
+#if UE_5_7_OR_LATER
+            topScope.SkipDeclaration(dummy);
+#else
             reader.SkipDeclaration(ref dummy);
+#endif
         }
         else
         {

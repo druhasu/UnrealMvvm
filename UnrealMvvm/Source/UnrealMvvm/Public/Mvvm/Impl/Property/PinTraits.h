@@ -42,7 +42,11 @@ struct TBaseStructure<FTimespan>
     {
         // copied from StaticGetBaseStructureInternal
         static UPackage* CoreUObjectPkg = FindObjectChecked<UPackage>(nullptr, TEXT("/Script/CoreUObject"));
+#if !UE_VERSION_OLDER_THAN(5,7,0)
+        static UScriptStruct* Result = (UScriptStruct*)StaticFindObjectFastInternal(UScriptStruct::StaticClass(), CoreUObjectPkg, "Timespan", EFindObjectFlags::None, RF_NoFlags, EInternalObjectFlags::None);
+#else
         static UScriptStruct* Result = (UScriptStruct*)StaticFindObjectFastInternal(UScriptStruct::StaticClass(), CoreUObjectPkg, "Timespan", false, RF_NoFlags, EInternalObjectFlags::None);
+#endif
         return Result;
     }
 };
@@ -196,7 +200,7 @@ namespace UnrealMvvm_Impl
     DEFINE_SIMPLE_PIN_TRAITS(FText, Text);
 
     // Struct. SubCategoryObject is the ScriptStruct of the struct passed thru this pin
-    DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TValueTypeTraits<T>::IsStruct, TDecay<T>::Type::StaticStruct());
+    DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TValueTypeTraits<T>::IsStruct && !TIsBaseStructure<typename TDecay<T>::Type>::Value, TDecay<T>::Type::StaticStruct());
 
     // Struct from Core
     DEFINE_COMPLEX_PIN_TRAITS(T, Struct, TIsBaseStructure<typename TDecay<T>::Type>::Value, TBaseStructure<typename TDecay<T>::Type>::Get());

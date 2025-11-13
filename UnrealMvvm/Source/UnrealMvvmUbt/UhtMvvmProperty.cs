@@ -33,6 +33,10 @@ public class UhtMvvmProperty : UhtType
 
     public override string EngineClassName => "ViewModelProperty";
 
+#if UE_5_7_OR_LATER
+    public override UhtClass? EngineClass => null;
+#endif
+
     public UhtClass Class => (Outer as UhtClass)!;
 
 #if UE_5_5_OR_LATER
