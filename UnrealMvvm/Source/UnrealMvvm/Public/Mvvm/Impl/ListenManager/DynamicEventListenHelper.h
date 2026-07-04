@@ -15,7 +15,11 @@ namespace UnrealMvvm_Impl
     public:
         /* Do not use directly. Use 'WithDynamic' macro */
         template<typename TListener>
+#if UE_VERSION_OLDER_THAN(5,8,0)
         void __WithDynamicImpl(TListener* Listener, typename TDecay<typename TPointerToMember<TEventPtr>::ValueType>::Type::FDelegate::template TMethodPtrResolver<TListener>::FMethodPtr Callback, FName FunctionName)
+#else
+        void __WithDynamicImpl(TListener* Listener, typename TDecay<typename TPointerToMember<TEventPtr>::ValueType>::Type::FDelegate::template TMethodPtrResolver<false, TListener>::FMethodPtr Callback, FName FunctionName)
+#endif
         {
             if (this->Widget != nullptr)
             {
@@ -39,8 +43,10 @@ namespace UnrealMvvm_Impl
     /* Adds Listener with UFunction */
 #if UE_VERSION_OLDER_THAN(5,7,0)
     #define WithDynamic(Listener, Function) __WithDynamicImpl(Listener, Function, STATIC_FUNCTION_FNAME( TEXT( #Function ) ) )
-#else
+#elif UE_VERSION_OLDER_THAN(5,8,0)
     #define WithDynamic(Listener, Function) __WithDynamicImpl(Listener, Function, STATIC_FUNCTION_FNAME( #Function ) )
+#else
+    #define WithDynamic(Listener, Function) __WithDynamicImpl(Listener, Function, UE_PRIVATE_STATIC_FUNCTION_FNAME( #Function ) )
 #endif
 
 }

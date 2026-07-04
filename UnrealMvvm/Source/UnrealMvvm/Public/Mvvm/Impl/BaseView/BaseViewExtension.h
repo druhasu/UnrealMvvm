@@ -25,7 +25,7 @@ private:
     template<typename U, typename V>
     friend class TBaseView;
     friend class UBaseView;
-    friend class UMvvmBlueprintLibrary;
+    friend class UMvvmStatics;
     friend class UBaseViewClassExtension;
     template <typename TView>
     friend class UnrealMvvm_Impl::TBaseViewComponentImpl;

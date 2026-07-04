@@ -16,6 +16,7 @@
 		<EngineVersion>$(EngineMajorVersion).$(EngineMinorVersion).$(EnginePatchVersion)</EngineVersion>
 
 		<TargetFramework Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(EngineVersion)', '5.5.0'))">net8.0</TargetFramework>
+		<TargetFramework Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(EngineVersion)', '5.8.0'))">net10.0</TargetFramework>
 		<TargetFramework Condition="$([MSBuild]::VersionLessThan('$(EngineVersion)', '5.5.0'))">net6.0</TargetFramework>
 	</PropertyGroup>
 </Project>

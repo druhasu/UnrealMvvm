@@ -9,7 +9,6 @@
 #include "Mvvm/Impl/Utils/VariadicHelpers.h"
 #include "Containers/StaticArray.h"
 #include "Templates/IsInvocable.h"
-#include "Templates/IsMemberPointer.h"
 #include <type_traits>
 
 namespace UnrealMvvm_Impl
@@ -126,7 +125,7 @@ Bind(TOwner* ThisPtr, TProperty Property, TCallback&& Callback)
 
 // Binds property to a method of TOwner
 template<typename TOwner, typename TProperty, typename TMemberPtr>
-typename TEnableIf< TIsMemberPointer<TMemberPtr>::Value >::Type
+typename TEnableIf< std::is_member_pointer_v<TMemberPtr> >::Type
 Bind(TOwner* ThisPtr, TProperty Property, TMemberPtr Callback)
 {
     __BindImpl(ThisPtr, Property, [ThisPtr, Callback](UnrealMvvm_Impl::TPropertyValueType_T<TProperty> V) { (ThisPtr->*Callback)(V); });

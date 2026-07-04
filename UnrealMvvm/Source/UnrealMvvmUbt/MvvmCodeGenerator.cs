@@ -5,12 +5,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using EpicGames.Core;
 using EpicGames.UHT.Parsers;
 using EpicGames.UHT.Tables;
 using EpicGames.UHT.Tokenizer;
 using EpicGames.UHT.Types;
 using EpicGames.UHT.Utils;
+using UnrealBuildTool;
 
 namespace UnrealMvvm;
 
@@ -160,6 +162,7 @@ public static class MvvmCodeGenerator
         WriteGeneratedCode(factory);
     }
 
+#if !UE_5_8_OR_LATER
     [UhtExporter(Name = ExporterNameFixup, ModuleName = ModuleName, Options = UhtExporterOptions.Default)]
     public static void FixupGeneratedFileNames(IUhtExportFactory factory)
     {
@@ -172,10 +175,20 @@ public static class MvvmCodeGenerator
             File.SetLastWriteTime(newFilepath, originalWriteTime);
         }
     }
+#endif
 
     private static void WriteGeneratedCode(IUhtExportFactory factory)
     {
         GeneratedFiles.Clear();
+
+#if UE_5_8_OR_LATER
+        var setupModules = FindSetupModules();
+        if (setupModules == null)
+        {
+            factory.Session.LogError($"'{ModuleName}.SetupModules' is not available");
+            return;
+        }
+#endif
 
         foreach (var propertiesPerModule in Properties.GroupBy(p => p.Class.Package.Module))
         {
@@ -264,21 +277,24 @@ public static class MvvmCodeGenerator
             sb.AppendLine("    }");
 
 #if UE_5_5_OR_LATER
-            UhtModule module = propertiesPerModule.Key;
-            string moduleName = module.Module.Name;
-            string moduleOutputDirectory = module.Module.OutputDirectory;
+            string moduleName = propertiesPerModule.Key.ShortName;
 #else
-            UHTManifest.Module module = propertiesPerModule.Key;
-            string moduleName = module.Name;
-            string moduleOutputDirectory = module.OutputDirectory;
+            string moduleName = propertiesPerModule.Key.Name;
 #endif
 
             sb.Append("} GViewModelPropertiesRegistrator_");
             sb.Append(moduleName);
             sb.AppendLine(";");
 
-            var outputPath = Path.Combine(moduleOutputDirectory, $"{moduleName}.Mvvm.gen.keep");
+            var outputPath = GetNameOfGeneratedFile(propertiesPerModule.Key);
             GeneratedFiles.Add(outputPath);
+
+#if UE_5_8_OR_LATER
+            if(!setupModules.Contains(moduleName))
+            {
+                factory.Session.LogError($"Module '{moduleName}' is not setup properly. Make sure to add '{ModuleName}.Setup(this);' into '{moduleName}.Build.cs'");
+            }
+#endif
 
             factory.CommitOutput(outputPath, sb);
         }
@@ -301,4 +317,30 @@ public static class MvvmCodeGenerator
 #endif
         }
     }
+
+#if UE_5_5_OR_LATER
+    private static string GetNameOfGeneratedFile(UhtModule uhtModule) => GetNameOfGeneratedFile(uhtModule.Module);
+#endif
+
+    private static string GetNameOfGeneratedFile(UHTManifest.Module manifestModule)
+    {
+        string moduleName = manifestModule.Name;
+        string moduleOutputDirectory = manifestModule.OutputDirectory;
+        return Path.Combine(moduleOutputDirectory, $"{moduleName}.Mvvm.gen.keep");
+    }
+
+#if UE_5_8_OR_LATER
+    private static List<string>? FindSetupModules()
+    {
+        Type? moduleRules = null;
+        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            moduleRules = asm.GetTypes().FirstOrDefault(t => t.Name == ModuleName);
+            if (moduleRules is not null)
+                break;
+        }
+
+        return moduleRules?.GetProperty("SetupModules", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as List<string>;
+    }
+#endif
 }

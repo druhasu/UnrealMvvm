@@ -27,33 +27,36 @@ namespace UnrealMvvm_Impl
             }
         };
 
-#if ENGINE_MAJOR_VERSION >= 5
+#if UE_VERSION_OLDER_THAN(5,8,0)
+        template <typename TClass>
+        UClass* StaticClassWrapper() { return TClass::StaticClass(); }
 
-    #if ENGINE_MINOR_VERSION >= 3
-        #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
-            Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, nullptr, nullptr, 1, ##__VA_ARGS__ }
-    #else
-        #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
-            Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, 1, nullptr, nullptr, ##__VA_ARGS__ }
-    #endif
-
-    #define DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType) \
-        new PropertyType(COMMON_PROPERTY_PARAMS( PropertyGenType, FieldOffset ));
-
-    #define DECLARE_WRAPPER_PROPERTY_INNER(PropertyType, PropertyGenType, InnerClass) \
-        new PropertyType(COMMON_PROPERTY_PARAMS( PropertyGenType, FieldOffset, &InnerClass ));
-
+        template <typename TStruct>
+        UScriptStruct* StaticStructWrapper() { return TStruct::StaticStruct(); }
 #else
+        template <typename TClass>
+        UClass* StaticClassWrapper(ETypeConstructPhase) { return TClass::StaticClass(); }
 
-    #define COMMON_PROPERTY_PARAMS(...)
-
-    #define DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType) \
-        new PropertyType(Scope, DebugName, EObjectFlags::RF_Transient, FieldOffset, EPropertyFlags::CPF_None);
-
-    #define DECLARE_WRAPPER_PROPERTY_INNER(PropertyType, PropertyGenType, InnerClass) \
-        new PropertyType(Scope, DebugName, EObjectFlags::RF_Transient, FieldOffset, EPropertyFlags::CPF_None, InnerClass());
-
+        template <typename TStruct>
+        UScriptStruct* StaticStructWrapper(ETypeConstructPhase) { return TStruct::StaticStruct(); }
 #endif
+
+#if ENGINE_MINOR_VERSION >= 8
+    #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
+        Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, nullptr, nullptr, 1, ##__VA_ARGS__ }
+#elif ENGINE_MINOR_VERSION >= 3
+    #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
+        Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, nullptr, nullptr, 1, ##__VA_ARGS__ }
+#else
+    #define COMMON_PROPERTY_PARAMS(PropertyGenType, ...) \
+        Scope, { TCHAR_TO_UTF8(*DebugName.ToString()), nullptr, EPropertyFlags::CPF_None, UECodeGen_Private::EPropertyGenFlags:: PropertyGenType, EObjectFlags::RF_Transient, 1, nullptr, nullptr, ##__VA_ARGS__ }
+#endif
+
+#define DECLARE_SIMPLE_PROPERTY_INNER(PropertyType, PropertyGenType) \
+    new PropertyType(COMMON_PROPERTY_PARAMS( PropertyGenType, FieldOffset ));
+
+#define DECLARE_WRAPPER_PROPERTY_INNER(PropertyType, PropertyGenType, InnerClass) \
+    new PropertyType(COMMON_PROPERTY_PARAMS( PropertyGenType, FieldOffset, &InnerClass ));
 
 #define DECLARE_SIMPLE_PROPERTY(VariableType, PropertyType, PropertyGenType) \
         template <> \
@@ -107,11 +110,11 @@ namespace UnrealMvvm_Impl
         DECLARE_SIMPLE_PROPERTY(uint32, FUInt32Property, UInt32);
         DECLARE_SIMPLE_PROPERTY(uint64, FUInt64Property, UInt64);
 
-        DECLARE_WRAPPER_PROPERTY(TScriptInterface<TValue>, FInterfaceProperty, Interface, true, TValue::UClassType::StaticClass);
-        DECLARE_WRAPPER_PROPERTY(TLazyObjectPtr<TValue>, FLazyObjectProperty, LazyObject, false, TValue::StaticClass);
-        DECLARE_WRAPPER_PROPERTY(TSoftClassPtr<TValue>, FSoftClassProperty, SoftClass, false, TValue::StaticClass);
-        DECLARE_WRAPPER_PROPERTY(TSoftObjectPtr<TValue>, FSoftObjectProperty, SoftObject, false, TValue::StaticClass);
-        DECLARE_WRAPPER_PROPERTY(TWeakObjectPtr<TValue>, FWeakObjectProperty, WeakObject, false, TValue::StaticClass);
+        DECLARE_WRAPPER_PROPERTY(TScriptInterface<TValue>, FInterfaceProperty, Interface, true, StaticClassWrapper<typename TValue::UClassType>);
+        DECLARE_WRAPPER_PROPERTY(TLazyObjectPtr<TValue>, FLazyObjectProperty, LazyObject, false, StaticClassWrapper<TValue>);
+        DECLARE_WRAPPER_PROPERTY(TSoftClassPtr<TValue>, FSoftClassProperty, SoftClass, false, StaticClassWrapper<TValue>);
+        DECLARE_WRAPPER_PROPERTY(TSoftObjectPtr<TValue>, FSoftObjectProperty, SoftObject, false, StaticClassWrapper<TValue>);
+        DECLARE_WRAPPER_PROPERTY(TWeakObjectPtr<TValue>, FWeakObjectProperty, WeakObject, false, StaticClassWrapper<TValue>);
 
         /* bool property. It does not fit into DECLARE_SIMPLE_PROPERTY */
         template <>
@@ -121,11 +124,7 @@ namespace UnrealMvvm_Impl
             static constexpr bool ContainsObjectReference = false;
             static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
-#if ENGINE_MAJOR_VERSION >= 5
                 new FBoolProperty(COMMON_PROPERTY_PARAMS(Bool, sizeof(bool), 0, nullptr));
-#else
-                new FBoolProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, 1, sizeof(bool), true);
-#endif
             }
         };
 
@@ -138,11 +137,10 @@ namespace UnrealMvvm_Impl
 
             static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
-                DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, TValue::StaticClass);
+                DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, StaticClassWrapper<TValue>);
             }
         };
 
-#if ENGINE_MAJOR_VERSION >= 5
         /* TObjectPtr<> pointer */
         template <typename TValue>
         struct TPropertyFactory<TObjectPtr<TValue>, typename TEnableIf<TValueTypeTraits<TValue>::IsClass>::Type>
@@ -152,10 +150,9 @@ namespace UnrealMvvm_Impl
 
             static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
-                DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, TValue::StaticClass);
+                DECLARE_WRAPPER_PROPERTY_INNER(FObjectProperty, Object, StaticClassWrapper<TValue>);
             }
         };
-#endif
 
         /* UStruct value */
         template <typename TValue>
@@ -166,7 +163,7 @@ namespace UnrealMvvm_Impl
 
             static void AddProperty(FFieldVariant Scope, uint16 FieldOffset, const FName& DebugName)
             {
-                DECLARE_WRAPPER_PROPERTY_INNER(FStructProperty, Struct, TValue::StaticStruct);
+                DECLARE_WRAPPER_PROPERTY_INNER(FStructProperty, Struct, StaticStructWrapper<TValue>);
             }
         };
 
@@ -181,11 +178,7 @@ namespace UnrealMvvm_Impl
             {
                 if (ContainsObjectReference)
                 {
-#if ENGINE_MAJOR_VERSION >= 5
                     auto Prop = new FArrayProperty(COMMON_PROPERTY_PARAMS(Array, FieldOffset, EArrayPropertyFlags::None));
-#else
-                    auto Prop = new FArrayProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, EArrayPropertyFlags::None);
-#endif
                     TPropertyFactory<TValue>::AddProperty(Prop, FieldOffset, FName(DebugName.ToString() + TEXT("_Value")));
                 }
             }
@@ -202,11 +195,7 @@ namespace UnrealMvvm_Impl
             {
                 if (ContainsObjectReference)
                 {
-#if ENGINE_MAJOR_VERSION >= 5
                     auto Prop = new FSetProperty(COMMON_PROPERTY_PARAMS(Set, FieldOffset));
-#else
-                    auto Prop = new FSetProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None);
-#endif
                     TPropertyFactory<TValue>::AddProperty(Prop, FieldOffset, FName(DebugName.ToString() + TEXT("_Value")));
                 }
             }
@@ -230,11 +219,7 @@ namespace UnrealMvvm_Impl
 
                 if (ContainsObjectReference)
                 {
-#if ENGINE_MAJOR_VERSION >= 5
                     auto Prop = new FMapProperty(COMMON_PROPERTY_PARAMS(Map, FieldOffset, EMapPropertyFlags::None));
-#else
-                    auto Prop = new FMapProperty(Scope, DebugName, EObjectFlags::RF_NoFlags, FieldOffset, EPropertyFlags::CPF_None, EMapPropertyFlags::None);
-#endif
                     TPropertyFactory<TKey>::AddProperty(Prop, 0, FName(DebugName.ToString() + TEXT("_Key")));
                     TPropertyFactory<TValue>::AddProperty(Prop, 1, FName(DebugName.ToString() + TEXT("_Value")));
                 }

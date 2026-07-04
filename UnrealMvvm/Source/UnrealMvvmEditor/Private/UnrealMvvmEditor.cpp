@@ -15,6 +15,7 @@
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "KismetCompiler.h"
+#include "Misc/EngineVersionComparison.h"
 
 class FUnrealMvvmEditorModule;
 
@@ -57,7 +58,7 @@ public:
         }
         else
         {
-            FCoreDelegates::OnPostEngineInit.AddRaw(this, &ThisClass::OnPostEngineInit);
+            GetOnPostEngineInit().AddRaw(this, &ThisClass::OnPostEngineInit);
         }
     }
 
@@ -211,7 +212,7 @@ private:
             FKismetCompilerContext::OnPreCompile.AddRaw(this, &ThisClass::OnKismetPreCompile);
         }
 
-        FCoreDelegates::OnPostEngineInit.RemoveAll(this);
+        GetOnPostEngineInit().RemoveAll(this);
     }
 
     void OnBlueprintPreCompile(UBlueprint* Blueprint)
@@ -246,6 +247,15 @@ private:
         }
 
         PendingBlueprints.Reset();
+    }
+
+    FSimpleMulticastDelegate& GetOnPostEngineInit()
+    {
+#if UE_VERSION_OLDER_THAN(5,8,0)
+        return FCoreDelegates::OnPostEngineInit;
+#else
+        return FCoreDelegates::GetOnPostEngineInit();
+#endif
     }
 
     TUniquePtr<FBlueprintCreateListener> BlueprintListener;

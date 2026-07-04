@@ -23,7 +23,7 @@ private:
     /* There are a lot of friends here, but this class externals should not be made public */
     template<typename U, typename V>
     friend class TBaseView;
-    friend class UMvvmBlueprintLibrary;
+    friend class UMvvmStatics;
     template <typename TView>
     friend class UnrealMvvm_Impl::TBaseViewComponentImpl;
     template<typename O, typename V, typename U>

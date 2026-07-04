@@ -1,6 +1,6 @@
 // Copyright Andrei Sudarikov. All Rights Reserved.
 
-#include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmStatics.h"
 #include "Mvvm/Impl/BaseView/BaseViewExtension.h"
 #include "Mvvm/Impl/BaseView/BaseViewComponent.h"
 #include "Mvvm/Impl/BaseView/ViewChangeTracker.h"
@@ -13,62 +13,62 @@
 #include "Blueprint/BlueprintExceptionInfo.h"
 #endif
 
-TSubclassOf<UBaseViewModel> UMvvmBlueprintLibrary::GetViewModelClass(UClass* ViewClass)
+TSubclassOf<UBaseViewModel> UMvvmStatics::GetViewModelClass(UClass* ViewClass)
 {
     return UnrealMvvm_Impl::FViewRegistry::GetViewModelClass(ViewClass);;
 }
 
-UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelFromWidget(UUserWidget* View)
+UBaseViewModel* UMvvmStatics::GetViewModelFromWidget(UUserWidget* View)
 {
     return GetViewModelInternal<UUserWidget, UBaseViewExtension>(View);
 }
 
-UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelFromActor(AActor* View)
+UBaseViewModel* UMvvmStatics::GetViewModelFromActor(AActor* View)
 {
     return GetViewModelInternal<AActor, UBaseViewComponent>(View);
 }
 
-void UMvvmBlueprintLibrary::SetViewModelToWidget(UUserWidget* View, UBaseViewModel* ViewModel)
+void UMvvmStatics::SetViewModelToWidget(UUserWidget* View, UBaseViewModel* ViewModel)
 {
     SetViewModelInternal<UUserWidget, UBaseViewExtension>(View, ViewModel);
 }
 
-void UMvvmBlueprintLibrary::SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel)
+void UMvvmStatics::SetViewModelToActor(AActor* View, UBaseViewModel* ViewModel)
 {
     SetViewModelInternal<AActor, UBaseViewComponent>(View, ViewModel);
 }
 
-bool UMvvmBlueprintLibrary::IsInitializingPropertyInWidget(UUserWidget* View)
+bool UMvvmStatics::IsInitializingPropertyInWidget(UUserWidget* View)
 {
     return UnrealMvvm_Impl::FViewChangeTracker::IsInitializing(View);
 }
 
-bool UMvvmBlueprintLibrary::IsInitializingPropertyInActor(AActor* View)
+bool UMvvmStatics::IsInitializingPropertyInActor(AActor* View)
 {
     return UnrealMvvm_Impl::FViewChangeTracker::IsInitializing(View);
 }
 
-bool UMvvmBlueprintLibrary::IsInitializingPropertyFromViewModel(UBaseViewModel* ViewModel)
+bool UMvvmStatics::IsInitializingPropertyFromViewModel(UBaseViewModel* ViewModel)
 {
     return UnrealMvvm_Impl::FViewChangeTracker::IsInitializing(ViewModel);
 }
 
-bool UMvvmBlueprintLibrary::IsChangingPropertyInWidget(UUserWidget* View)
+bool UMvvmStatics::IsChangingPropertyInWidget(UUserWidget* View)
 {
     return UnrealMvvm_Impl::FViewChangeTracker::IsChanging(View);
 }
 
-bool UMvvmBlueprintLibrary::IsChangingPropertyInActor(AActor* View)
+bool UMvvmStatics::IsChangingPropertyInActor(AActor* View)
 {
     return UnrealMvvm_Impl::FViewChangeTracker::IsChanging(View);
 }
 
-bool UMvvmBlueprintLibrary::IsChangingPropertyFromViewModel(UBaseViewModel* ViewModel)
+bool UMvvmStatics::IsChangingPropertyFromViewModel(UBaseViewModel* ViewModel)
 {
     return UnrealMvvm_Impl::FViewChangeTracker::IsChanging(ViewModel);
 }
 
-DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
+DEFINE_FUNCTION(UMvvmStatics::execGetViewModelPropertyValue)
 {
     P_GET_OBJECT(UBaseViewModel, ViewModel);
     P_GET_PROPERTY(FNameProperty, PropertyName);
@@ -106,7 +106,7 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execGetViewModelPropertyValue)
     P_FINISH;
 }
 
-DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
+DEFINE_FUNCTION(UMvvmStatics::execSetViewModelPropertyValue)
 {
     P_GET_OBJECT(UBaseViewModel, ViewModel);
     P_GET_PROPERTY(FNameProperty, PropertyName);
@@ -205,7 +205,7 @@ DEFINE_FUNCTION(UMvvmBlueprintLibrary::execSetViewModelPropertyValue)
 }
 
 template <typename TView, typename TViewComponent>
-UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelInternal(TView* View)
+UBaseViewModel* UMvvmStatics::GetViewModelInternal(TView* View)
 {
     if (!ensureAlways(View))
     {
@@ -224,7 +224,7 @@ UBaseViewModel* UMvvmBlueprintLibrary::GetViewModelInternal(TView* View)
 }
 
 template <typename TView, typename TViewComponent>
-void UMvvmBlueprintLibrary::SetViewModelInternal(TView* View, UBaseViewModel* ViewModel)
+void UMvvmStatics::SetViewModelInternal(TView* View, UBaseViewModel* ViewModel)
 {
     using namespace UnrealMvvm_Impl;
 

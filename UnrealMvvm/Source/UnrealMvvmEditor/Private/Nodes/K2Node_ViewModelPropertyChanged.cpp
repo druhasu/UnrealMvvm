@@ -2,7 +2,7 @@
 
 #include "K2Node_ViewModelPropertyChanged.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
-#include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmStatics.h"
 #include "ViewModelClassSelectorHelper.h"
 #include "Blueprint/UserWidget.h"
 #include "EdGraphSchema_K2.h"
@@ -62,7 +62,7 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
         {
             // spawn GetViewModelPropertyValue
             UK2Node_CallFunction* GetViewModelPropertyValueCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
-            GetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, UMvvmBlueprintLibrary::StaticClass());
+            GetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FViewModelPropertyNodeHelper::GetPropertyValueFunctionName, UMvvmStatics::StaticClass());
             GetViewModelPropertyValueCall->AllocateDefaultPins();
 
             // set property name
@@ -97,8 +97,8 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
     UEdGraphPin* IsInitialPin = FindPin(IsInitialPinName);
     if (IsInitialPin != nullptr && IsInitialPin->HasAnyConnections())
     {
-        static const FName IsInitializingWidget = GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, IsInitializingPropertyInWidget);
-        static const FName IsInitializingActor = GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, IsInitializingPropertyInActor);
+        static const FName IsInitializingWidget = GET_MEMBER_NAME_CHECKED(UMvvmStatics, IsInitializingPropertyInWidget);
+        static const FName IsInitializingActor = GET_MEMBER_NAME_CHECKED(UMvvmStatics, IsInitializingPropertyInActor);
 
         FName IsInitializingFunctionName = GetBlueprint()->GeneratedClass->IsChildOf<UUserWidget>()
             ? IsInitializingWidget
@@ -106,7 +106,7 @@ void UK2Node_ViewModelPropertyChanged::ExpandNode(FKismetCompilerContext& Compil
 
         // spawn call to appropriate IsInitializing variant
         UK2Node_CallFunction* IsInitializingCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
-        IsInitializingCall->FunctionReference.SetExternalMember(IsInitializingFunctionName, UMvvmBlueprintLibrary::StaticClass());
+        IsInitializingCall->FunctionReference.SetExternalMember(IsInitializingFunctionName, UMvvmStatics::StaticClass());
         IsInitializingCall->AllocateDefaultPins();
 
         CompilerContext.MovePinLinksToIntermediate(*IsInitialPin, *IsInitializingCall->GetReturnValuePin());

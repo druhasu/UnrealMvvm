@@ -9,24 +9,23 @@ public class UnrealMvvmTestsEditor : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "Core",
-                "UMG",
-                "UnrealMvvm",
-            });
+        [
+            "Core",
+            "UMG",
+        ]);
 
         PrivateDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "BlueprintGraph",
-                "CoreUObject",
-                "Engine",
-                "Slate",
-                "SlateCore",
-                "UnrealEd",
-                "UnrealMvvmTests",
-                "UnrealMvvmEditor",
-            });
+        [
+            "BlueprintGraph",
+            "CoreUObject",
+            "Engine",
+            "Slate",
+            "SlateCore",
+            "UnrealEd",
+            "UnrealMvvmTests",
+            "UnrealMvvmEditor",
+        ]);
+
+        UnrealMvvm.Setup(this);
     }
 }

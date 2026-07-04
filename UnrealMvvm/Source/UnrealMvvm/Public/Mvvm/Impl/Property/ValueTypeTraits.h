@@ -14,6 +14,7 @@ namespace UnrealMvvm_Impl
     {
         UE_STATIC_ASSERT_COMPLETE_TYPE(T, "T must be fully defined type, not just forward declared");
 
+        PRAGMA_DISABLE_DEPRECATION_WARNINGS
         template<typename U> static decltype(U::StaticStruct()) Test1(int);
         template<typename U> static decltype(U::StaticClass()) Test1(int);
         template<typename U> static char Test1(...);
@@ -25,5 +26,6 @@ namespace UnrealMvvm_Impl
         static const bool IsStruct = std::is_same_v<decltype(Test1<JustT>(0)), UScriptStruct*>;
         static const bool IsClass = std::is_same_v<decltype(Test1<JustT>(0)), UClass*>;
         static const bool IsInterface = !std::is_same_v< char, decltype(Test2<JustT>(0)) > && !TIsDerivedFrom<JustT, UObject>::Value;
+        PRAGMA_ENABLE_DEPRECATION_WARNINGS
     };
 }

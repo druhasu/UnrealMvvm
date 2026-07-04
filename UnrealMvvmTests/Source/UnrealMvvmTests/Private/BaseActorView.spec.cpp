@@ -5,7 +5,7 @@
 #include "TestBaseActorView.h"
 #include "TestBaseViewModel.h"
 #include "BindingWorkerTestViewModel.h"
-#include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmStatics.h"
 
 #include "TempWorldHelper.h"
 
@@ -149,7 +149,7 @@ void FBaseActorViewSpec::Define()
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             View->SetViewModel(ViewModel);
 
-            TestEqual("Untyped ViewModel", UMvvmBlueprintLibrary::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
+            TestEqual("Untyped ViewModel", UMvvmStatics::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
         });
 
         It("Should Call OnViewModelChanged", [this]
@@ -189,18 +189,18 @@ void FBaseActorViewSpec::Define()
 
             View->IntValueChangedCallback = [&](auto)
             {
-                TestTrue("IsInitializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-                TestTrue("IsInitializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+                TestTrue("IsInitializing by View", UMvvmStatics::IsInitializingProperty(View));
+                TestTrue("IsInitializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
             };
 
-            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            TestFalse("Is Initializing by View", UMvvmStatics::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
 
             View->DispatchBeginPlay();
             View->SetViewModel(ViewModel);
 
-            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            TestFalse("Is Initializing by View", UMvvmStatics::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
         });
 
         It("Should report initialization when Set ViewModel and then Constructed", [this]
@@ -213,18 +213,18 @@ void FBaseActorViewSpec::Define()
 
             View->IntValueChangedCallback = [&](auto)
             {
-                TestTrue("IsInitializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-                TestTrue("IsInitializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+                TestTrue("IsInitializing by View", UMvvmStatics::IsInitializingProperty(View));
+                TestTrue("IsInitializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
             };
 
-            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            TestFalse("Is Initializing by View", UMvvmStatics::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
 
             View->SetViewModel(ViewModel);
             View->DispatchBeginPlay();
 
-            TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-            TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+            TestFalse("Is Initializing by View", UMvvmStatics::IsInitializingProperty(View));
+            TestFalse("Is Initializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
         });
 
         It("Should report change", [this]
@@ -238,19 +238,19 @@ void FBaseActorViewSpec::Define()
             View->DispatchBeginPlay();
             View->SetViewModel(ViewModel);
 
-            TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
-            TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+            TestFalse("IsChanging by View", UMvvmStatics::IsChangingProperty(View));
+            TestFalse("IsChanging by ViewModel", UMvvmStatics::IsChangingProperty(ViewModel));
 
             View->IntValueChangedCallback = [&](auto)
             {
-                TestTrue("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
-                TestTrue("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+                TestTrue("IsChanging by View", UMvvmStatics::IsChangingProperty(View));
+                TestTrue("IsChanging by ViewModel", UMvvmStatics::IsChangingProperty(ViewModel));
             };
 
             ViewModel->SetIntValue(2);
 
-            TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
-            TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+            TestFalse("IsChanging by View", UMvvmStatics::IsChangingProperty(View));
+            TestFalse("IsChanging by ViewModel", UMvvmStatics::IsChangingProperty(ViewModel));
         });
 
         It("Should not report initialization during change", [this]
@@ -266,8 +266,8 @@ void FBaseActorViewSpec::Define()
 
             View->IntValueChangedCallback = [&](auto)
             {
-                TestFalse("Is Initializing by View", UMvvmBlueprintLibrary::IsInitializingProperty(View));
-                TestFalse("Is Initializing by ViewModel", UMvvmBlueprintLibrary::IsInitializingProperty(ViewModel));
+                TestFalse("Is Initializing by View", UMvvmStatics::IsInitializingProperty(View));
+                TestFalse("Is Initializing by ViewModel", UMvvmStatics::IsInitializingProperty(ViewModel));
             };
 
             ViewModel->SetIntValue(2);
@@ -283,8 +283,8 @@ void FBaseActorViewSpec::Define()
 
             View->IntValueChangedCallback = [&](auto)
             {
-                TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
-                TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+                TestFalse("IsChanging by View", UMvvmStatics::IsChangingProperty(View));
+                TestFalse("IsChanging by ViewModel", UMvvmStatics::IsChangingProperty(ViewModel));
             };
 
             View->SetViewModel(ViewModel);
@@ -301,8 +301,8 @@ void FBaseActorViewSpec::Define()
 
             View->IntValueChangedCallback = [&](auto)
             {
-                TestFalse("IsChanging by View", UMvvmBlueprintLibrary::IsChangingProperty(View));
-                TestFalse("IsChanging by ViewModel", UMvvmBlueprintLibrary::IsChangingProperty(ViewModel));
+                TestFalse("IsChanging by View", UMvvmStatics::IsChangingProperty(View));
+                TestFalse("IsChanging by ViewModel", UMvvmStatics::IsChangingProperty(ViewModel));
             };
 
             View->DispatchBeginPlay();
@@ -438,7 +438,7 @@ void FBaseActorViewSpec::Define()
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             View->SetViewModel(ViewModel);
 
-            TestEqual("Untyped ViewModel", UMvvmBlueprintLibrary::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
+            TestEqual("Untyped ViewModel", UMvvmStatics::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
         });
 
         It("Should Call OnViewModelChanged", [this]
@@ -500,7 +500,7 @@ void FBaseActorViewSpec::Define()
             TestEqual("MyValue is default", View->MyValue, 0);
 
             View->DispatchBeginPlay();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             TestEqual("MyValue", View->MyValue, 1);
 
             ViewModel->SetIntValue(2);
@@ -517,7 +517,7 @@ void FBaseActorViewSpec::Define()
 
             TestEqual("MyValue is default", View->MyValue, 0);
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             View->DispatchBeginPlay();
             TestEqual("MyValue is default", View->MyValue, 1);
 
@@ -547,7 +547,7 @@ void FBaseActorViewSpec::Define()
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             TestEqual("MyValue is default", View->MyValue, 0);
 
@@ -563,7 +563,7 @@ void FBaseActorViewSpec::Define()
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->DispatchBeginPlay();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             ViewModel->SetIntValue(1);
 
@@ -580,11 +580,11 @@ void FBaseActorViewSpec::Define()
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
             View->DispatchBeginPlay();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             ViewModel->SetIntValue(1);
 
-            UMvvmBlueprintLibrary::SetViewModel(View, nullptr);
+            UMvvmStatics::SetViewModel(View, nullptr);
             ViewModel->SetIntValue(2);
             TestEqual("MyValue", View->MyValue, 1);
         });
@@ -595,9 +595,9 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
-            TestEqual("Untyped ViewModel", UMvvmBlueprintLibrary::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
+            TestEqual("Untyped ViewModel", UMvvmStatics::GetViewModel(View), StaticCast<UBaseViewModel*>(ViewModel));
         });
 
         It("Should Call OnViewModelChanged", [this]
@@ -607,11 +607,11 @@ void FBaseActorViewSpec::Define()
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             TestNull("OldViewModel", View->OldViewModel);
             TestEqual("NewViewModel", View->NewViewModel.Get(), ViewModel);
 
-            UMvvmBlueprintLibrary::SetViewModel(View, nullptr);
+            UMvvmStatics::SetViewModel(View, nullptr);
             TestEqual("OldViewModel", View->OldViewModel.Get(), ViewModel);
             TestNull("NewViewModel", View->NewViewModel);
         });
@@ -623,7 +623,7 @@ void FBaseActorViewSpec::Define()
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World, false);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             View->DispatchBeginPlay();
         });
 
@@ -634,7 +634,7 @@ void FBaseActorViewSpec::Define()
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             TestEqual("NewViewModel", View->ViewModelFromGetter.Get(), ViewModel);
         });
 
@@ -644,7 +644,7 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             ViewModel->SetIntValue(123);
 
@@ -657,7 +657,7 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             View->SetValueToViewModel(123);
 
@@ -670,7 +670,7 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             View->SetValueToViewModelConstant();
 
@@ -683,7 +683,7 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateBlueprintBasedView(Helper.World);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             View->SetValueToViewModelStruct();
 
@@ -697,7 +697,7 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             ViewModel->SetIntValue(123);
 
@@ -711,7 +711,7 @@ void FBaseActorViewSpec::Define()
 
             ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
 
             View->SetValueToViewModel(123);
 
@@ -731,7 +731,7 @@ void FBaseActorViewSpec::Define()
             RootViewModel->SetChild(FirstChildViewModel);
             FirstChildViewModel->SetChild(SecondChildViewModel);
 
-            UMvvmBlueprintLibrary::SetViewModel(View, RootViewModel);
+            UMvvmStatics::SetViewModel(View, RootViewModel);
             View->DispatchBeginPlay();
 
             UBindingWorkerViewModel_SecondChild* SecondChildAlternativeViewModel = NewObject<UBindingWorkerViewModel_SecondChild>();
@@ -749,7 +749,7 @@ void FBaseActorViewSpec::Define()
             ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             View->DispatchBeginPlay();
 
             ViewModel->SetIntValue(1);
@@ -767,7 +767,7 @@ void FBaseActorViewSpec::Define()
             ATestBaseActorViewBlueprint* View = CreateActor<ATestBaseActorViewBlueprint>(Helper.World, ActorClass);
             UTestDerivedViewModel* ViewModel = NewObject<UTestDerivedViewModel>();
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             View->DispatchBeginPlay();
 
             ViewModel->SetIntValue(1);
@@ -788,7 +788,7 @@ void FBaseActorViewSpec::Define()
             UTestBaseViewModel* ViewModel = NewObject<UTestBaseViewModel>();
             ViewModel->SetIntValue(1);
 
-            UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+            UMvvmStatics::SetViewModel(View, ViewModel);
             View->DispatchBeginPlay();
 
             ViewModel->SetIntValue(2);

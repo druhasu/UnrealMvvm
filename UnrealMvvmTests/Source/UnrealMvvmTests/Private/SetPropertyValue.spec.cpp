@@ -2,7 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 
-#include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmStatics.h"
 #include "Mvvm/Impl/Property/ViewModelRegistry.h"
 #include "Mvvm/Impl/Property/ViewModelPropertyReflection.h"
 #include "PinTraitsViewModel.h"
@@ -79,7 +79,7 @@ void FSetPropertyValueSpec::TestCommon(FName FunctionName)
     UUserWidget* View = CreateWidget<UUserWidget>(Helper.World, ViewClass);
     UPinTraitsViewModel* ViewModel = NewObject<UPinTraitsViewModel>();
 
-    UMvvmBlueprintLibrary::SetViewModel(View, ViewModel);
+    UMvvmStatics::SetViewModel(View, ViewModel);
 
     void* Parms = FMemory_Alloca(Function->ParmsSize);
 

@@ -3,14 +3,14 @@
 #pragma once
 
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "MvvmBlueprintLibrary.generated.h"
+#include "MvvmStatics.generated.h"
 
 class UUserWidget;
 class UBaseViewModel;
 class AActor;
 
 UCLASS()
-class UNREALMVVM_API UMvvmBlueprintLibrary : public UBlueprintFunctionLibrary
+class UNREALMVVM_API UMvvmStatics : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 

@@ -2,7 +2,7 @@
 
 #include "K2Node_ViewModelGetSet.h"
 #include "Mvvm/BaseViewModel.h"
-#include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmStatics.h"
 #include "Mvvm/Impl/BaseView/ViewRegistry.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/Actor.h"
@@ -31,7 +31,7 @@ void UK2Node_ViewModelGetSet::ExpandNode(FKismetCompilerContext& CompilerContext
 
     // call to GetViewModel/SetViewModel function
     UK2Node_CallFunction* CallFunctionNode = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(this, SourceGraph);
-    CallFunctionNode->FunctionReference.SetExternalMember(GetFunctionName(), UMvvmBlueprintLibrary::StaticClass());
+    CallFunctionNode->FunctionReference.SetExternalMember(GetFunctionName(), UMvvmStatics::StaticClass());
     CallFunctionNode->AllocateDefaultPins();
 
     UEdGraphPin* SrcViewPin = FindPin(FViewModelPropertyNodeHelper::ViewPinName);
@@ -242,15 +242,15 @@ FName UK2Node_ViewModelGetSet::GetFunctionName() const
     if (ViewClass->IsChildOf<UUserWidget>())
     {
         return bIsSetter ?
-            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelToWidget) :
-            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromWidget);
+            GET_FUNCTION_NAME_CHECKED(UMvvmStatics, SetViewModelToWidget) :
+            GET_FUNCTION_NAME_CHECKED(UMvvmStatics, GetViewModelFromWidget);
     }
     else
     {
         ensureAlways(ViewClass->IsChildOf<AActor>());
         return bIsSetter ?
-            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelToActor) :
-            GET_FUNCTION_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromActor);
+            GET_FUNCTION_NAME_CHECKED(UMvvmStatics, SetViewModelToActor) :
+            GET_FUNCTION_NAME_CHECKED(UMvvmStatics, GetViewModelFromActor);
     }
 }
 

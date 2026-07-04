@@ -3,7 +3,7 @@
 #include "ViewModelPropertyNodeHelper.h"
 #include "Mvvm/Impl/Property/ViewModelPropertyIterator.h"
 #include "ViewModelClassSelectorHelper.h"
-#include "Mvvm/MvvmBlueprintLibrary.h"
+#include "Mvvm/MvvmStatics.h"
 #include "Blueprint/UserWidget.h"
 #include "KismetCompiler.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -15,8 +15,8 @@
 const FName FViewModelPropertyNodeHelper::HasValuePinName("HasValue");
 const FName FViewModelPropertyNodeHelper::ViewModelPinName("ViewModel");
 const FName FViewModelPropertyNodeHelper::ViewPinName("View");
-const FName FViewModelPropertyNodeHelper::GetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelPropertyValue));
-const FName FViewModelPropertyNodeHelper::SetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, SetViewModelPropertyValue));
+const FName FViewModelPropertyNodeHelper::GetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmStatics, GetViewModelPropertyValue));
+const FName FViewModelPropertyNodeHelper::SetPropertyValueFunctionName(GET_MEMBER_NAME_CHECKED(UMvvmStatics, SetViewModelPropertyValue));
 
 bool FViewModelPropertyNodeHelper::IsPropertyAvailableInBlueprint(const UnrealMvvm_Impl::FViewModelPropertyReflection& Property)
 {
@@ -161,12 +161,12 @@ UK2Node_CallFunction* FViewModelPropertyNodeHelper::SpawnGetViewModelNodes(FKism
     // get ViewModel from current View: GetSelf -> GetViewModelFromWidget/GetViewModelFromActor
     UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForNodeChecked(SourceNode);
     FName GetViewModelFunctionName = Blueprint->GeneratedClass->IsChildOf<UUserWidget>() ?
-        GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromWidget) :
-        GET_MEMBER_NAME_CHECKED(UMvvmBlueprintLibrary, GetViewModelFromActor);
+        GET_MEMBER_NAME_CHECKED(UMvvmStatics, GetViewModelFromWidget) :
+        GET_MEMBER_NAME_CHECKED(UMvvmStatics, GetViewModelFromActor);
 
     // GetViewModelFromWidget() / GetViewModelFromActor()
     UK2Node_CallFunction* GetViewModelCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(SourceNode, SourceGraph);
-    GetViewModelCall->FunctionReference.SetExternalMember(GetViewModelFunctionName, UMvvmBlueprintLibrary::StaticClass());
+    GetViewModelCall->FunctionReference.SetExternalMember(GetViewModelFunctionName, UMvvmStatics::StaticClass());
     GetViewModelCall->AllocateDefaultPins();
 
     // GetSelf()
@@ -195,7 +195,7 @@ void FViewModelPropertyNodeHelper::SpawnGetSetPropertyValueNodes(const FName& Fu
 
     // spawn call to GetViewModelProperty/SetViewModelProperty static function
     UK2Node_CallFunction* GetSetViewModelPropertyValueCall = CompilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(SourceNode, SourceGraph);
-    GetSetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FunctionName, UMvvmBlueprintLibrary::StaticClass());
+    GetSetViewModelPropertyValueCall->FunctionReference.SetExternalMember(FunctionName, UMvvmStatics::StaticClass());
     GetSetViewModelPropertyValueCall->AllocateDefaultPins();
 
     // Connect nodes to ViewModel pin

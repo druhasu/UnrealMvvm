@@ -10,7 +10,7 @@
  */
 
 // shorthand for remove parentheses
-#define UMVVM_IMPL_RP PREPROCESSOR_REMOVE_OPTIONAL_PARENS
+#define UMVVM_IMPL_RP UE_REMOVE_OPTIONAL_PARENS
 
 // Calls Macro usign Args. Args are expected to be inside parantheses
 #define UMVVM_IMPL_INDIRECT_CALL(Macro, Args) Macro Args
@@ -153,7 +153,7 @@ GetterVisibility: \
  */
 #define VM_PROP_MG_MS(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, ;, ;, (UMVVM_IMPL_PROP_AUTO_FIELD(UMVVM_IMPL_RP(ValueType), Name)), ##__VA_ARGS__) \
     )
 
@@ -163,7 +163,7 @@ GetterVisibility: \
  */
 #define VM_PROP_AG_MS(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, UMVVM_IMPL_PROP_AUTO_GETTER(Name), ;, (UMVVM_IMPL_PROP_AUTO_FIELD(UMVVM_IMPL_RP(ValueType), Name)), ##__VA_ARGS__) \
     )
 
@@ -173,7 +173,7 @@ GetterVisibility: \
  */
 #define VM_PROP_MG_AS(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, ;, UMVVM_IMPL_PROP_AUTO_SETTER(Name), (UMVVM_IMPL_PROP_AUTO_FIELD(UMVVM_IMPL_RP(ValueType), Name)), ##__VA_ARGS__) \
     )
 
@@ -183,7 +183,7 @@ GetterVisibility: \
  */
 #define VM_PROP_AG_AS(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, UMVVM_IMPL_PROP_AUTO_GETTER(Name), UMVVM_IMPL_PROP_AUTO_SETTER(Name), (UMVVM_IMPL_PROP_AUTO_FIELD(ValueType, Name)), ##__VA_ARGS__) \
     )
 
@@ -197,7 +197,7 @@ GetterVisibility: \
  */
 #define VM_PROP_MG_MS_NF(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, ;, ;, ##__VA_ARGS__) \
     )
 
@@ -207,7 +207,7 @@ GetterVisibility: \
  */
 #define VM_PROP_AG_MS_NF(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, UMVVM_IMPL_PROP_AUTO_GETTER(Name), ;, ##__VA_ARGS__) \
     )
 
@@ -217,7 +217,7 @@ GetterVisibility: \
  */
 #define VM_PROP_MG_AS_NF(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, ;, UMVVM_IMPL_PROP_AUTO_SETTER(Name), ##__VA_ARGS__) \
     )
 
@@ -227,7 +227,7 @@ GetterVisibility: \
  */
 #define VM_PROP_AG_AS_NF(ValueType, Name, ... /* GetterVisibility, SetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_COMMON_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, UMVVM_IMPL_PROP_AUTO_GETTER(Name), UMVVM_IMPL_PROP_AUTO_SETTER(Name), ##__VA_ARGS__) \
     )
 
@@ -237,7 +237,7 @@ GetterVisibility: \
  */
 #define VM_PROP_MG_NF(ValueType, Name, ... /* GetterVisibility */) \
     UMVVM_IMPL_INDIRECT_CALL( \
-        PREPROCESSOR_JOIN(UMVVM_IMPL_PROP_MG_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
+        UE_JOIN(UMVVM_IMPL_PROP_MG_NF_, UMVVM_IMPL_NARGS(__VA_ARGS__)), \
         (ValueType, Name, ##__VA_ARGS__) \
     )
 
