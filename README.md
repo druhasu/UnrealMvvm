@@ -18,7 +18,7 @@ You can use [UnrealDI](https://github.com/druhasu/UnrealDI) plugin in Model laye
 
 I test this plugin to work with the latest version of Unreal Engine and two versions before it.
 
-It should probably work with previous versions too, but I cannot properly test it, because Blueprint test classes are already saved with 5.3 version. It is difficult to downgrade them.
+It should probably work with previous versions too, but I cannot properly test it, because Blueprint test classes are already saved with one of the latest versions. It is difficult to downgrade them.
 
 If you have any issues, please submit them [here](https://github.com/druhasu/UnrealMvvm/issues/new)
 
@@ -28,7 +28,7 @@ UnrealMvvm is distributed in source form only and must be compiled together with
 
 1. Download [latest release](https://github.com/druhasu/UnrealMvvm/releases/latest)
 2. Extract contents of the archive into your project /Plugins/UnrealMvvm folder
-3. Add "UnrealMvvm" to PrivateDependencyModuleNames inside your .Build.cs file
+3. Add `UnrealMvvm.Setup(this);` to your .Build.cs file (see [UnrealMvvmTests.Build.cs](https://github.com/druhasu/UnrealMvvm/blob/master/UnrealMvvmTests/Source/UnrealMvvmTests/UnrealMvvmTests.Build.cs) for example)
 4. Build the project
 
 ## Getting started
