@@ -6,6 +6,7 @@ using UnrealBuildTool;
 public class UnrealMvvm : ModuleRules
 {
     public static List<string> SetupModules { get; set; } = [];
+    public static bool RulesCreated { get; set; } = false;
 
     public UnrealMvvm(ReadOnlyTargetRules Target) : base(Target)
     {
@@ -26,6 +27,8 @@ public class UnrealMvvm : ModuleRules
             "SlateCore",
             // ... add private dependencies that you statically link with here ...
         ]);
+
+        RulesCreated = true;
     }
 
     public static void Setup(ModuleRules module)
